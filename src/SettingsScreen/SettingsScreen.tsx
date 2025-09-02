@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Switch, TouchableOpacity, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet, Switch, TouchableOpacity } from 'react-native';
+import { useAuth } from '../libs/hooks/useAuth';
 import Toolbar from '../components/Toolbar';
 
 const SettingsScreen = ({ navigation }: any) => {
-  const isDarkMode = useColorScheme() === 'dark';
-  const [darkMode, setDarkMode] = useState(isDarkMode);
+  const { isDarkMode, setDarkMode } = useAuth();
   const [locationEnabled, setLocationEnabled] = useState(true);
   const [radius, setRadius] = useState('5 miles');
   const [categories, setCategories] = useState({
@@ -28,7 +28,7 @@ const SettingsScreen = ({ navigation }: any) => {
           <Text style={[styles.sectionTitle, { color: isDarkMode ? '#fff' : '#000' }]}>Theme</Text>
           <View style={styles.row}>
             <Text style={{ color: isDarkMode ? '#fff' : '#000' }}>Dark Mode</Text>
-            <Switch value={darkMode} onValueChange={setDarkMode} />
+            <Switch value={isDarkMode} onValueChange={setDarkMode} />
           </View>
         </View>
         <View style={styles.section}>

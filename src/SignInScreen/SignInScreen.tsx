@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity } from 'react-native';
+import { useAuth } from '../libs/hooks/useAuth';
 
 const SignInScreen = ({ navigation }: any) => {
-  const isDarkMode = useColorScheme() === 'dark';
+  const { isDarkMode } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 

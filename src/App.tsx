@@ -6,21 +6,30 @@
  */
 
 import { NewAppScreen } from '@react-native/new-app-screen';
+
 import AppNavigator from './AppNavigator';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { StatusBar, StyleSheet } from 'react-native';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AuthProvider, useAuth } from './libs/hooks/useAuth';
+
 
 function App() {
-  const isDarkMode = useColorScheme() === 'dark';
-
   return (
-    <SafeAreaProvider>
+    <AuthProvider>
+      <SafeAreaProvider>
+        <AppWithStatusBar />
+      </SafeAreaProvider>
+    </AuthProvider>
+  );
+}
+
+function AppWithStatusBar() {
+  const { isDarkMode } = useAuth();
+  return (
+    <>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-  <AppNavigator />
-    </SafeAreaProvider>
+      <AppNavigator />
+    </>
   );
 }
 

@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { useAuth } from '../libs/hooks/useAuth';
 import Toolbar from '../components/Toolbar';
 
 const exploreItems = [
@@ -14,7 +15,7 @@ const exploreItems = [
 ];
 
 const ExploreScreen = ({ navigation }: any) => {
-  const isDarkMode = useColorScheme() === 'dark';
+  const { isDarkMode } = useAuth();
 
   return (
     <View style={{ flex: 1, backgroundColor: isDarkMode ? '#000' : '#fff' }}>

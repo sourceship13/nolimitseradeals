@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useAuth } from '../libs/hooks/useAuth';
 import Toolbar from '../components/Toolbar';
 
 const deal = {
@@ -14,7 +15,7 @@ const deal = {
 };
 
 const DealDetailScreen = ({ navigation }: any) => {
-  const isDarkMode = useColorScheme() === 'dark';
+  const { isDarkMode } = useAuth();
   const [contactsToSend, setContactsToSend] = useState(3);
 
   return (
