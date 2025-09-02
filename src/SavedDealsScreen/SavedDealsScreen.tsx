@@ -14,7 +14,12 @@ const SavedDealsScreen = ({ navigation }: any) => {
 
   return (
     <View style={{ flex: 1, backgroundColor: isDarkMode ? '#000' : '#fff' }}>
-      <Toolbar title="My Deals" onBack={() => navigation.goBack()} />
+      <Toolbar
+        title="My Deals"
+        onBack={() => navigation.goBack()}
+        showSettings={true}
+        onSettings={() => navigation.navigate('Settings')}
+      />
       <View style={styles.container}>
         <FlatList
           data={savedDeals}

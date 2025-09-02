@@ -8,7 +8,12 @@ const ProfileScreen = ({ navigation }: any) => {
 
   return (
     <View style={{ flex: 1, backgroundColor: isDarkMode ? '#000' : '#fff' }}>
-      <Toolbar title="Profile" onBack={() => navigation.goBack()} />
+      <Toolbar
+        title="Profile"
+        onBack={() => navigation.goBack()}
+        showSettings={true}
+        onSettings={() => navigation.navigate('Settings')}
+      />
       <View style={styles.container}>
         <View style={styles.avatar}><Text style={styles.avatarText}>U</Text></View>
         <Text style={[styles.userName, { color: isDarkMode ? '#fff' : '#000' }]}>User Name</Text>

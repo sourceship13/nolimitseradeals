@@ -47,6 +47,12 @@ const SwipeScreen = ({ navigation }: any) => {
         showSettings={true}
         onSettings={() => navigation.navigate('Settings')}
       />
+      <View style={styles.topBar}>
+        <Text style={[styles.topBarTitle, { color: isDarkMode ? '#fff' : '#111' }]}>Today's Deals</Text>
+        <TouchableOpacity style={styles.exploreBtn} onPress={() => navigation.navigate('Explore')}>
+          <Text style={[styles.exploreBtnText, { color: isDarkMode ? '#fff' : '#111' }]}>Explore</Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.container}>
         <View style={[styles.card, { backgroundColor: currentDeal.backgroundColor }]}>  
           <Text style={styles.dealImage}>{currentDeal.image}</Text>
@@ -68,12 +74,38 @@ const SwipeScreen = ({ navigation }: any) => {
   );
 };
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
+  },
+  topBar: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.04)',
+  },
+  topBarTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  exploreBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+  },
+  exploreBtnText: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   title: {
     fontSize: 28,

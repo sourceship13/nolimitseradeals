@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { useAuth } from '../libs/hooks/useAuth';
 import Toolbar from '../components/Toolbar';
 
@@ -19,19 +19,28 @@ const ExploreScreen = ({ navigation }: any) => {
 
   return (
     <View style={{ flex: 1, backgroundColor: isDarkMode ? '#000' : '#fff' }}>
-      <Toolbar title="Explore" onBack={() => navigation.goBack()} />
+      <Toolbar
+        title="Explore"
+        onBack={() => navigation.goBack()}
+        showSettings={true}
+        onSettings={() => navigation.navigate('Settings')}
+      />
       <View style={styles.container}>
         <FlatList
           data={exploreItems}
           keyExtractor={item => item.id.toString()}
           numColumns={2}
           renderItem={({ item }) => (
-            <View style={[styles.card, { backgroundColor: isDarkMode ? '#222' : '#f5f5f5' }]}>  
+            <TouchableOpacity
+              style={[styles.card, { backgroundColor: isDarkMode ? '#222' : '#f5f5f5' }]}
+              onPress={() => navigation.navigate('DealDetail', { deal: item })}
+              activeOpacity={0.8}
+            >
               <Text style={styles.itemImage}>{item.image}</Text>
               <Text style={styles.itemTitle}>{item.item}</Text>
               <Text style={styles.itemBusiness}>{item.business}</Text>
               <Text style={styles.itemCategory}>{item.category}</Text>
-            </View>
+            </TouchableOpacity>
           )}
           contentContainerStyle={styles.grid}
         />
@@ -53,15 +62,15 @@ const styles = StyleSheet.create({
   },
   grid: {
     alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
   },
   card: {
-    flex: 1,
     margin: 8,
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
-    minWidth: 140,
-    maxWidth: 160,
+    width: 160,
   },
   itemImage: {
     fontSize: 36,

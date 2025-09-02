@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useAuth } from '../libs/hooks/useAuth';
 import Toolbar from '../components/Toolbar';
 
-const deal = {
+
+const defaultDeal = {
   business: "Ara's Sandwich Shop",
   offer: "Free Turkey Club Sandwich",
   description: "Get a delicious turkey club sandwich absolutely free! Premium turkey, crispy bacon, fresh lettuce and tomato on artisan bread.",
@@ -14,21 +15,30 @@ const deal = {
   backgroundColor: "#FF6B35"
 };
 
-const DealDetailScreen = ({ navigation }: any) => {
+const DealDetailScreen = ({ navigation, route }: any) => {
   const { isDarkMode } = useAuth();
   const [contactsToSend, setContactsToSend] = useState(3);
+  const deal = route?.params?.deal ? {
+    ...defaultDeal,
+    ...route.params.deal
+  } : defaultDeal;
 
   return (
     <View style={{ flex: 1, backgroundColor: isDarkMode ? '#000' : '#fff' }}>
-      <Toolbar title="Deal Details" onBack={() => navigation.goBack()} />
+      <Toolbar
+        title="Deal Details"
+        onBack={() => navigation.goBack()}
+        showSettings={true}
+        onSettings={() => navigation.navigate('Settings')}
+      />
       <View style={styles.container}>
-        <View style={[styles.card, { backgroundColor: deal.backgroundColor }]}>  
+        <View style={[styles.card, { backgroundColor: deal.backgroundColor || '#FF6B35' }]}>  
           <Text style={styles.dealImage}>{deal.image}</Text>
-          <Text style={styles.dealOffer}>{deal.offer}</Text>
+          <Text style={styles.dealOffer}>{deal.offer || deal.item}</Text>
           <Text style={styles.dealBusiness}>{deal.business}</Text>
-          <Text style={styles.dealLocation}>{deal.location}</Text>
-          <Text style={styles.dealExpires}>{deal.expires}</Text>
-          <Text style={styles.dealDescription}>{deal.description}</Text>
+          <Text style={styles.dealLocation}>{deal.location || ''}</Text>
+          <Text style={styles.dealExpires}>{deal.expires || ''}</Text>
+          {deal.description && <Text style={styles.dealDescription}>{deal.description}</Text>}
         </View>
         <View style={styles.redeemSection}>
           <Text style={[styles.redeemLabel, { color: isDarkMode ? '#fff' : '#000' }]}>Send to how many contacts?</Text>
