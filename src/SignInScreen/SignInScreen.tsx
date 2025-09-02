@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity } from 'react-native';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAuth } from '../libs/hooks/useAuth';
 
 const SignInScreen = ({ navigation }: any) => {
@@ -34,6 +37,26 @@ const SignInScreen = ({ navigation }: any) => {
       <TouchableOpacity style={[styles.buttonOutline, { borderColor: isDarkMode ? '#fff' : '#000' }]} onPress={() => navigation.navigate('SignUp')}>
         <Text style={{ color: isDarkMode ? '#fff' : '#000', fontWeight: 'bold' }}>Create Account</Text>
       </TouchableOpacity>
+
+      {/* Social Sign In Buttons */}
+      <View style={styles.socialContainer}>
+        <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]}>
+          <FontAwesome name="google" size={22} color="#EA4335" style={styles.socialIcon} />
+          <Text style={[styles.socialText, { color: '#EA4335' }]}>Sign in with Google</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#1877F3' }]}> 
+          <FontAwesome name="facebook" size={22} color="#fff" style={styles.socialIcon} />
+          <Text style={[styles.socialText, { color: '#fff' }]}>Sign in with Facebook</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#E1306C' }]}> 
+          <FontAwesome name="instagram" size={22} color="#fff" style={styles.socialIcon} />
+          <Text style={[styles.socialText, { color: '#fff' }]}>Sign in with Instagram</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#000' }]}> 
+          <FontAwesome5 name="apple" size={22} color="#fff" style={styles.socialIcon} />
+          <Text style={[styles.socialText, { color: '#fff' }]}>Sign in with Apple</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -74,6 +97,26 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
     borderWidth: 2,
+  },
+  socialContainer: {
+    width: '100%',
+    marginTop: 16,
+  },
+  socialBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 10,
+    justifyContent: 'center',
+  },
+  socialIcon: {
+    marginRight: 12,
+  },
+  socialText: {
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
 
