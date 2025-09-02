@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, useColorScheme } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useAuth } from '../libs/hooks/useAuth';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -13,7 +14,7 @@ interface ToolbarProps {
 
 
 const Toolbar: React.FC<ToolbarProps> = ({ title = '', onBack, onSettings, showSettings }) => {
-  const isDarkMode = useColorScheme() === 'dark';
+  const { isDarkMode } = useAuth();
   return (
     <SafeAreaView edges={["top"]} style={{ backgroundColor: isDarkMode ? '#111' : '#fff' }}>
       <View style={[styles.toolbar, { backgroundColor: isDarkMode ? '#111' : '#fff', borderBottomColor: isDarkMode ? '#222' : '#eee' }]}>  
