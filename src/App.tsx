@@ -6,6 +6,7 @@
  */
 
 import { NewAppScreen } from '@react-native/new-app-screen';
+import AppNavigator from './AppNavigator';
 import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
 import {
   SafeAreaProvider,
@@ -18,7 +19,7 @@ function App() {
   return (
     <SafeAreaProvider>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
+  <AppNavigator />
     </SafeAreaProvider>
   );
 }
