@@ -1,0 +1,77 @@
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, useColorScheme } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+
+
+interface ToolbarProps {
+  title?: string;
+  onBack?: () => void;
+  onSettings?: () => void;
+  showSettings?: boolean;
+}
+
+
+const Toolbar: React.FC<ToolbarProps> = ({ title = '', onBack, onSettings, showSettings }) => {
+  const isDarkMode = useColorScheme() === 'dark';
+  return (
+    <SafeAreaView edges={["top"]} style={{ backgroundColor: isDarkMode ? '#111' : '#fff' }}>
+      <View style={[styles.toolbar, { backgroundColor: isDarkMode ? '#111' : '#fff', borderBottomColor: isDarkMode ? '#222' : '#eee' }]}>  
+        <TouchableOpacity
+          onPress={onBack}
+          style={styles.backBtn}
+          hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="chevron-back" size={32} color={isDarkMode ? '#fff' : '#222'} />
+        </TouchableOpacity>
+        <Text style={[styles.title, { color: isDarkMode ? '#fff' : '#111' }]}>{title}</Text>
+        {showSettings ? (
+          <TouchableOpacity
+            onPress={onSettings}
+            style={styles.settingsBtn}
+            hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="settings-sharp" size={28} color={isDarkMode ? '#fff' : '#222'} />
+          </TouchableOpacity>
+        ) : (
+          <View style={{ width: 40 }} />
+        )}
+      </View>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  toolbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 56,
+    borderBottomWidth: 1,
+    paddingHorizontal: 8,
+    justifyContent: 'space-between',
+  },
+  backBtn: {
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 24,
+  },
+  settingsBtn: {
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 24,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    flex: 1,
+    textAlign: 'center',
+  },
+});
+
+export default Toolbar;
