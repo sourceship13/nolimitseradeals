@@ -40,19 +40,31 @@ const SignInScreen = ({ navigation }: any) => {
 
       {/* Social Sign In Buttons */}
       <View style={styles.socialContainer}>
-        <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]}>
+        <TouchableOpacity
+          style={[styles.socialBtn, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]}
+          onPress={() => navigation.navigate('Swipe')}
+        >
           <FontAwesome name="google" size={22} color="#EA4335" style={styles.socialIcon} />
           <Text style={[styles.socialText, { color: '#EA4335' }]}>Sign in with Google</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#1877F3' }]}> 
+        <TouchableOpacity
+          style={[styles.socialBtn, { backgroundColor: '#1877F3' }]}
+          onPress={() => navigation.navigate('Swipe')}
+        >
           <FontAwesome name="facebook" size={22} color="#fff" style={styles.socialIcon} />
           <Text style={[styles.socialText, { color: '#fff' }]}>Sign in with Facebook</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#E1306C' }]}> 
+        <TouchableOpacity
+          style={[styles.socialBtn, { backgroundColor: '#E1306C' }]}
+          onPress={() => navigation.navigate('Swipe')}
+        >
           <FontAwesome name="instagram" size={22} color="#fff" style={styles.socialIcon} />
           <Text style={[styles.socialText, { color: '#fff' }]}>Sign in with Instagram</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#000' }]}> 
+        <TouchableOpacity
+          style={[styles.socialBtn, { backgroundColor: '#000' }]}
+          onPress={() => navigation.navigate('Swipe')}
+        >
           <FontAwesome5 name="apple" size={22} color="#fff" style={styles.socialIcon} />
           <Text style={[styles.socialText, { color: '#fff' }]}>Sign in with Apple</Text>
         </TouchableOpacity>

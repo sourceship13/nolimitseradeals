@@ -4,16 +4,9 @@ import { useAuth } from '../libs/hooks/useAuth';
 import Toolbar from '../components/Toolbar';
 
 const SettingsScreen = ({ navigation }: any) => {
-  const { isDarkMode, setDarkMode } = useAuth();
+  const { isDarkMode, setDarkMode, categories, setCategories } = useAuth();
   const [locationEnabled, setLocationEnabled] = useState(true);
   const [radius, setRadius] = useState('5 miles');
-  const [categories, setCategories] = useState({
-    food: true,
-    beauty: true,
-    fitness: true,
-    electronics: true,
-    fashion: true,
-  });
   const [notifications, setNotifications] = useState({
     deals: true,
     expiry: true,

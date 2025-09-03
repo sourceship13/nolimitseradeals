@@ -15,7 +15,8 @@ const exploreItems = [
 ];
 
 const ExploreScreen = ({ navigation }: any) => {
-  const { isDarkMode } = useAuth();
+  const { isDarkMode, categories } = useAuth();
+  const activeCategories = Object.keys(categories).filter(key => categories[key]);
 
   return (
     <View style={{ flex: 1, backgroundColor: isDarkMode ? '#000' : '#fff' }}>
@@ -25,6 +26,18 @@ const ExploreScreen = ({ navigation }: any) => {
         showSettings={true}
         onSettings={() => navigation.navigate('Settings')}
       />
+      {/* Top bar for categories */}
+      <View style={[styles.topBar, { backgroundColor: isDarkMode ? '#111' : '#f5f5f5', borderBottomWidth: 1, borderBottomColor: isDarkMode ? '#222' : '#eee' }]}> 
+        {activeCategories.length === 0 ? (
+          <Text style={{ color: isDarkMode ? '#fff' : '#333', fontStyle: 'italic', padding: 8 }}>No categories selected</Text>
+        ) : (
+          activeCategories.map(cat => (
+            <View key={cat} style={[styles.categoryChip, { backgroundColor: isDarkMode ? '#222' : '#fff', borderColor: isDarkMode ? '#444' : '#ddd' }]}> 
+              <Text style={{ color: isDarkMode ? '#fff' : '#333', fontWeight: 'bold', textTransform: 'capitalize' }}>{cat}</Text>
+            </View>
+          ))
+        )}
+      </View>
       <View style={styles.container}>
         <FlatList
           data={exploreItems}
@@ -50,6 +63,21 @@ const ExploreScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minHeight: 44,
+  },
+  categoryChip: {
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    marginRight: 8,
+    marginBottom: 4,
+  },
   container: {
     flex: 1,
     padding: 24,
