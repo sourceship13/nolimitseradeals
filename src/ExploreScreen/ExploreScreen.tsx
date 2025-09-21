@@ -19,6 +19,7 @@ const ExploreScreen = ({ navigation }: any) => {
   const { isDarkMode, categories } = useAuth();
   const colors = getColors(isDarkMode);
   const activeCategories = Object.keys(categories).filter(key => categories[key]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [deals, setDeals] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +44,13 @@ const ExploreScreen = ({ navigation }: any) => {
     fetchDeals();
   }, []);
 
+  // Filter deals by selectedCategory if set
+  const filteredDeals = selectedCategory
+    ? deals.filter(
+        d => (d.category || d.category_name || '').toLowerCase() === selectedCategory.toLowerCase()
+      )
+    : deals;
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Toolbar
@@ -56,11 +64,39 @@ const ExploreScreen = ({ navigation }: any) => {
         {activeCategories.length === 0 ? (
           <Text style={{ color: colors.text, fontStyle: 'italic', padding: 8 }}>No categories selected</Text>
         ) : (
-          activeCategories.map(cat => (
-            <View key={cat} style={[styles.categoryChip, { backgroundColor: colors.chip, borderColor: colors.borderStrong }]}> 
-              <Text style={{ color: colors.text, fontWeight: 'bold', textTransform: 'capitalize' }}>{cat}</Text>
-            </View>
-          ))
+          <FlatList
+            data={activeCategories}
+            keyExtractor={cat => cat}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            renderItem={({ item: cat }) => {
+              const isSelected = selectedCategory === cat;
+              return (
+                <TouchableOpacity
+                  onPress={() => setSelectedCategory(isSelected ? null : cat)}
+                  style={[
+                    styles.categoryChip,
+                    {
+                      backgroundColor: isSelected ? colors.primary : colors.chip,
+                      borderColor: isSelected ? colors.primary : colors.borderStrong,
+                    },
+                  ]}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    style={{
+                      color: isSelected ? colors.background : colors.text,
+                      fontWeight: 'bold',
+                      textTransform: 'capitalize',
+                    }}
+                  >
+                    {cat}
+                  </Text>
+                </TouchableOpacity>
+              );
+            }}
+            contentContainerStyle={{ paddingVertical: 2 }}
+          />
         )}
       </View>
       <View style={styles.container}>
@@ -70,7 +106,7 @@ const ExploreScreen = ({ navigation }: any) => {
           <Text style={{ color: colors.error, textAlign: 'center', marginTop: 32 }}>{error}</Text>
         ) : (
           <FlatList
-            data={deals}
+            data={filteredDeals}
             keyExtractor={item => item.id?.toString?.() || Math.random().toString()}
             numColumns={3}
             renderItem={({ item }) => (
