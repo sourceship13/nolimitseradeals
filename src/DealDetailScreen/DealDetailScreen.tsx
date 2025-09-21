@@ -4,24 +4,34 @@ import { useAuth } from '../libs/hooks/useAuth';
 import Toolbar from '../components/Toolbar';
 
 
-const defaultDeal = {
-  business: "Ara's Sandwich Shop",
-  offer: "Free Turkey Club Sandwich",
-  description: "Get a delicious turkey club sandwich absolutely free! Premium turkey, crispy bacon, fresh lettuce and tomato on artisan bread.",
-  image: "🥪",
-  location: "Downtown • 0.3 mi",
-  category: "Food",
-  expires: "Expires in 2 days",
-  backgroundColor: "#FF6B35"
-};
+// const defaultDeal = {
+//   business: "Ara's Sandwich Shop",
+//   offer: "Free Turkey Club Sandwich",
+//   description: "Get a delicious turkey club sandwich absolutely free! Premium turkey, crispy bacon, fresh lettuce and tomato on artisan bread.",
+//   image: "🥪",
+//   location: "Downtown • 0.3 mi",
+//   category: "Food",
+//   expires: "Expires in 2 days",
+//   backgroundColor: "#FF6B35"
+// };
 
 const DealDetailScreen = ({ navigation, route }: any) => {
   const { isDarkMode } = useAuth();
   const [contactsToSend, setContactsToSend] = useState(3);
-  const deal = route?.params?.deal ? {
-    ...defaultDeal,
-    ...route.params.deal
-  } : defaultDeal;
+  // Prefer backend fields, fallback to defaultDeal for missing values
+  const deal = route?.params?.deal;
+  
+  console.log('Deal details:', deal);
+
+  // Use placeholder if no image
+  const dealImage = deal.image ? deal.image : '🛍️';
+  // Prefer backend field names for business, offer, etc.
+  const business = deal.business || deal.business_name || '';
+  const offer = deal.offer || deal.item || deal.title || '';
+  const category = deal.category || deal.category_name || '';
+  const location = deal.location || deal.location_name || '';
+  const expires = deal.expires || deal.expiry || '';
+  const description = deal.description || '';
 
   return (
     <View style={{ flex: 1, backgroundColor: isDarkMode ? '#000' : '#fff' }}>
@@ -33,12 +43,13 @@ const DealDetailScreen = ({ navigation, route }: any) => {
       />
       <View style={styles.container}>
         <View style={[styles.card, { backgroundColor: deal.backgroundColor || '#FF6B35' }]}>  
-          <Text style={styles.dealImage}>{deal.image}</Text>
-          <Text style={styles.dealOffer}>{deal.offer || deal.item}</Text>
-          <Text style={styles.dealBusiness}>{deal.business}</Text>
-          <Text style={styles.dealLocation}>{deal.location || ''}</Text>
-          <Text style={styles.dealExpires}>{deal.expires || ''}</Text>
-          {deal.description && <Text style={styles.dealDescription}>{deal.description}</Text>}
+          <Text style={styles.dealImage}>{dealImage}</Text>
+          <Text style={styles.dealOffer}>{offer}</Text>
+          <Text style={styles.dealBusiness}>{business}</Text>
+          <Text style={styles.dealLocation}>{location}</Text>
+          <Text style={styles.dealExpires}>{expires}</Text>
+          {category && <Text style={styles.dealExpires}>{category}</Text>}
+          {description && <Text style={styles.dealDescription}>{description}</Text>}
         </View>
         <View style={styles.redeemSection}>
           <Text style={[styles.redeemLabel, { color: isDarkMode ? '#fff' : '#000' }]}>Send to how many contacts?</Text>

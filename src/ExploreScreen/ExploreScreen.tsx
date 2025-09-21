@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { useAuth } from '../libs/hooks/useAuth';
 import Toolbar from '../components/Toolbar';
@@ -17,6 +17,29 @@ const exploreItems = [
 const ExploreScreen = ({ navigation }: any) => {
   const { isDarkMode, categories } = useAuth();
   const activeCategories = Object.keys(categories).filter(key => categories[key]);
+  const [deals, setDeals] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchDeals = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // Replace with your actual AWS endpoint URL
+        const response = await fetch('https://f3x2ipn2yf.us-east-1.awsapprunner.com/api/deals/all-v2');
+        if (!response.ok) throw new Error('Failed to fetch deals');
+        const data = await response.json();
+        setDeals(data);
+        console.log('Fetched deals:', data);
+      } catch (err: any) {
+        setError(err.message || 'Unknown error');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDeals();
+  }, []);
 
   return (
     <View style={{ flex: 1, backgroundColor: isDarkMode ? '#000' : '#fff' }}>
@@ -39,24 +62,30 @@ const ExploreScreen = ({ navigation }: any) => {
         )}
       </View>
       <View style={styles.container}>
-        <FlatList
-          data={exploreItems}
-          keyExtractor={item => item.id.toString()}
-          numColumns={2}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[styles.card, { backgroundColor: isDarkMode ? '#222' : '#f5f5f5' }]}
-              onPress={() => navigation.navigate('DealDetail', { deal: item })}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.itemImage}>{item.image}</Text>
-              <Text style={styles.itemTitle}>{item.item}</Text>
-              <Text style={styles.itemBusiness}>{item.business}</Text>
-              <Text style={styles.itemCategory}>{item.category}</Text>
-            </TouchableOpacity>
-          )}
-          contentContainerStyle={styles.grid}
-        />
+        {loading ? (
+          <Text style={{ color: isDarkMode ? '#fff' : '#000', textAlign: 'center', marginTop: 32 }}>Loading deals...</Text>
+        ) : error ? (
+          <Text style={{ color: 'red', textAlign: 'center', marginTop: 32 }}>{error}</Text>
+        ) : (
+          <FlatList
+            data={deals}
+            keyExtractor={item => item.id?.toString?.() || Math.random().toString()}
+            numColumns={2}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[styles.card, { backgroundColor: isDarkMode ? '#222' : '#f5f5f5' }]}
+                onPress={() => navigation.navigate('DealDetail', { deal: item })}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.itemImage}>{item.image ? item.image : '🛍️'}</Text>
+                <Text style={styles.itemBusiness}>{item.business_name}</Text>
+                <Text style={styles.itemCategory}>{item.category_name}</Text>
+                <Text style={styles.itemCategory}>{item.description}</Text>
+              </TouchableOpacity>
+            )}
+            contentContainerStyle={styles.grid}
+          />
+        )}
       </View>
     </View>
   );
