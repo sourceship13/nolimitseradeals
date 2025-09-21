@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useMemo } from 'react';
 import { Appearance } from 'react-native';
+import { getColors } from '../colors';
+export { getColors };
 
 interface AuthContextType {
   isDarkMode: boolean;

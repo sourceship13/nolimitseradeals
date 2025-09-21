@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { useAuth } from '../libs/hooks/useAuth';
+import { getColors } from '../libs/colors';
 import Toolbar from '../components/Toolbar';
 
 const exploreItems = [
@@ -16,6 +17,7 @@ const exploreItems = [
 
 const ExploreScreen = ({ navigation }: any) => {
   const { isDarkMode, categories } = useAuth();
+  const colors = getColors(isDarkMode);
   const activeCategories = Object.keys(categories).filter(key => categories[key]);
   const [deals, setDeals] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -42,7 +44,7 @@ const ExploreScreen = ({ navigation }: any) => {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: isDarkMode ? '#000' : '#fff' }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Toolbar
         title="Explore"
         onBack={() => navigation.goBack()}
@@ -50,37 +52,37 @@ const ExploreScreen = ({ navigation }: any) => {
         onSettings={() => navigation.navigate('Settings')}
       />
       {/* Top bar for categories */}
-      <View style={[styles.topBar, { backgroundColor: isDarkMode ? '#111' : '#f5f5f5', borderBottomWidth: 1, borderBottomColor: isDarkMode ? '#222' : '#eee' }]}> 
+      <View style={[styles.topBar, { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border }]}> 
         {activeCategories.length === 0 ? (
-          <Text style={{ color: isDarkMode ? '#fff' : '#333', fontStyle: 'italic', padding: 8 }}>No categories selected</Text>
+          <Text style={{ color: colors.text, fontStyle: 'italic', padding: 8 }}>No categories selected</Text>
         ) : (
           activeCategories.map(cat => (
-            <View key={cat} style={[styles.categoryChip, { backgroundColor: isDarkMode ? '#222' : '#fff', borderColor: isDarkMode ? '#444' : '#ddd' }]}> 
-              <Text style={{ color: isDarkMode ? '#fff' : '#333', fontWeight: 'bold', textTransform: 'capitalize' }}>{cat}</Text>
+            <View key={cat} style={[styles.categoryChip, { backgroundColor: colors.chip, borderColor: colors.borderStrong }]}> 
+              <Text style={{ color: colors.text, fontWeight: 'bold', textTransform: 'capitalize' }}>{cat}</Text>
             </View>
           ))
         )}
       </View>
       <View style={styles.container}>
         {loading ? (
-          <Text style={{ color: isDarkMode ? '#fff' : '#000', textAlign: 'center', marginTop: 32 }}>Loading deals...</Text>
+          <Text style={{ color: colors.text, textAlign: 'center', marginTop: 32 }}>Loading deals...</Text>
         ) : error ? (
-          <Text style={{ color: 'red', textAlign: 'center', marginTop: 32 }}>{error}</Text>
+          <Text style={{ color: colors.error, textAlign: 'center', marginTop: 32 }}>{error}</Text>
         ) : (
           <FlatList
             data={deals}
             keyExtractor={item => item.id?.toString?.() || Math.random().toString()}
-            numColumns={2}
+            numColumns={3}
             renderItem={({ item }) => (
               <TouchableOpacity
-                style={[styles.card, { backgroundColor: isDarkMode ? '#222' : '#f5f5f5' }]}
+                style={[styles.card, { backgroundColor: colors.card }]}
                 onPress={() => navigation.navigate('DealDetail', { deal: item })}
                 activeOpacity={0.8}
               >
                 <Text style={styles.itemImage}>{item.image ? item.image : '🛍️'}</Text>
-                <Text style={styles.itemBusiness}>{item.business_name}</Text>
-                <Text style={styles.itemCategory}>{item.category_name}</Text>
-                <Text style={styles.itemCategory}>{item.description}</Text>
+                <Text style={[styles.itemBusiness, { color: colors.disabled }]}>{item.business_name}</Text>
+                <Text style={[styles.itemCategory, { color: colors.textPlaceholder }]}>{item.category_name}</Text>
+                <Text style={[styles.itemCategory, { color: colors.textTertiary }]}>{item.description}</Text>
               </TouchableOpacity>
             )}
             contentContainerStyle={styles.grid}
@@ -109,7 +111,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    padding: 24,
+    padding: 4,
   },
   title: {
     fontSize: 28,
@@ -123,11 +125,11 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   card: {
-    margin: 8,
+    margin: 2,
     borderRadius: 16,
-    padding: 16,
+    padding: 4,
     alignItems: 'center',
-    width: 160,
+    width: 140,
   },
   itemImage: {
     fontSize: 36,
@@ -140,12 +142,11 @@ const styles = StyleSheet.create({
   },
   itemBusiness: {
     fontSize: 12,
-    color: '#888',
     marginBottom: 2,
+    textAlign: 'center',
   },
   itemCategory: {
     fontSize: 12,
-    color: '#aaa',
   },
 });
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { useAuth } from '../libs/hooks/useAuth';
+import { getColors } from '../libs/colors';
 import Toolbar from '../components/Toolbar';
 
 const savedDeals = [
@@ -11,9 +12,10 @@ const savedDeals = [
 
 const SavedDealsScreen = ({ navigation }: any) => {
   const { isDarkMode } = useAuth();
+  const colors = getColors(isDarkMode);
 
   return (
-    <View style={{ flex: 1, backgroundColor: isDarkMode ? '#000' : '#fff' }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Toolbar
         title="My Deals"
         onBack={() => navigation.goBack()}
@@ -25,16 +27,16 @@ const SavedDealsScreen = ({ navigation }: any) => {
           data={savedDeals}
           keyExtractor={item => item.id.toString()}
           renderItem={({ item }) => (
-            <View style={[styles.card, { backgroundColor: isDarkMode ? '#222' : '#f5f5f5' }]}>  
+            <View style={[styles.card, { backgroundColor: colors.card }]}>  
               <Text style={styles.dealImage}>{item.image}</Text>
-              <Text style={styles.dealTitle}>{item.item}</Text>
-              <Text style={styles.dealBusiness}>{item.business}</Text>
+              <Text style={[styles.dealTitle, { color: colors.text }]}>{item.item}</Text>
+              <Text style={[styles.dealBusiness, { color: colors.disabled }]}>{item.business}</Text>
               {item.status === 'saved' ? (
-                <TouchableOpacity style={[styles.button, { backgroundColor: isDarkMode ? '#fff' : '#000' }]}>
-                  <Text style={{ color: isDarkMode ? '#000' : '#fff', fontWeight: 'bold' }}>Redeem Now</Text>
+                <TouchableOpacity style={[styles.button, { backgroundColor: colors.text }]}> 
+                  <Text style={{ color: colors.background, fontWeight: 'bold' }}>Redeem Now</Text>
                 </TouchableOpacity>
               ) : (
-                <Text style={styles.redeemed}>Redeemed</Text>
+                <Text style={[styles.redeemed, { color: colors.secondary }]}>Redeemed</Text>
               )}
             </View>
           )}
@@ -77,7 +79,6 @@ const styles = StyleSheet.create({
   },
   dealBusiness: {
     fontSize: 12,
-    color: '#888',
     marginBottom: 8,
   },
   button: {
@@ -88,7 +89,6 @@ const styles = StyleSheet.create({
     width: 120,
   },
   redeemed: {
-    color: '#4ECDC4',
     fontWeight: 'bold',
     marginTop: 8,
   },

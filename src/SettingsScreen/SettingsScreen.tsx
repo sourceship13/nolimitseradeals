@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Switch, TouchableOpacity } from 'react-native';
 import { useAuth } from '../libs/hooks/useAuth';
+import { getColors } from '../libs/colors';
 import Toolbar from '../components/Toolbar';
 
 const SettingsScreen = ({ navigation }: any) => {
   const { isDarkMode, setDarkMode, categories, setCategories } = useAuth();
+  const colors = getColors(isDarkMode);
   const [locationEnabled, setLocationEnabled] = useState(true);
   const [radius, setRadius] = useState('5 miles');
   const [notifications, setNotifications] = useState({
@@ -14,50 +16,50 @@ const SettingsScreen = ({ navigation }: any) => {
   });
 
   return (
-    <View style={{ flex: 1, backgroundColor: isDarkMode ? '#000' : '#fff' }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Toolbar title="Preferences" onBack={() => navigation.goBack()} />
-      <View style={styles.container}>
+  <View style={styles.container}>
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDarkMode ? '#fff' : '#000' }]}>Theme</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Theme</Text>
           <View style={styles.row}>
-            <Text style={{ color: isDarkMode ? '#fff' : '#000' }}>Dark Mode</Text>
+            <Text style={{ color: colors.text }}>Dark Mode</Text>
             <Switch value={isDarkMode} onValueChange={setDarkMode} />
           </View>
         </View>
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDarkMode ? '#fff' : '#000' }]}>Location Settings</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Location Settings</Text>
           <View style={styles.row}>
-            <Text style={{ color: isDarkMode ? '#fff' : '#000' }}>Use my location</Text>
+            <Text style={{ color: colors.text }}>Use my location</Text>
             <Switch value={locationEnabled} onValueChange={setLocationEnabled} />
           </View>
-          <Text style={{ color: isDarkMode ? '#aaa' : '#333', marginTop: 8 }}>Search radius: {radius}</Text>
+          <Text style={{ color: colors.textSecondary, marginTop: 8 }}>Search radius: {radius}</Text>
         </View>
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDarkMode ? '#fff' : '#000' }]}>Deal Categories</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Deal Categories</Text>
           {Object.keys(categories).map(key => (
             <View style={styles.row} key={key}>
-              <Text style={{ color: isDarkMode ? '#fff' : '#000' }}>{key.charAt(0).toUpperCase() + key.slice(1)}</Text>
+              <Text style={{ color: colors.text }}>{key.charAt(0).toUpperCase() + key.slice(1)}</Text>
               <Switch value={categories[key as keyof typeof categories]} onValueChange={v => setCategories({ ...categories, [key]: v })} />
             </View>
           ))}
         </View>
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDarkMode ? '#fff' : '#000' }]}>Notifications</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Notifications</Text>
           <View style={styles.row}>
-            <Text style={{ color: isDarkMode ? '#fff' : '#000' }}>New deals nearby</Text>
+            <Text style={{ color: colors.text }}>New deals nearby</Text>
             <Switch value={notifications.deals} onValueChange={v => setNotifications({ ...notifications, deals: v })} />
           </View>
           <View style={styles.row}>
-            <Text style={{ color: isDarkMode ? '#fff' : '#000' }}>Deal expiry reminders</Text>
+            <Text style={{ color: colors.text }}>Deal expiry reminders</Text>
             <Switch value={notifications.expiry} onValueChange={v => setNotifications({ ...notifications, expiry: v })} />
           </View>
           <View style={styles.row}>
-            <Text style={{ color: isDarkMode ? '#fff' : '#000' }}>Friend referrals</Text>
+            <Text style={{ color: colors.text }}>Friend referrals</Text>
             <Switch value={notifications.referrals} onValueChange={v => setNotifications({ ...notifications, referrals: v })} />
           </View>
         </View>
-        <TouchableOpacity style={[styles.button, { backgroundColor: '#FF6B35', marginTop: 24 }]}> 
-          <Text style={{ color: '#fff', fontWeight: 'bold' }}>Sign Out</Text>
+        <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary, marginTop: 24 }]}> 
+          <Text style={{ color: colors.background, fontWeight: 'bold' }}>Sign Out</Text>
         </TouchableOpacity>
       </View>
     </View>

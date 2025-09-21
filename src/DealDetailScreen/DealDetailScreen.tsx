@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useAuth } from '../libs/hooks/useAuth';
+import { getColors } from '../libs/colors';
 import Toolbar from '../components/Toolbar';
 
 
@@ -17,6 +18,7 @@ import Toolbar from '../components/Toolbar';
 
 const DealDetailScreen = ({ navigation, route }: any) => {
   const { isDarkMode } = useAuth();
+  const colors = getColors(isDarkMode);
   const [contactsToSend, setContactsToSend] = useState(3);
   // Prefer backend fields, fallback to defaultDeal for missing values
   const deal = route?.params?.deal;
@@ -34,7 +36,7 @@ const DealDetailScreen = ({ navigation, route }: any) => {
   const description = deal.description || '';
 
   return (
-    <View style={{ flex: 1, backgroundColor: isDarkMode ? '#000' : '#fff' }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Toolbar
         title="Deal Details"
         onBack={() => navigation.goBack()}
@@ -42,28 +44,28 @@ const DealDetailScreen = ({ navigation, route }: any) => {
         onSettings={() => navigation.navigate('Settings')}
       />
       <View style={styles.container}>
-        <View style={[styles.card, { backgroundColor: deal.backgroundColor || '#FF6B35' }]}>  
+        <View style={[styles.card, { backgroundColor: deal.backgroundColor || colors.primary }]}>  
           <Text style={styles.dealImage}>{dealImage}</Text>
-          <Text style={styles.dealOffer}>{offer}</Text>
-          <Text style={styles.dealBusiness}>{business}</Text>
-          <Text style={styles.dealLocation}>{location}</Text>
-          <Text style={styles.dealExpires}>{expires}</Text>
-          {category && <Text style={styles.dealExpires}>{category}</Text>}
-          {description && <Text style={styles.dealDescription}>{description}</Text>}
+          <Text style={[styles.dealOffer, { color: colors.background }]}>{offer}</Text>
+          <Text style={[styles.dealBusiness, { color: colors.background }]}>{business}</Text>
+          <Text style={[styles.dealLocation, { color: colors.background }]}>{location}</Text>
+          <Text style={[styles.dealExpires, { color: colors.background }]}>{expires}</Text>
+          {category && <Text style={[styles.dealExpires, { color: colors.background }]}>{category}</Text>}
+          {description && <Text style={[styles.dealDescription, { color: colors.background }]}>{description}</Text>}
         </View>
         <View style={styles.redeemSection}>
-          <Text style={[styles.redeemLabel, { color: isDarkMode ? '#fff' : '#000' }]}>Send to how many contacts?</Text>
+          <Text style={[styles.redeemLabel, { color: colors.text }]}>Send to how many contacts?</Text>
           <View style={styles.redeemRow}>
-            <TouchableOpacity onPress={() => setContactsToSend(Math.max(2, contactsToSend - 1))} style={styles.redeemBtn}><Text style={styles.redeemBtnText}>-</Text></TouchableOpacity>
-            <Text style={styles.contactsCount}>{contactsToSend}</Text>
-            <TouchableOpacity onPress={() => setContactsToSend(Math.min(6, contactsToSend + 1))} style={styles.redeemBtn}><Text style={styles.redeemBtnText}>+</Text></TouchableOpacity>
+            <TouchableOpacity onPress={() => setContactsToSend(Math.max(2, contactsToSend - 1))} style={[styles.redeemBtn, { backgroundColor: colors.surface }]}><Text style={[styles.redeemBtnText, { color: colors.text }]}>-</Text></TouchableOpacity>
+            <Text style={[styles.contactsCount, { color: colors.text }]}>{contactsToSend}</Text>
+            <TouchableOpacity onPress={() => setContactsToSend(Math.min(6, contactsToSend + 1))} style={[styles.redeemBtn, { backgroundColor: colors.surface }]}><Text style={[styles.redeemBtnText, { color: colors.text }]}>+</Text></TouchableOpacity>
           </View>
-          <TouchableOpacity style={[styles.button, { backgroundColor: isDarkMode ? '#fff' : '#000' }]} onPress={() => {/* send logic */}}>
-            <Text style={{ color: isDarkMode ? '#000' : '#fff', fontWeight: 'bold' }}>Send to {contactsToSend} Contacts</Text>
+          <TouchableOpacity style={[styles.button, { backgroundColor: colors.text }]} onPress={() => {/* send logic */}}>
+            <Text style={{ color: colors.background, fontWeight: 'bold' }}>Send to {contactsToSend} Contacts</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={[styles.button, { backgroundColor: '#FF6B35', marginTop: 16 }]} onPress={() => navigation.navigate('SavedDeals')}>
-          <Text style={{ color: '#fff', fontWeight: 'bold' }}>Save Deal</Text>
+        <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary, marginTop: 16 }]} onPress={() => navigation.navigate('SavedDeals')}>
+          <Text style={{ color: colors.background, fontWeight: 'bold' }}>Save Deal</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -96,26 +98,21 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 8,
-    color: '#fff',
   },
   dealBusiness: {
     fontSize: 16,
-    color: '#fff',
     marginBottom: 4,
   },
   dealLocation: {
     fontSize: 14,
-    color: '#fff',
     marginBottom: 4,
   },
   dealExpires: {
     fontSize: 12,
-    color: '#fff',
     marginBottom: 8,
   },
   dealDescription: {
     fontSize: 14,
-    color: '#fff',
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -133,7 +130,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   redeemBtn: {
-    backgroundColor: '#eee',
     borderRadius: 16,
     padding: 8,
     marginHorizontal: 8,

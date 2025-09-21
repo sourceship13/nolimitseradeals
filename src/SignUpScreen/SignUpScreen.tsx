@@ -4,12 +4,14 @@ import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity } from 'rea
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { useAuth } from '../libs/hooks/useAuth';
+import { getColors } from '../libs/colors';
 
 const fieldKeys = ["firstName", "lastName", "email", "phone", "password"] as const;
 const fieldLabels = ["First Name", "Last Name", "Email", "Phone Number", "Password"];
 
 const SignUpScreen = ({ navigation }: any) => {
   const { isDarkMode } = useAuth();
+  const colors = getColors(isDarkMode);
   const [fields, setFields] = useState({
     firstName: '',
     lastName: '',
@@ -20,40 +22,40 @@ const SignUpScreen = ({ navigation }: any) => {
 
 
   return (
-    <View style={[styles.container, { backgroundColor: isDarkMode ? '#000' : '#fff' }]}>  
-      <Text style={[styles.title, { color: isDarkMode ? '#fff' : '#000' }]}>Create Account</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>  
+      <Text style={[styles.title, { color: colors.text }]}>Create Account</Text>
       {fieldLabels.map((field, idx) => (
         <TextInput
           key={field}
-          style={[styles.input, { color: isDarkMode ? '#fff' : '#000', backgroundColor: isDarkMode ? '#222' : '#f5f5f5' }]}
+          style={[styles.input, { color: colors.text, backgroundColor: colors.surface }]}
           placeholder={field}
-          placeholderTextColor={isDarkMode ? '#888' : '#aaa'}
+          placeholderTextColor={colors.textPlaceholder}
           value={fields[fieldKeys[idx]]}
           onChangeText={text => setFields({ ...fields, [fieldKeys[idx]]: text })}
           secureTextEntry={field === 'Password'}
           keyboardType={field === 'Email' ? 'email-address' : field === 'Phone Number' ? 'phone-pad' : 'default'}
         />
       ))}
-      <TouchableOpacity style={[styles.button, { backgroundColor: isDarkMode ? '#fff' : '#000' }]} onPress={() => navigation.navigate('Swipe')}>
-        <Text style={{ color: isDarkMode ? '#000' : '#fff', fontWeight: 'bold' }}>Join DEALZ</Text>
+      <TouchableOpacity style={[styles.button, { backgroundColor: colors.text }]} onPress={() => navigation.navigate('Swipe')}>
+        <Text style={{ color: colors.background, fontWeight: 'bold' }}>Join DEALZ</Text>
       </TouchableOpacity>
       {/* Social Sign Up Buttons */}
       <View style={styles.socialContainer}>
-        <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]}> 
-          <FontAwesome name="google" size={22} color="#EA4335" style={styles.socialIcon} />
-          <Text style={[styles.socialText, { color: '#EA4335' }]}>Sign up with Google</Text>
+        <TouchableOpacity style={[styles.socialBtn, { backgroundColor: colors.google, borderColor: colors.border, borderWidth: 1 }]}> 
+          <FontAwesome name="google" size={22} color={colors.background} style={styles.socialIcon} />
+          <Text style={[styles.socialText, { color: colors.background }]}>Sign up with Google</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#1877F3' }]}> 
-          <FontAwesome name="facebook" size={22} color="#fff" style={styles.socialIcon} />
-          <Text style={[styles.socialText, { color: '#fff' }]}>Sign up with Facebook</Text>
+        <TouchableOpacity style={[styles.socialBtn, { backgroundColor: colors.facebook }]}> 
+          <FontAwesome name="facebook" size={22} color={colors.background} style={styles.socialIcon} />
+          <Text style={[styles.socialText, { color: colors.background }]}>Sign up with Facebook</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#E1306C' }]}> 
-          <FontAwesome name="instagram" size={22} color="#fff" style={styles.socialIcon} />
-          <Text style={[styles.socialText, { color: '#fff' }]}>Sign up with Instagram</Text>
+        <TouchableOpacity style={[styles.socialBtn, { backgroundColor: colors.instagram }]}> 
+          <FontAwesome name="instagram" size={22} color={colors.background} style={styles.socialIcon} />
+          <Text style={[styles.socialText, { color: colors.background }]}>Sign up with Instagram</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.socialBtn, { backgroundColor: '#000' }]}> 
-          <FontAwesome5 name="apple" size={22} color="#fff" style={styles.socialIcon} />
-          <Text style={[styles.socialText, { color: '#fff' }]}>Sign up with Apple</Text>
+        <TouchableOpacity style={[styles.socialBtn, { backgroundColor: colors.apple }]}> 
+          <FontAwesome5 name="apple" size={22} color={colors.background} style={styles.socialIcon} />
+          <Text style={[styles.socialText, { color: colors.background }]}>Sign up with Apple</Text>
         </TouchableOpacity>
       </View>
     </View>

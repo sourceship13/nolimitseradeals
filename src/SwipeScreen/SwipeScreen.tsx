@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useAuth } from '../libs/hooks/useAuth';
+import { useAuth, getColors } from '../libs/hooks/useAuth';
 import Toolbar from '../components/Toolbar';
 
 
@@ -18,6 +18,7 @@ const PLACEHOLDER_DEAL = {
 const SwipeScreen = ({ navigation }: any) => {
 
   const { isDarkMode } = useAuth();
+  const colors = getColors(isDarkMode);
   const [deals, setDeals] = useState<any[]>([]);
   const [currentDealIndex, setCurrentDealIndex] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -54,7 +55,7 @@ const SwipeScreen = ({ navigation }: any) => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: isDarkMode ? '#000' : '#fff' }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Toolbar
         title="DEALZ"
         onBack={() => navigation.goBack()}
@@ -62,31 +63,31 @@ const SwipeScreen = ({ navigation }: any) => {
         onSettings={() => navigation.navigate('Settings')}
       />
       <View style={styles.topBar}>
-        <Text style={[styles.topBarTitle, { color: isDarkMode ? '#fff' : '#111' }]}>Today's Deals</Text>
+        <Text style={[styles.topBarTitle, { color: colors.text }]}>Today's Deals</Text>
         <TouchableOpacity style={styles.exploreBtn} onPress={() => navigation.navigate('Explore')}>
-          <Text style={[styles.exploreBtnText, { color: isDarkMode ? '#fff' : '#111' }]}>Explore</Text>
+          <Text style={[styles.exploreBtnText, { color: colors.text }]}>Explore</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.container}>
         {loading ? (
-          <Text style={{ color: isDarkMode ? '#fff' : '#000', textAlign: 'center', marginTop: 32 }}>Loading deals...</Text>
+          <Text style={{ color: colors.text, textAlign: 'center', marginTop: 32 }}>Loading deals...</Text>
         ) : error ? (
-          <Text style={{ color: 'red', textAlign: 'center', marginTop: 32 }}>{error}</Text>
+          <Text style={{ color: colors.error, textAlign: 'center', marginTop: 32 }}>{error}</Text>
         ) : (
           <>
-            <View style={[styles.card, { backgroundColor: currentDeal.backgroundColor || '#FF6B35' }]}>  
+            <View style={[styles.card, { backgroundColor: currentDeal.backgroundColor || colors.primary }]}>  
               <Text style={styles.dealImage}>{currentDeal.image ? currentDeal.image : '🛍️'}</Text>
-              <Text style={styles.dealBusiness}>{currentDeal.business || currentDeal.business_name || ''}</Text>
-              <Text style={styles.dealOffer}>{currentDeal.description || currentDeal.descrption || currentDeal.description || ''}</Text>
-              <Text style={styles.dealLocation}>{currentDeal.category_name || currentDeal.category_name || ''}</Text>
-              <Text style={styles.dealExpires}>{currentDeal.expires || currentDeal.expiry || ''}</Text>
+              <Text style={[styles.dealBusiness, { color: colors.text }]}>{currentDeal.business || currentDeal.business_name || ''}</Text>
+              <Text style={[styles.dealOffer, { color: colors.textSecondary }]}>{currentDeal.description || currentDeal.descrption || currentDeal.description || ''}</Text>
+              <Text style={[styles.dealLocation, { color: colors.textTertiary }]}>{currentDeal.category_name || currentDeal.category_name || ''}</Text>
+              <Text style={[styles.dealExpires, { color: colors.textTertiary }]}>{currentDeal.expires || currentDeal.expiry || ''}</Text>
             </View>
             <View style={styles.actions}>
-              <TouchableOpacity style={[styles.actionBtn, { backgroundColor: isDarkMode ? '#222' : '#eee' }]} onPress={() => handleSwipe('left')}>
-                <Text style={{ color: '#e74c3c', fontSize: 24 }}>✗</Text>
+              <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.card }]} onPress={() => handleSwipe('left')}>
+                <Text style={{ color: colors.error, fontSize: 24 }}>✗</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.actionBtn, { backgroundColor: isDarkMode ? '#fff' : '#000' }]} onPress={() => handleSwipe('right')}>
-                <Text style={{ color: '#e74c3c', fontSize: 24 }}>♥</Text>
+              <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.background }]} onPress={() => handleSwipe('right')}>
+                <Text style={{ color: colors.error, fontSize: 24 }}>♥</Text>
               </TouchableOpacity>
             </View>
           </>
