@@ -1,41 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useAuth } from '../libs/hooks/useAuth';
 import Toolbar from '../components/Toolbar';
 
-const sampleDeals = [
-  {
-    id: 1,
-    business: "Ara's Sandwich Shop",
-    offer: "Free Turkey Club Sandwich",
-    image: "🥪",
-    location: "Downtown • 0.3 mi",
-    category: "Food",
-    expires: "Expires in 2 days",
-    backgroundColor: "#FF6B35"
-  },
-  {
-    id: 2,
-    business: "Ara's Fitness Gear",
-    offer: "Free Resistance Bands Set",
-    image: "💪",
-    location: "Midtown • 0.8 mi",
-    category: "Fitness",
-    expires: "Expires in 5 days",
-    backgroundColor: "#4ECDC4"
-  }
-];
+
+const PLACEHOLDER_DEAL = {
+  id: 0,
+  business: 'No Deals',
+  offer: 'No deals available',
+  image: '🛍️',
+  location: '',
+  category: '',
+  expires: '',
+  backgroundColor: '#888'
+};
 
 const SwipeScreen = ({ navigation }: any) => {
+
   const { isDarkMode } = useAuth();
+  const [deals, setDeals] = useState<any[]>([]);
   const [currentDealIndex, setCurrentDealIndex] = useState(0);
-  const currentDeal = sampleDeals[currentDealIndex];
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchDeals = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch('https://f3x2ipn2yf.us-east-1.awsapprunner.com/api/deals/all-v2');
+        if (!response.ok) throw new Error('Failed to fetch deals');
+        const data = await response.json();
+        setDeals(data);
+        console.log('Fetched deals:', data);
+        setCurrentDealIndex(0);
+      } catch (err: any) {
+        setError(err.message || 'Unknown error');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDeals();
+  }, []);
+
+  const currentDeal = deals.length > 0 ? deals[currentDealIndex] : PLACEHOLDER_DEAL;
 
   const handleSwipe = (direction: 'left' | 'right') => {
     if (direction === 'right') {
-      navigation.navigate('DealDetail');
+      navigation.navigate('DealDetail', { deal: currentDeal });
     } else {
-      setCurrentDealIndex((prev) => (prev + 1) % sampleDeals.length);
+      setCurrentDealIndex((prev) => deals.length > 0 ? (prev + 1) % deals.length : 0);
     }
   };
 
@@ -54,21 +68,29 @@ const SwipeScreen = ({ navigation }: any) => {
         </TouchableOpacity>
       </View>
       <View style={styles.container}>
-        <View style={[styles.card, { backgroundColor: currentDeal.backgroundColor }]}>  
-          <Text style={styles.dealImage}>{currentDeal.image}</Text>
-          <Text style={styles.dealOffer}>{currentDeal.offer}</Text>
-          <Text style={styles.dealBusiness}>{currentDeal.business}</Text>
-          <Text style={styles.dealLocation}>{currentDeal.location}</Text>
-          <Text style={styles.dealExpires}>{currentDeal.expires}</Text>
-        </View>
-        <View style={styles.actions}>
-          <TouchableOpacity style={[styles.actionBtn, { backgroundColor: isDarkMode ? '#222' : '#eee' }]} onPress={() => handleSwipe('left')}>
-            <Text style={{ color: '#e74c3c', fontSize: 24 }}>✗</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.actionBtn, { backgroundColor: isDarkMode ? '#fff' : '#000' }]} onPress={() => handleSwipe('right')}>
-            <Text style={{ color: '#e74c3c', fontSize: 24 }}>♥</Text>
-          </TouchableOpacity>
-        </View>
+        {loading ? (
+          <Text style={{ color: isDarkMode ? '#fff' : '#000', textAlign: 'center', marginTop: 32 }}>Loading deals...</Text>
+        ) : error ? (
+          <Text style={{ color: 'red', textAlign: 'center', marginTop: 32 }}>{error}</Text>
+        ) : (
+          <>
+            <View style={[styles.card, { backgroundColor: currentDeal.backgroundColor || '#FF6B35' }]}>  
+              <Text style={styles.dealImage}>{currentDeal.image ? currentDeal.image : '🛍️'}</Text>
+              <Text style={styles.dealBusiness}>{currentDeal.business || currentDeal.business_name || ''}</Text>
+              <Text style={styles.dealOffer}>{currentDeal.description || currentDeal.descrption || currentDeal.description || ''}</Text>
+              <Text style={styles.dealLocation}>{currentDeal.category_name || currentDeal.category_name || ''}</Text>
+              <Text style={styles.dealExpires}>{currentDeal.expires || currentDeal.expiry || ''}</Text>
+            </View>
+            <View style={styles.actions}>
+              <TouchableOpacity style={[styles.actionBtn, { backgroundColor: isDarkMode ? '#222' : '#eee' }]} onPress={() => handleSwipe('left')}>
+                <Text style={{ color: '#e74c3c', fontSize: 24 }}>✗</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.actionBtn, { backgroundColor: isDarkMode ? '#fff' : '#000' }]} onPress={() => handleSwipe('right')}>
+                <Text style={{ color: '#e74c3c', fontSize: 24 }}>♥</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
       </View>
     </View>
   );
