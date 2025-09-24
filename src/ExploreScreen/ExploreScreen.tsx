@@ -47,7 +47,7 @@ const ExploreScreen = ({ navigation }: any) => {
   // Filter deals by selectedCategory if set
   const filteredDeals = selectedCategory
     ? deals.filter(
-        d => (d.category || d.category_name || '').toLowerCase() === selectedCategory.toLowerCase()
+        deal => (deal.category || deal.category_name || '').toLowerCase() === selectedCategory.toLowerCase()
       )
     : deals;
 
