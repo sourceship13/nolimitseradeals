@@ -6,7 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Keychain from 'react-native-keychain';
 import ApiConfig from '../libs/utils/api.utils';
 
-const API_BASE_URL = ApiConfig.baseURL;
+const API_BASE_URL = ApiConfig.apiURL;
 
 interface AuthTokens {
   accessToken: string;
@@ -212,42 +212,106 @@ class AuthService {
   }
 
   // Register new user
+  // async register(data: {
+  //   email: string;
+  //   password: string;
+  //   username?: string;
+  //   phone_number?: string;
+  //   first_name?: string;
+  //   last_name?: string;
+  // }): Promise<{ user: User; message: string }> {
+  //   try {
+  //     console.log('Registering user with data:', data);
+  //     const response = await fetch(`${API_BASE_URL}/auth/register`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify(data),
+  //     });
+
+  //     if (!response.ok) {
+  //       const error = await response.json();
+  //       throw new Error(error.error || 'Registration failed');
+  //     }
+
+  //     const result = await response.json();
+  //     const { user, accessToken, refreshToken, message } = result;
+
+  //     await this.storeTokens({ accessToken, refreshToken });
+  //     await AsyncStorage.setItem('user', JSON.stringify(user));
+
+  //     return { user, message };
+  //   } catch (error) {
+  //     if (error instanceof Error) {
+  //       throw error;
+  //     }
+  //     throw new Error('Registration failed');
+  //   }
+  // }
+
   async register(data: {
-    email: string;
-    password: string;
-    username?: string;
-    phone_number?: string;
-    first_name?: string;
-    last_name?: string;
-  }): Promise<{ user: User; message: string }> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+  email: string;
+  password: string;
+  // ...
+}) {
+  const url = `${API_BASE_URL}/auth/register`;
+  console.log('🔴 FULL URL:', url);
+  console.log('🔴 API_BASE_URL:', API_BASE_URL);
+  console.log('🔴 Sending data:', data);
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+  
+  console.log('🔴 Response status:', response.status);
+  const responseText = await response.text();
+  console.log('🔴 Response text:', responseText);
+  
+  try {
+    const url = `${API_BASE_URL}/auth/register`;
+    console.log('Attempting registration at:', url);
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Registration failed');
-      }
-
-      const result = await response.json();
-      const { user, accessToken, refreshToken, message } = result;
-
-      await this.storeTokens({ accessToken, refreshToken });
-      await AsyncStorage.setItem('user', JSON.stringify(user));
-
-      return { user, message };
-    } catch (error) {
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error('Registration failed');
+    // Log the raw response first
+    const responseText = await response.text();
+    console.log('Raw response:', responseText);
+    console.log('Response status:', response.status);
+    
+    // Check if it's HTML
+    if (responseText.startsWith('<')) {
+      console.error('Received HTML instead of JSON:', responseText.substring(0, 200));
+      throw new Error('Server error - received HTML instead of JSON. Check if backend is running.');
     }
+    
+    // Try to parse as JSON
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch (parseError) {
+      throw new Error('Invalid response from server');
+    }
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Registration failed');
+    }
+
+    // ... rest of the method
+  } catch (error) {
+    throw error;
   }
+}
 
   // Login user
   async login(

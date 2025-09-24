@@ -5,18 +5,6 @@ import { getColors } from '../../libs/colors';
 import Toolbar from '../../components/Toolbar';
 import ApiConfig from '../../libs/utils/api.utils';
 
-
-const exploreItems = [
-  { id: 1, business: "Ara's Beauty Bar", item: "Free Lipstick", image: "💄", category: "Cosmetics" },
-  { id: 2, business: "Ara's Café", item: "Free Coffee", image: "☕", category: "Food" },
-  { id: 3, business: "Ara's Gym", item: "Free Dumbbells", image: "🏋️", category: "Fitness" },
-  { id: 4, business: "Ara's Electronics", item: "Free Headphones", image: "🎧", category: "Tech" },
-  { id: 5, business: "Ara's Bakery", item: "Free Cupcakes", image: "🧁", category: "Food" },
-  { id: 6, business: "Ara's Skincare", item: "Free Face Mask", image: "✨", category: "Cosmetics" },
-  { id: 7, business: "Ara's Sports", item: "Free Water Bottle", image: "🥤", category: "Fitness" },
-  { id: 8, business: "Ara's Gadgets", item: "Free Phone Case", image: "📱", category: "Tech" }
-];
-
 const ExploreScreen = ({ navigation }: any) => {
   const { isDarkMode, categories } = useAuth();
   const colors = getColors(isDarkMode);
@@ -31,8 +19,6 @@ const ExploreScreen = ({ navigation }: any) => {
       setLoading(true);
       setError(null);
       try {
-        // Replace with your actual AWS endpoint URL
-        console.log('Fetching deals from:', `${ApiConfig.apiURL}/deals/all-v2`);
         const response = await fetch(`${ApiConfig.apiURL}/deals/all-v2`);
         if (!response.ok) throw new Error('Failed to fetch deals');
         const data = await response.json();
