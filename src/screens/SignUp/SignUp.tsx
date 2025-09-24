@@ -25,11 +25,11 @@ const SignUpScreen = ({ navigation }: any) => {
   const colors = getColors(isDarkMode);
   
   const [fields, setFields] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    password: '',
+    firstName: 'aaa',
+    lastName: 'aaa',
+    email: 'aaa@aaa.com',
+    phone: '1597561324  ',
+    password: 'Purple99!',
   });
   
   const [confirmPassword, setConfirmPassword] = useState('');

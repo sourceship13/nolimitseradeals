@@ -253,28 +253,15 @@ class AuthService {
   async register(data: {
   email: string;
   password: string;
-  // ...
+  first_name?: string;
+  last_name?: string;
+  phone_number?: string;
 }) {
-  const url = `${API_BASE_URL}/auth/register`;
-  console.log('🔴 FULL URL:', url);
-  console.log('🔴 API_BASE_URL:', API_BASE_URL);
-  console.log('🔴 Sending data:', data);
-  
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-  
-  console.log('🔴 Response status:', response.status);
-  const responseText = await response.text();
-  console.log('🔴 Response text:', responseText);
-  
   try {
     const url = `${API_BASE_URL}/auth/register`;
-    console.log('Attempting registration at:', url);
+    console.log('🔴 FULL URL:', url);
+    console.log('🔴 API_BASE_URL:', API_BASE_URL);
+    console.log('🔴 Sending data:', data);
     
     const response = await fetch(url, {
       method: 'POST',
@@ -283,11 +270,12 @@ class AuthService {
       },
       body: JSON.stringify(data),
     });
-
+    
+    console.log('🔴 Response status:', response.status);
+    
     // Log the raw response first
     const responseText = await response.text();
-    console.log('Raw response:', responseText);
-    console.log('Response status:', response.status);
+    console.log('🔴 Response text:', responseText);
     
     // Check if it's HTML
     if (responseText.startsWith('<')) {
@@ -300,15 +288,21 @@ class AuthService {
     try {
       result = JSON.parse(responseText);
     } catch (parseError) {
+      console.error('Failed to parse response as JSON:', parseError);
       throw new Error('Invalid response from server');
     }
-
+    
+    // Check if the request was successful
     if (!response.ok) {
       throw new Error(result.error || 'Registration failed');
     }
-
-    // ... rest of the method
+    
+    // Success! Return the result
+    console.log('✅ Registration successful:', result);
+    return result;
+    
   } catch (error) {
+    console.error('❌ Registration error:', error);
     throw error;
   }
 }
