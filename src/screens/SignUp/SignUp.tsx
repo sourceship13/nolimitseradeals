@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import { useAuth } from '../libs/hooks/useAuth';
-import { getColors } from '../libs/colors';
+import { useAuth } from '../../libs/hooks/useAuth';
+import { getColors } from '../../libs/colors';
 
 const fieldKeys = ["firstName", "lastName", "email", "phone", "password"] as const;
 const fieldLabels = ["First Name", "Last Name", "Email", "Phone Number", "Password"];

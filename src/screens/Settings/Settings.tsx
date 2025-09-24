@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Switch, TouchableOpacity } from 'react-native';
-import { useAuth } from '../libs/hooks/useAuth';
-import { getColors } from '../libs/colors';
-import Toolbar from '../components/Toolbar';
+import { useAuth } from '../../libs/hooks/useAuth';
+import { getColors } from '../../libs/colors';
+import Toolbar from '../../components/Toolbar';
 
 const SettingsScreen = ({ navigation }: any) => {
   const { isDarkMode, setDarkMode, categories, setCategories } = useAuth();

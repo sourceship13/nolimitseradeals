@@ -3,8 +3,8 @@ import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity } from 'rea
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useAuth } from '../libs/hooks/useAuth';
-import { getColors } from '../libs/colors';
+import { useAuth } from '../../libs/hooks/useAuth';
+import { getColors } from '../../libs/colors';
 
 const SignInScreen = ({ navigation }: any) => {
   const { isDarkMode } = useAuth();

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useAuth, getColors } from '../libs/hooks/useAuth';
-import Toolbar from '../components/Toolbar';
+import { useAuth, getColors } from '../../libs/hooks/useAuth';
+import Toolbar from '../../components/Toolbar';
 
 
 const PLACEHOLDER_DEAL = {

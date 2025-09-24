@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useAuth } from '../libs/hooks/useAuth';
-import { getColors } from '../libs/colors';
-import Toolbar from '../components/Toolbar';
+import { useAuth } from '../../libs/hooks/useAuth';
+import { getColors } from '../../libs/colors';
+import Toolbar from '../../components/Toolbar';
 
 const ProfileScreen = ({ navigation }: any) => {
   const { isDarkMode } = useAuth();

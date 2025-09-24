@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-import { useAuth } from '../libs/hooks/useAuth';
-import { getColors } from '../libs/colors';
-import Toolbar from '../components/Toolbar';
+import { useAuth } from '../../libs/hooks/useAuth';
+import { getColors } from '../../libs/colors';
+import Toolbar from '../../components/Toolbar';
 
 const exploreItems = [
   { id: 1, business: "Ara's Beauty Bar", item: "Free Lipstick", image: "💄", category: "Cosmetics" },

@@ -1,14 +1,14 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import SignInScreen from './SignInScreen/SignInScreen';
-import SignUpScreen from './SignUpScreen/SignUpScreen';
-import SwipeScreen from './SwipeScreen/SwipeScreen';
-import ExploreScreen from './ExploreScreen/ExploreScreen';
-import DealDetailScreen from './DealDetailScreen/DealDetailScreen';
-import ProfileScreen from './ProfileScreen/ProfileScreen';
-import SavedDealsScreen from './SavedDealsScreen/SavedDealsScreen';
-import SettingsScreen from './SettingsScreen/SettingsScreen';
+import SignInScreen from './screens/SignIn/SignIn';
+import SignUpScreen from './screens/SignUp/SignUp';
+import SwipeScreen from './screens/Swipe/Swipe';
+import ExploreScreen from './screens/Explore/Explore';
+import DealDetailScreen from './screens/DealDetail/DealDetail';
+import ProfileScreen from './screens/Profile/Profile';
+import SavedDealsScreen from './screens/SavedDeals/SavedDeals';
+import SettingsScreen from './screens/Settings/Settings';
 
 const Stack = createNativeStackNavigator();
 

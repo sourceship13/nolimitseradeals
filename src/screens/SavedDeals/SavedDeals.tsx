@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-import { useAuth } from '../libs/hooks/useAuth';
-import { getColors } from '../libs/colors';
-import Toolbar from '../components/Toolbar';
+import { useAuth } from '../../libs/hooks/useAuth';
+import { getColors } from '../../libs/colors';
+import Toolbar from '../../components/Toolbar';
 
 const savedDeals = [
   { id: 1, business: "Ara's Pizza", item: "Free Margherita Pizza", status: "saved", image: "🍕" },
