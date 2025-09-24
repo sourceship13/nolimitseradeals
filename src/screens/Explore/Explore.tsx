@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-import { useAuth } from '../../libs/hooks/useAuth';
+import { useAuth,  } from '../../libs/hooks/useAuth';
 import { getColors } from '../../libs/colors';
 import Toolbar from '../../components/Toolbar';
+import ApiConfig from '../../libs/utils/api.utils';
+
 
 const exploreItems = [
   { id: 1, business: "Ara's Beauty Bar", item: "Free Lipstick", image: "💄", category: "Cosmetics" },
@@ -30,7 +32,8 @@ const ExploreScreen = ({ navigation }: any) => {
       setError(null);
       try {
         // Replace with your actual AWS endpoint URL
-        const response = await fetch('https://f3x2ipn2yf.us-east-1.awsapprunner.com/api/deals/all-v2');
+        console.log('Fetching deals from:', `${ApiConfig.apiURL}/deals/all-v2`);
+        const response = await fetch(`${ApiConfig.apiURL}/deals/all-v2`);
         if (!response.ok) throw new Error('Failed to fetch deals');
         const data = await response.json();
         setDeals(data);
