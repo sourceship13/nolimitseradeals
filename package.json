@@ -4,10 +4,13 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android",
-    "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
-    "test": "jest"
+    "test": "jest",
+    "ios": "react-native run-ios --simulator='iPhone 16 Pro'",
+    "ios:max": "react-native run-ios --simulator='iPhone 16 Pro Max'",
+    "ios:se": "react-native run-ios --simulator='iPhone SE (3rd generation)'",
+    "ios:ipad": "react-native run-ios --simulator='iPad Pro (12.9-inch)'"
   },
   "dependencies": {
     "@react-native/new-app-screen": "0.81.1",
