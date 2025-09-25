@@ -48,7 +48,6 @@ const ExploreScreen = ({ navigation }: any) => {
         showSettings={true}
         onSettings={() => navigation.navigate('Settings')}
       />
-      {/* Top bar for categories */}
       <View style={[styles.topBar, { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border }]}> 
         {activeCategories.length === 0 ? (
           <Text style={{ color: colors.text, fontStyle: 'italic', padding: 8 }}>No categories selected</Text>

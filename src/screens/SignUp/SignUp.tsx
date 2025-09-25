@@ -103,7 +103,7 @@ const SignUpScreen = ({ navigation }: any) => {
         [
           {
             text: 'OK',
-            onPress: () => navigation.navigate('Swipe'),
+            onPress: () => navigation.navigate('Verification', { phoneNumber: fields.phone.trim() })
           },
         ]
       );

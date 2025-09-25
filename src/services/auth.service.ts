@@ -211,44 +211,67 @@ class AuthService {
     return this.refreshPromise;
   }
 
-  // Register new user
-  // async register(data: {
-  //   email: string;
-  //   password: string;
-  //   username?: string;
-  //   phone_number?: string;
-  //   first_name?: string;
-  //   last_name?: string;
-  // }): Promise<{ user: User; message: string }> {
-  //   try {
-  //     console.log('Registering user with data:', data);
-  //     const response = await fetch(`${API_BASE_URL}/auth/register`, {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify(data),
-  //     });
+  async verifyCode(identifier: string, code: string) {
+  try {
+    const url = `${API_BASE_URL}/auth/verify-code`;
+    console.log('Verifying code at:', url);
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        identifier, // phone number or email
+        code
+      }),
+    });
 
-  //     if (!response.ok) {
-  //       const error = await response.json();
-  //       throw new Error(error.error || 'Registration failed');
-  //     }
+    const text = await response.text();
+    console.log('Verification response:', text);
+    
+    let result;
+    try {
+      result = JSON.parse(text);
+    } catch (e) {
+      throw new Error('Invalid response from server');
+    }
 
-  //     const result = await response.json();
-  //     const { user, accessToken, refreshToken, message } = result;
+    if (!response.ok) {
+      throw new Error(result.error || 'Verification failed');
+    }
 
-  //     await this.storeTokens({ accessToken, refreshToken });
-  //     await AsyncStorage.setItem('user', JSON.stringify(user));
+    return result;
+  } catch (error) {
+    console.error('Verification error:', error);
+    throw error;
+  }
+}
 
-  //     return { user, message };
-  //   } catch (error) {
-  //     if (error instanceof Error) {
-  //       throw error;
-  //     }
-  //     throw new Error('Registration failed');
-  //   }
-  // }
+async resendVerificationCode(identifier: string) {
+  try {
+    const url = `${API_BASE_URL}/auth/resend-code`;
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ identifier }),
+    });
+
+    const result = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to resend code');
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Resend error:', error);
+    throw error;
+  }
+}
 
   async register(data: {
   email: string;

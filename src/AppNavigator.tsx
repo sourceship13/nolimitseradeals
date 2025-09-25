@@ -9,6 +9,7 @@ import DealDetailScreen from './screens/DealDetail/DealDetail';
 import ProfileScreen from './screens/Profile/Profile';
 import SavedDealsScreen from './screens/SavedDeals/SavedDeals';
 import SettingsScreen from './screens/Settings/Settings';
+import VerificationScreen from './VerificationScreen/VerificationScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -25,6 +26,7 @@ const AppNavigator = () => {
       >
         <Stack.Screen name="SignIn" component={SignInScreen} />
         <Stack.Screen name="SignUp" component={SignUpScreen} />
+        <Stack.Screen name="Verification" component={VerificationScreen} />
         <Stack.Screen name="Swipe" component={SwipeScreen} />
         <Stack.Screen name="Explore" component={ExploreScreen} />
         <Stack.Screen name="DealDetail" component={DealDetailScreen} />
