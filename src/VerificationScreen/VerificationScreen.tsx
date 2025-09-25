@@ -147,22 +147,31 @@ const VerificationScreen = ({ navigation, route }: any) => {
   };
 
   const resendCode = async () => {
-    if (resendTimer > 0) return; // Prevent spam
+    if (resendTimer > 0) return; // Prevent spam while timer is active
 
     try {
+      console.log('Resending code for:', identifier);
+
       const result = await authService.resendVerificationCode(identifier);
 
       if (result.success) {
         Alert.alert(
-          'Code Sent',
+          'Code Sent!',
           `A new verification code has been sent via ${
-            result.method || verificationMethod
+            result.method || 'SMS'
           }.`,
         );
-        setResendTimer(30); // 30 second cooldown
-        // Clear current code
+
+        // Set 30 second cooldown
+        setResendTimer(30);
+
+        // Clear the current code inputs
         setCode(['', '', '', '', '', '']);
-        inputRefs.current[0]?.focus();
+
+        // Focus first input
+        if (inputRefs.current[0]) {
+          inputRefs.current[0].focus();
+        }
       } else {
         Alert.alert('Error', result.message || 'Failed to resend code');
       }

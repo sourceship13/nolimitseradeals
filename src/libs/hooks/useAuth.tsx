@@ -3,6 +3,7 @@ import { Appearance, AppState, AppStateStatus } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getColors } from '../colors';
 import AuthService from '../../services/auth.service';
+import ApiConfig from '../utils/api.utils';
 
 export { getColors };
 
@@ -17,6 +18,19 @@ interface User {
   account_type: 'regular' | 'premium' | 'business';
   is_verified: boolean;
   is_active: boolean;
+}
+
+// Category type definition
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  icon_url?: string;
+  color_hex?: string;
+  sort_order: number;
+  active_deal_count: string;
+  business_count: string;
 }
 
 // Login credentials types
@@ -72,6 +86,8 @@ interface AuthContextType {
   setDarkMode: (value: boolean) => void;
   categories: Record<string, boolean>;
   setCategories: (value: Record<string, boolean>) => void;
+  availableCategories: Category[];
+  refreshCategories: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -84,13 +100,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Your existing state
   const colorScheme = Appearance.getColorScheme();
   const [isDarkMode, setDarkModeState] = useState(colorScheme === 'dark');
-  const [categories, setCategoriesState] = useState<Record<string, boolean>>({
-    food: true,
-    beauty: true,
-    fitness: true,
-    electronics: true,
-    fashion: true,
-  });
+  const [categories, setCategoriesState] = useState<Record<string, boolean>>({});
+  const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
   
   // App state reference for background/foreground handling
   const appState = useRef(AppState.currentState);
@@ -115,10 +126,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  // Fetch categories from API
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch(`${ApiConfig.apiURL}/deals/categories`);
+      if (!response.ok) throw new Error('Failed to fetch categories');
+      
+      const result = await response.json();
+      if (result.success && result.data) {
+        setAvailableCategories(result.data);
+        
+        // Initialize all categories as selected by default if no saved preferences
+        const savedCategories = await AsyncStorage.getItem('categories');
+        if (!savedCategories) {
+          const defaultCategories: Record<string, boolean> = {};
+          result.data.forEach((cat: Category) => {
+            defaultCategories[cat.slug] = true;
+          });
+          setCategoriesState(defaultCategories);
+        }
+        
+        return result.data;
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      return [];
+    }
+  };
+
   // Initialize app (auth + preferences)
   const initializeApp = async () => {
     try {
       setLoading(true);
+      
+      // Fetch available categories first
+      await fetchCategories();
       
       // Load saved preferences
       await loadPreferences();
@@ -164,7 +206,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Load category preferences
       const savedCategories = await AsyncStorage.getItem('categories');
       if (savedCategories !== null) {
-        setCategoriesState(JSON.parse(savedCategories));
+        const parsedCategories = JSON.parse(savedCategories);
+        
+        // Validate saved categories against available categories
+        const validCategories: Record<string, boolean> = {};
+        availableCategories.forEach(cat => {
+          // Use the saved preference if it exists, otherwise default to true
+          validCategories[cat.slug] = parsedCategories[cat.slug] !== undefined 
+            ? parsedCategories[cat.slug] 
+            : true;
+        });
+        
+        setCategoriesState(validCategories);
+      } else if (availableCategories.length > 0) {
+        // If no saved preferences but we have categories, set all to true
+        const defaultCategories: Record<string, boolean> = {};
+        availableCategories.forEach(cat => {
+          defaultCategories[cat.slug] = true;
+        });
+        setCategoriesState(defaultCategories);
       }
     } catch (error) {
       console.error('Error loading preferences:', error);
@@ -182,6 +242,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Refresh user data when app comes back to foreground
         refreshUser();
       }
+      // Refresh categories when app comes back to foreground
+      fetchCategories();
     }
     appState.current = nextAppState;
   };
@@ -204,6 +266,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Error saving category preferences:', error);
     }
+  };
+
+  // Refresh categories manually
+  const refreshCategories = async () => {
+    await fetchCategories();
   };
 
   // Authentication Methods
@@ -253,7 +320,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       
       // Optionally reset preferences on logout
-      // setCategories({ food: true, beauty: true, fitness: true, electronics: true, fashion: true });
+      // Reset categories to all true
+      if (availableCategories.length > 0) {
+        const defaultCategories: Record<string, boolean> = {};
+        availableCategories.forEach(cat => {
+          defaultCategories[cat.slug] = true;
+        });
+        setCategories(defaultCategories);
+      }
     } catch (error) {
       console.error('Logout error:', error);
       // Even if API call fails, clear local state
@@ -327,7 +401,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Load user-specific category preferences if they exist
       const userCategories = await AsyncStorage.getItem(`categories_${userId}`);
       if (userCategories) {
-        setCategoriesState(JSON.parse(userCategories));
+        const parsedCategories = JSON.parse(userCategories);
+        
+        // Validate against available categories
+        const validCategories: Record<string, boolean> = {};
+        availableCategories.forEach(cat => {
+          validCategories[cat.slug] = parsedCategories[cat.slug] !== undefined 
+            ? parsedCategories[cat.slug] 
+            : true;
+        });
+        
+        setCategoriesState(validCategories);
       }
       
       // Load user-specific theme preference if it exists
@@ -375,7 +459,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setDarkMode,
     categories,
     setCategories,
-  }), [user, loading, isDarkMode, categories]);
+    availableCategories,
+    refreshCategories,
+  }), [user, loading, isDarkMode, categories, availableCategories]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
