@@ -10,6 +10,7 @@ import {
 import { useAuth } from '../libs/hooks/useAuth';
 import { getColors } from '../libs/colors';
 import Toolbar from '../components/Toolbar';
+import ApiService from '../services/api.service';
 import authService from '../services/auth.service'; // Add this import
 
 console.log('authService:', authService);

@@ -38,23 +38,21 @@ class AuthService {
     url: string,
     options: RequestInit = {}
   ): Promise<Response> {
-    const defaultHeaders: HeadersInit = {
+    const accessToken = await this.getAccessToken();
+    console.log(`🔑 AuthService.fetchWithConfig: Retrieved access token: ${accessToken ? `EXISTS (${accessToken.substring(0, 20)}...)` : 'NULL'}`);
+    
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...options.headers as Record<string, string>,
+      ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
     };
 
-    // Add auth token if not explicitly excluded
-    if (!options.headers || !('Authorization' in options.headers)) {
-      const token = await this.getAccessToken();
-      if (token) {
-        defaultHeaders.Authorization = `Bearer ${token}`;
-      }
-    }
-
-    return fetch(url, {
-      ...options,
-      headers: defaultHeaders,
-    });
+    console.log(`📤 AuthService.fetchWithConfig: Final headers for ${url}:`, headers);
+    
+    const response = await fetch(url, { ...options, headers });
+    console.log(`📥 AuthService.fetchWithConfig: Response status: ${response.status} for ${url}`);
+    
+    return response;
   }
 
   // Helper to handle API responses
@@ -101,7 +99,9 @@ class AuthService {
   // Get access token
   private async getAccessToken(): Promise<string | null> {
     try {
-      return await AsyncStorage.getItem('accessToken');
+      const token = await AsyncStorage.getItem('accessToken');
+      console.log(`🔍 AuthService.getAccessToken: ${token ? `Token found (${token.substring(0, 10)}...)` : 'No token found'}`);
+      return token;
     } catch (error) {
       console.error('Error getting access token:', error);
       return null;
@@ -128,6 +128,20 @@ class AuthService {
     } catch (error) {
       console.error('Error clearing tokens:', error);
     }
+  }
+
+  // Public method for making authenticated requests
+  public async makeAuthenticatedRequest(
+    url: string,
+    options: RequestInit = {}
+  ): Promise<Response> {
+    console.log(`🔐 AuthService.makeAuthenticatedRequest: Called with URL: ${url}`);
+    console.log(`🔐 AuthService.makeAuthenticatedRequest: Options received:`, options);
+    
+    const result = await this.fetchWithConfig(url, options);
+    
+    console.log(`🔐 AuthService.makeAuthenticatedRequest: Returning response with status: ${result.status}`);
+    return result;
   }
 
   // Make authenticated request with automatic token refresh
@@ -341,7 +355,7 @@ async resendVerificationCode(identifier: string) {
     deviceId?: string
   ): Promise<User> {
     try {
-      const headers: HeadersInit = {
+      const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
 
@@ -349,15 +363,30 @@ async resendVerificationCode(identifier: string) {
         headers['X-Device-ID'] = deviceId;
       }
 
+      console.log(`🔑 AuthService.login: Attempting login to ${API_BASE_URL}/auth/login`);
+      console.log(`🔑 AuthService.login: Credentials:`, { ...credentials, password: '[HIDDEN]' });
+      console.log(`🔑 AuthService.login: Headers:`, headers);
+
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers,
         body: JSON.stringify(credentials),
       });
 
+      console.log(`🔑 AuthService.login: Response status:`, response.status);
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Login failed');
+        const errorText = await response.text();
+        console.error(`❌ AuthService.login: Error response:`, errorText);
+        
+        let errorObj;
+        try {
+          errorObj = JSON.parse(errorText);
+        } catch {
+          errorObj = { error: errorText };
+        }
+        
+        throw new Error(errorObj.error || errorObj.message || `Login failed with status ${response.status}`);
       }
 
       const result = await response.json();
@@ -430,7 +459,9 @@ async resendVerificationCode(identifier: string) {
   // Check if user is authenticated
   async isAuthenticated(): Promise<boolean> {
     const token = await this.getAccessToken();
-    return !!token;
+    const isAuth = !!token;
+    console.log(`🔐 AuthService.isAuthenticated: ${isAuth} (token: ${token ? 'exists' : 'null'})`);
+    return isAuth;
   }
 
   // Verify email

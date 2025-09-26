@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -7,10 +7,33 @@ import { useAuth } from '../../libs/hooks/useAuth';
 import { getColors } from '../../libs/colors';
 
 const SignInScreen = ({ navigation }: any) => {
-  const { isDarkMode } = useAuth();
+  const { isDarkMode, login } = useAuth();
   const colors = getColors(isDarkMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSignIn = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter both email and password');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      console.log('🔄 SignIn: Attempting login with email:', email);
+      
+      await login({ email, password });
+      
+      console.log('✅ SignIn: Login successful, navigating to Swipe');
+      navigation.navigate('Swipe');
+    } catch (error) {
+      console.error('❌ SignIn: Login failed:', error);
+      Alert.alert('Sign In Failed', String(error));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>  
@@ -33,8 +56,16 @@ const SignInScreen = ({ navigation }: any) => {
         onChangeText={setPassword}
         secureTextEntry
       />
-      <TouchableOpacity style={[styles.button, { backgroundColor: colors.text }]} onPress={() => navigation.navigate('Swipe')}>
-        <Text style={{ color: colors.background, fontWeight: 'bold' }}>Sign In</Text>
+      <TouchableOpacity 
+        style={[styles.button, { backgroundColor: loading ? colors.disabled : colors.text }]} 
+        onPress={handleSignIn}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color={colors.background} />
+        ) : (
+          <Text style={{ color: colors.background, fontWeight: 'bold' }}>Sign In</Text>
+        )}
       </TouchableOpacity>
       <TouchableOpacity style={[styles.buttonOutline, { borderColor: colors.text }]} onPress={() => navigation.navigate('SignUp')}>
         <Text style={{ color: colors.text, fontWeight: 'bold' }}>Create Account</Text>
@@ -131,6 +162,14 @@ const styles = StyleSheet.create({
   socialText: {
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  debugButton: {
+    position: 'absolute',
+    bottom: 50,
+    right: 20,
+    padding: 8,
+    borderRadius: 5,
+    borderWidth: 1,
   },
 });
 

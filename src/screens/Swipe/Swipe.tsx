@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, PanGestureHandler } from 'react-native';
 import { useAuth, getColors } from '../../libs/hooks/useAuth';
 import Toolbar from '../../components/Toolbar';
+import ApiService from '../../services/api.service';
 
 
 const PLACEHOLDER_DEAL = {
@@ -29,11 +30,10 @@ const SwipeScreen = ({ navigation }: any) => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch('https://f3x2ipn2yf.us-east-1.awsapprunner.com/api/deals/all-v2');
-        if (!response.ok) throw new Error('Failed to fetch deals');
-        const data = await response.json();
-        setDeals(data);
-        console.log('Fetched deals:', data);
+        const result = await ApiService.getDeals();
+        const dealsData = result.data || result;
+        setDeals(Array.isArray(dealsData) ? dealsData : []);
+        console.log('Fetched deals:', dealsData);
         setCurrentDealIndex(0);
       } catch (err: any) {
         setError(err.message || 'Unknown error');
@@ -58,7 +58,6 @@ const SwipeScreen = ({ navigation }: any) => {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Toolbar
         title="DEALZ"
-        onBack={() => navigation.goBack()}
         showSettings={true}
         onSettings={() => navigation.navigate('Settings')}
       />

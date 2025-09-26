@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator }
 import { useAuth } from '../../libs/hooks/useAuth';
 import { getColors } from '../../libs/colors';
 import Toolbar from '../../components/Toolbar';
+import ApiService from '../../services/api.service';
 import ApiConfig from '../../libs/utils/api.utils';
 
 const ExploreScreen = ({ navigation }: any) => {
@@ -26,9 +27,7 @@ const ExploreScreen = ({ navigation }: any) => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`${ApiConfig.apiURL}/deals/all-v2`);
-        if (!response.ok) throw new Error('Failed to fetch deals');
-        const result = await response.json();
+        const result = await ApiService.getDeals();
         
         // Handle both direct array and object with data property
         const dealsData = result.data || result;

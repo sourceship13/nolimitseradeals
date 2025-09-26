@@ -3,6 +3,7 @@ import { Appearance, AppState, AppStateStatus } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getColors } from '../colors';
 import AuthService from '../../services/auth.service';
+import ApiService from '../../services/api.service';
 import ApiConfig from '../utils/api.utils';
 
 export { getColors };
@@ -86,10 +87,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Fetch categories from API
   const fetchCategories = async () => {
     try {
-      const response = await fetch(`${ApiConfig.apiURL}/deals/categories`);
-      if (!response.ok) throw new Error('Failed to fetch categories');
+      const result = await ApiService.getCategories();
       
-      const result = await response.json();
       if (result.success && result.data) {
         setAvailableCategories(result.data);
         
@@ -115,39 +114,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const initializeApp = async () => {
     try {
       setLoading(true);
-      
-      // Fetch available categories first
-      await fetchCategories();
+      console.log('🚀 InitializeApp: Starting app initialization...');
       
       // Load saved preferences
       await loadPreferences();
       
       // Check authentication status
+      console.log('🔍 InitializeApp: Checking authentication status...');
       const isAuth = await AuthService.isAuthenticated();
+      console.log(`🔍 InitializeApp: isAuthenticated = ${isAuth}`);
       
       if (isAuth) {
+        console.log('✅ InitializeApp: User is authenticated, getting user data...');
         // Get stored user data
         const currentUser = await AuthService.getCurrentUser();
+        console.log(`👤 InitializeApp: Current user:`, currentUser ? 'Found' : 'Not found');
         setUser(currentUser);
+        
+        // Fetch categories after user is authenticated
+        console.log('📂 InitializeApp: Fetching categories for authenticated user...');
+        await fetchCategories();
         
         // Try to refresh user data from server
         if (currentUser) {
           try {
+            console.log('🔄 InitializeApp: Refreshing user data from server...');
             const freshUser = await AuthService.getProfile();
+            console.log('✅ InitializeApp: User data refreshed from server');
             setUser(freshUser);
           } catch (error) {
-            console.log('Using cached user data');
+            console.log('⚠️ InitializeApp: Using cached user data, server refresh failed:', error);
             // Keep using cached data if refresh fails
           }
         }
       } else {
+        console.log('❌ InitializeApp: User is not authenticated');
         setUser(null);
       }
     } catch (error) {
-      console.error('Error initializing app:', error);
+      console.error('💥 InitializeApp: Error initializing app:', error);
       setUser(null);
     } finally {
       setLoading(false);
+      console.log('🏁 InitializeApp: App initialization complete');
     }
   };
 
@@ -198,9 +207,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (user) {
         // Refresh user data when app comes back to foreground
         refreshUser();
+        // Refresh categories when app comes back to foreground (only if user is authenticated)
+        fetchCategories();
       }
-      // Refresh categories when app comes back to foreground
-      fetchCategories();
     }
     appState.current = nextAppState;
   };
@@ -246,6 +255,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const loggedInUser = await AuthService.login(credentials, deviceId);
       setUser(loggedInUser);
+      
+      // Fetch categories after successful login
+      console.log('📂 Login: Fetching categories for newly authenticated user...');
+      await fetchCategories();
       
       // Load user-specific preferences if any
       await loadUserPreferences(loggedInUser.id);

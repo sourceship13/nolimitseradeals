@@ -10,29 +10,54 @@ import ProfileScreen from './screens/Profile/Profile';
 import SavedDealsScreen from './screens/SavedDeals/SavedDeals';
 import SettingsScreen from './screens/Settings/Settings';
 import VerificationScreen from './VerificationScreen/VerificationScreen';
+import DebugScreen from './screens/Debug/Debug';
+import { useAuth } from './libs/hooks/useAuth';
+import { ActivityIndicator, View } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    // Show loading screen while checking authentication
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="SignIn"
+        initialRouteName={isAuthenticated ? "Swipe" : "SignIn"}
         screenOptions={{
           headerShown: false,
           gestureEnabled: true,
           gestureDirection: 'horizontal',
         }}
       >
-        <Stack.Screen name="SignIn" component={SignInScreen} />
-        <Stack.Screen name="SignUp" component={SignUpScreen} />
-        <Stack.Screen name="Verification" component={VerificationScreen} />
-        <Stack.Screen name="Swipe" component={SwipeScreen} />
-        <Stack.Screen name="Explore" component={ExploreScreen} />
-        <Stack.Screen name="DealDetail" component={DealDetailScreen} />
-        <Stack.Screen name="Profile" component={ProfileScreen} />
-        <Stack.Screen name="SavedDeals" component={SavedDealsScreen} />
-        <Stack.Screen name="Settings" component={SettingsScreen} />
+        {!isAuthenticated ? (
+          // Authentication flow screens
+          <>
+            <Stack.Screen name="SignIn" component={SignInScreen} />
+            <Stack.Screen name="SignUp" component={SignUpScreen} />
+            <Stack.Screen name="Verification" component={VerificationScreen} />
+            <Stack.Screen name="Debug" component={DebugScreen} />
+          </>
+        ) : (
+          // Authenticated user screens
+          <>
+            <Stack.Screen name="Swipe" component={SwipeScreen} />
+            <Stack.Screen name="Explore" component={ExploreScreen} />
+            <Stack.Screen name="DealDetail" component={DealDetailScreen} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
+            <Stack.Screen name="SavedDeals" component={SavedDealsScreen} />
+            <Stack.Screen name="Settings" component={SettingsScreen} />
+            <Stack.Screen name="Debug" component={DebugScreen} />
+          </>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

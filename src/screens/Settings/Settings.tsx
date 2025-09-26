@@ -58,6 +58,18 @@ const SettingsScreen = ({ navigation }: any) => {
             <Switch value={notifications.referrals} onValueChange={v => setNotifications({ ...notifications, referrals: v })} />
           </View>
         </View>
+        
+        {/* Debug Section */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Developer Options</Text>
+          <TouchableOpacity 
+            style={[styles.button, { backgroundColor: colors.error, marginBottom: 16 }]} 
+            onPress={() => navigation.navigate('Debug')}
+          >
+            <Text style={{ color: colors.background, fontWeight: 'bold' }}>🔧 Debug Console</Text>
+          </TouchableOpacity>
+        </View>
+
         <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary, marginTop: 24 }]}> 
           <Text style={{ color: colors.background, fontWeight: 'bold' }}>Sign Out</Text>
         </TouchableOpacity>

@@ -1,0 +1,170 @@
+// src/services/api.service.ts
+import AuthService from './auth.service';
+import ApiConfig from '../libs/utils/api.utils';
+
+interface ApiResponse<T = any> {
+  data?: T;
+  success?: boolean;
+  message?: string;
+  error?: string;
+}
+
+class ApiService {
+  private baseURL = ApiConfig.apiURL;
+
+  // Public endpoints (no authentication required)
+  private publicEndpoints = [
+    '/auth/login',
+    '/auth/register', 
+    '/auth/verify-email',
+    '/auth/verify-phone',
+    '/auth/resend-code',
+    '/auth/forgot-password',
+    '/auth/reset-password',
+    // All other endpoints require authentication
+  ];
+
+  /**
+   * Determines if an endpoint requires authentication
+   */
+  private requiresAuth(endpoint: string): boolean {
+    return !this.publicEndpoints.some(publicEndpoint => 
+      endpoint.includes(publicEndpoint)
+    );
+  }
+
+  /**
+   * Generic API call method
+   */
+  async makeRequest<T = any>(
+    endpoint: string, 
+    options: RequestInit = {}
+  ): Promise<ApiResponse<T>> {
+    const url = `${this.baseURL}${endpoint}`;
+    
+    console.log(`🔍 API Request: ${endpoint}`);
+    console.log(`🔒 Requires Auth: ${this.requiresAuth(endpoint)}`);
+    
+    try {
+      let response: Response;
+      
+      if (this.requiresAuth(endpoint)) {
+        console.log(`🛡️ ApiService: Making authenticated request to: ${url}`);
+        console.log(`📋 ApiService: Original options passed to AuthService:`, options);
+        
+        // Ensure we have proper options structure for AuthService
+        const authOptions = {
+          method: 'GET',
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            ...options.headers,
+          },
+        };
+        
+        console.log(`📋 ApiService: Modified options for AuthService:`, authOptions);
+        response = await AuthService.makeAuthenticatedRequest(url, authOptions);
+      } else {
+        console.log(`🌐 ApiService: Making public request to: ${url}`);
+        // Use regular fetch for public endpoints
+        const headers = {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        };
+        
+        response = await fetch(url, {
+          ...options,
+          headers,
+        });
+      }
+
+      console.log(`📡 Response status: ${response.status}`);
+      
+      const data = await response.json();
+      console.log(`📦 Response data:`, data);
+      
+      if (!response.ok) {
+        console.error(`❌ API Error: ${response.status} - ${data.message || data.error}`);
+        throw new Error(data.message || data.error || `HTTP ${response.status}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error(`💥 API Error (${endpoint}):`, error);
+      throw error;
+    }
+  }
+
+  // Deals API Methods
+  async getDeals(): Promise<ApiResponse<any[]>> {
+    return this.makeRequest('/deals/all-v2');
+  }
+
+  async getCategories(): Promise<ApiResponse<any[]>> {
+    return this.makeRequest('/deals/categories');
+  }
+
+  async getDealById(id: string): Promise<ApiResponse<any>> {
+    return this.makeRequest(`/deals/${id}`);
+  }
+
+  async saveDeal(dealId: string): Promise<ApiResponse> {
+    return this.makeRequest(`/deals/${dealId}/save`, {
+      method: 'POST',
+    });
+  }
+
+  async unsaveDeal(dealId: string): Promise<ApiResponse> {
+    return this.makeRequest(`/deals/${dealId}/save`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getSavedDeals(): Promise<ApiResponse<any[]>> {
+    return this.makeRequest('/deals/saved');
+  }
+
+  // User Profile API Methods
+  async getUserProfile(): Promise<ApiResponse<any>> {
+    return this.makeRequest('/user/profile');
+  }
+
+  async updateUserProfile(updates: any): Promise<ApiResponse> {
+    return this.makeRequest('/user/profile', {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+  }
+
+  // Verification API Methods
+  async verifyCode(phoneNumber: string, code: string): Promise<ApiResponse> {
+    return this.makeRequest('/auth/verify-phone', {
+      method: 'POST',
+      body: JSON.stringify({ phoneNumber, code }),
+    });
+  }
+
+  async resendVerificationCode(phoneNumber: string): Promise<ApiResponse> {
+    return this.makeRequest('/auth/resend-code', {
+      method: 'POST',
+      body: JSON.stringify({ phoneNumber }),
+    });
+  }
+
+  // Analytics/Tracking (if needed)
+  async trackDealView(dealId: string): Promise<ApiResponse> {
+    return this.makeRequest('/analytics/deal-view', {
+      method: 'POST',
+      body: JSON.stringify({ dealId, timestamp: new Date().toISOString() }),
+    });
+  }
+
+  async trackDealShare(dealId: string, platform: string): Promise<ApiResponse> {
+    return this.makeRequest('/analytics/deal-share', {
+      method: 'POST',
+      body: JSON.stringify({ dealId, platform, timestamp: new Date().toISOString() }),
+    });
+  }
+}
+
+export default new ApiService();

@@ -18,14 +18,18 @@ const Toolbar: React.FC<ToolbarProps> = ({ title = '', onBack, onSettings, showS
   return (
     <SafeAreaView edges={["top"]} style={{ backgroundColor: isDarkMode ? '#111' : '#fff' }}>
       <View style={[styles.toolbar, { backgroundColor: isDarkMode ? '#111' : '#fff', borderBottomColor: isDarkMode ? '#222' : '#eee' }]}>  
-        <TouchableOpacity
-          onPress={onBack}
-          style={styles.backBtn}
-          hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="chevron-back" size={32} color={isDarkMode ? '#fff' : '#222'} />
-        </TouchableOpacity>
+        {onBack ? (
+          <TouchableOpacity
+            onPress={onBack}
+            style={styles.backBtn}
+            hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="chevron-back" size={32} color={isDarkMode ? '#fff' : '#222'} />
+          </TouchableOpacity>
+        ) : (
+          <View style={{ width: 40 }} />
+        )}
         <Text style={[styles.title, { color: isDarkMode ? '#fff' : '#111' }]}>{title}</Text>
         {showSettings ? (
           <TouchableOpacity
