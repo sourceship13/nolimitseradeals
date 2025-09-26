@@ -62,8 +62,14 @@ const SwipeScreen = ({ navigation }: any) => {
         onSettings={() => navigation.navigate('Settings')}
       />
       <View style={styles.topBar}>
-        <Text style={[styles.topBarTitle, { color: colors.text }]}>Today's Deals</Text>
-        <TouchableOpacity style={styles.exploreBtn} onPress={() => navigation.navigate('Explore')}>
+        <Text style={[styles.topBarTitle, { color: colors.text }]}>Recent Deals</Text>
+        <TouchableOpacity 
+          style={[
+            styles.exploreBtn, 
+            { backgroundColor: isDarkMode ? 'rgba(128, 128, 128, 0.3)' : 'rgba(0,0,0,0.08)' }
+          ]} 
+          onPress={() => navigation.navigate('Explore')}
+        >
           <Text style={[styles.exploreBtnText, { color: colors.text }]}>Explore</Text>
         </TouchableOpacity>
       </View>
@@ -123,7 +129,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: 'rgba(0,0,0,0.08)',
+    // backgroundColor moved to inline styling for theme support
   },
   exploreBtnText: {
     fontSize: 16,
