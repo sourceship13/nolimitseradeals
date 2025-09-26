@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Switch, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Switch, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { useAuth } from '../../libs/hooks/useAuth';
 import { getColors } from '../../libs/colors';
 import Toolbar from '../../components/Toolbar';
 
 const SettingsScreen = ({ navigation }: any) => {
-  const { isDarkMode, setDarkMode, categories, setCategories } = useAuth();
+  const { isDarkMode, setDarkMode, categories, setCategories, logout } = useAuth();
   const colors = getColors(isDarkMode);
   const [locationEnabled, setLocationEnabled] = useState(true);
   const [radius, setRadius] = useState('5 miles');
@@ -15,10 +15,38 @@ const SettingsScreen = ({ navigation }: any) => {
     referrals: true,
   });
 
+  const handleLogout = async () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              console.log('🚪 Settings: User initiated logout');
+              await logout();
+              console.log('✅ Settings: Logout successful, navigating to SignIn');
+              // Navigation will be handled automatically by AppNavigator when user becomes null
+            } catch (error) {
+              console.error('❌ Settings: Logout failed:', error);
+              Alert.alert('Logout Failed', 'There was an error signing out. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Toolbar title="Preferences" onBack={() => navigation.goBack()} />
-  <View style={styles.container}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.container}>
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Theme</Text>
           <View style={styles.row}>
@@ -58,6 +86,13 @@ const SettingsScreen = ({ navigation }: any) => {
             <Switch value={notifications.referrals} onValueChange={v => setNotifications({ ...notifications, referrals: v })} />
           </View>
         </View>
+
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: colors.error, marginTop: 24 }]} 
+          onPress={handleLogout}
+        > 
+          <Text style={{ color: colors.background, fontWeight: 'bold' }}>Sign Out</Text>
+        </TouchableOpacity>
         
         {/* Debug Section */}
         <View style={styles.section}>
@@ -69,19 +104,18 @@ const SettingsScreen = ({ navigation }: any) => {
             <Text style={{ color: colors.background, fontWeight: 'bold' }}>🔧 Debug Console</Text>
           </TouchableOpacity>
         </View>
-
-        <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary, marginTop: 24 }]}> 
-          <Text style={{ color: colors.background, fontWeight: 'bold' }}>Sign Out</Text>
-        </TouchableOpacity>
-      </View>
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  scrollView: {
     flex: 1,
+  },
+  container: {
     padding: 24,
+    paddingBottom: 40, // Extra space at bottom
   },
   section: {
     marginBottom: 24,

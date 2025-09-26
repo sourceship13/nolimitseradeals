@@ -9,8 +9,8 @@ import { getColors } from '../../libs/colors';
 const SignInScreen = ({ navigation }: any) => {
   const { isDarkMode, login } = useAuth();
   const colors = getColors(isDarkMode);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('aj@sera.dev');
+  const [password, setPassword] = useState('Purple99!');
   const [loading, setLoading] = useState(false);
 
   const handleSignIn = async () => {
@@ -25,8 +25,7 @@ const SignInScreen = ({ navigation }: any) => {
       
       await login({ email, password });
       
-      console.log('✅ SignIn: Login successful, navigating to Swipe');
-      navigation.navigate('Swipe');
+      console.log('✅ SignIn: Login successful, AppNavigator will handle navigation automatically');
     } catch (error) {
       console.error('❌ SignIn: Login failed:', error);
       Alert.alert('Sign In Failed', String(error));
