@@ -19,7 +19,10 @@ const ExploreScreen = ({ navigation }: any) => {
 
   useEffect(() => {
     // Fetch deals
-    const fetchDeals = async () => {
+    fetchDeals();
+  }, []);
+
+  const fetchDeals = async () => {
       setLoading(true);
       setError(null);
       try {
@@ -38,9 +41,6 @@ const ExploreScreen = ({ navigation }: any) => {
         setLoading(false);
       }
     };
-
-    fetchDeals();
-  }, []);
 
   // Filter deals by selectedCategory if set
   const filteredDeals = selectedCategory
@@ -216,7 +216,6 @@ const ExploreScreen = ({ navigation }: any) => {
               style={[styles.retryButton, { backgroundColor: colors.primary }]}
               onPress={() => {
                 setError(null);
-                // Re-fetch deals
                 fetchDeals();
               }}
             >

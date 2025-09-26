@@ -4,18 +4,6 @@ import { useAuth } from '../../libs/hooks/useAuth';
 import { getColors } from '../../libs/colors';
 import Toolbar from '../../components/Toolbar';
 
-
-// const defaultDeal = {
-//   business: "Ara's Sandwich Shop",
-//   offer: "Free Turkey Club Sandwich",
-//   description: "Get a delicious turkey club sandwich absolutely free! Premium turkey, crispy bacon, fresh lettuce and tomato on artisan bread.",
-//   image: "🥪",
-//   location: "Downtown • 0.3 mi",
-//   category: "Food",
-//   expires: "Expires in 2 days",
-//   backgroundColor: "#FF6B35"
-// };
-
 const DealDetailScreen = ({ navigation, route }: any) => {
   const { isDarkMode } = useAuth();
   const colors = getColors(isDarkMode);
