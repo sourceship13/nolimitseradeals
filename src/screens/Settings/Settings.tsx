@@ -1,12 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Switch, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { useAuth } from '../../libs/hooks/useAuth';
 import { getColors } from '../../libs/colors';
 import Toolbar from '../../components/Toolbar';
 
 const SettingsScreen = ({ navigation }: any) => {
-  const { isDarkMode, setDarkMode, categories, setCategories, logout } = useAuth();
+  const { isDarkMode, setDarkMode, categories, setCategories, logout, refreshCategories, availableCategories } = useAuth();
   const colors = getColors(isDarkMode);
+  
+  // Debug categories
+  console.log('🔍 Settings Debug - categories:', categories);
+  console.log('🔍 Settings Debug - availableCategories:', availableCategories);
+  console.log('🔍 Settings Debug - Object.keys(categories):', Object.keys(categories));
+  
   const [locationEnabled, setLocationEnabled] = useState(true);
   const [radius, setRadius] = useState('5 miles');
   const [notifications, setNotifications] = useState({
@@ -14,6 +20,18 @@ const SettingsScreen = ({ navigation }: any) => {
     expiry: true,
     referrals: true,
   });
+
+  // Refresh categories when Settings screen loads
+  useEffect(() => {
+    const initializeCategories = async () => {
+      if (Object.keys(categories).length === 0) {
+        console.log('📝 Settings: No categories found, refreshing...');
+        await refreshCategories();
+      }
+    };
+    
+    initializeCategories();
+  }, []);
 
   const handleLogout = async () => {
     Alert.alert(
@@ -63,13 +81,40 @@ const SettingsScreen = ({ navigation }: any) => {
           <Text style={{ color: colors.textSecondary, marginTop: 8 }}>Search radius: {radius}</Text>
         </View>
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Deal Categories</Text>
-          {Object.keys(categories).map(key => (
-            <View style={styles.row} key={key}>
-              <Text style={{ color: colors.text }}>{key.charAt(0).toUpperCase() + key.slice(1)}</Text>
-              <Switch value={categories[key as keyof typeof categories]} onValueChange={v => setCategories({ ...categories, [key]: v })} />
-            </View>
-          ))}
+          <View style={styles.row}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Deal Categories</Text>
+            <TouchableOpacity 
+              onPress={refreshCategories}
+              style={{ padding: 4 }}
+            >
+              <Text style={{ color: colors.primary, fontSize: 14 }}>🔄 Refresh</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {Object.keys(categories).length === 0 && availableCategories.length === 0 ? (
+            <Text style={{ color: colors.textSecondary, fontStyle: 'italic' }}>
+              Loading categories... Tap refresh if this persists.
+            </Text>
+          ) : availableCategories.length > 0 ? (
+            // Use availableCategories for display names
+            availableCategories.map(category => (
+              <View style={styles.row} key={category.slug}>
+                <Text style={{ color: colors.text }}>{category.name}</Text>
+                <Switch 
+                  value={categories[category.slug] ?? true} 
+                  onValueChange={v => setCategories({ ...categories, [category.slug]: v })} 
+                />
+              </View>
+            ))
+          ) : (
+            // Fallback to categories object keys
+            Object.keys(categories).map(key => (
+              <View style={styles.row} key={key}>
+                <Text style={{ color: colors.text }}>{key.charAt(0).toUpperCase() + key.slice(1)}</Text>
+                <Switch value={categories[key as keyof typeof categories]} onValueChange={v => setCategories({ ...categories, [key]: v })} />
+              </View>
+            ))
+          )}
         </View>
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Notifications</Text>

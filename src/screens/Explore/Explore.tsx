@@ -11,7 +11,15 @@ const ExploreScreen = ({ navigation }: any) => {
   const colors = getColors(isDarkMode);
   
   // Filter available categories to show only the ones the user has enabled
-  const activeCategories = availableCategories.filter(cat => categories[cat.slug]);
+  // If no categories are set (empty object), show all available categories
+  const activeCategories = Object.keys(categories).length === 0 
+    ? availableCategories 
+    : availableCategories.filter(cat => categories[cat.slug]);
+  
+  // Debug category filtering
+  console.log('🔍 Explore Debug - availableCategories:', availableCategories.length, availableCategories.map(c => c.slug));
+  console.log('🔍 Explore Debug - categories object:', categories);
+  console.log('🔍 Explore Debug - activeCategories:', activeCategories.length, activeCategories.map(c => c.slug));
   
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [deals, setDeals] = useState<any[]>([]);
@@ -32,7 +40,7 @@ const ExploreScreen = ({ navigation }: any) => {
         // Handle both direct array and object with data property
         const dealsData = result.data || result;
         setDeals(Array.isArray(dealsData) ? dealsData : []);
-        console.log('Fetched deals count:', dealsData.length);
+        console.log('Fetched deals count:', Array.isArray(dealsData) ? dealsData.length : (dealsData as any)?.data?.length || 0);
       } catch (err: any) {
         setError(err.message || 'Unknown error');
         console.error('Error fetching deals:', err);
@@ -66,18 +74,56 @@ const ExploreScreen = ({ navigation }: any) => {
     return (
       <TouchableOpacity
         style={[
-          styles.card, 
+          styles.card,
+          isDarkMode ? styles.glassCardDark : styles.glassCard, 
           { 
-            backgroundColor: colors.card,
-            borderColor: isFeatured ? colors.primary : 'transparent',
-            borderWidth: isFeatured ? 2 : 0,
+            backgroundColor: isDarkMode 
+              ? 'rgba(255, 255, 255, 0.06)' 
+              : 'rgba(255, 255, 255, 0.15)',
+            borderColor: isFeatured 
+              ? colors.primary 
+              : isDarkMode 
+                ? 'rgba(255, 255, 255, 0.2)' 
+                : 'rgba(0, 0, 0, 0.05)',
+            borderWidth: isFeatured ? 2 : 1,
           }
         ]}
         onPress={() => navigation.navigate('DealDetail', { deal: item })}
-        activeOpacity={0.8}
+        activeOpacity={0.7}
       >
+        {/* Gradient overlays temporarily removed */}
+        
+        {/* Subtle glow effect for dark mode - much more transparent */}
+        {isDarkMode && (
+          <>
+            <View style={[
+              styles.innerGlow,
+              {
+                borderColor: 'rgba(255, 255, 255, 0.12)',
+              }
+            ]} />
+            <View style={[
+              styles.shimmerEffect,
+              {
+                backgroundColor: 'rgba(255, 255, 255, 0.015)',
+              }
+            ]} />
+          </>
+        )}
+        
         {isFeatured ? (
-          <View style={[styles.featuredBadge, { backgroundColor: colors.primary }]}>
+          <View style={[
+            styles.featuredBadge, 
+            { 
+              backgroundColor: isDarkMode 
+                ? colors.primary + 'E6' // More opaque in dark mode
+                : colors.primary + '95',
+              borderWidth: 1,
+              borderColor: isDarkMode
+                ? 'rgba(255, 255, 255, 0.3)'
+                : colors.primary + '40'
+            }
+          ]}>
             <Text style={[styles.featuredText, { color: colors.background }]}>Featured</Text>
           </View>
         ) : null}
@@ -143,9 +189,19 @@ const ExploreScreen = ({ navigation }: any) => {
       {/* Category Filter Bar */}
       <View style={[styles.topBar, { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border }]}> 
         {activeCategories.length === 0 ? (
-          <Text style={{ color: colors.text, fontStyle: 'italic', padding: 8 }}>
-            No categories selected. Go to Settings to enable categories.
-          </Text>
+          <View style={{ padding: 8, alignItems: 'center' }}>
+            <Text style={{ color: colors.text, fontStyle: 'italic', textAlign: 'center' }}>
+              No categories available. 
+            </Text>
+            <TouchableOpacity 
+              onPress={() => navigation.navigate('Settings')}
+              style={{ marginTop: 4 }}
+            >
+              <Text style={{ color: colors.primary, textDecorationLine: 'underline' }}>
+                Go to Settings to manage categories
+              </Text>
+            </TouchableOpacity>
+          </View>
         ) : (
           <FlatList
             data={[{ id: 'all', name: 'All', slug: null }, ...activeCategories]}
@@ -164,10 +220,10 @@ const ExploreScreen = ({ navigation }: any) => {
                     styles.categoryChip,
                     {
                       backgroundColor: isSelected 
-                        ? (cat.color_hex || colors.primary) 
+                        ? ((cat as any).color_hex || colors.primary) 
                         : colors.chip,
                       borderColor: isSelected 
-                        ? (cat.color_hex || colors.primary) 
+                        ? ((cat as any).color_hex || colors.primary) 
                         : colors.borderStrong,
                     },
                   ]}
@@ -182,7 +238,7 @@ const ExploreScreen = ({ navigation }: any) => {
                   >
                     {cat.name}
                   </Text>
-                  {cat.active_deal_count ? (
+                  {(cat as any).active_deal_count ? (
                     <Text
                       style={{
                         color: isSelected ? colors.background : colors.textPlaceholder,
@@ -190,7 +246,7 @@ const ExploreScreen = ({ navigation }: any) => {
                         marginLeft: 4,
                       }}
                     >
-                      ({cat.active_deal_count})
+                      ({(cat as any).active_deal_count})
                     </Text>
                   ) : null}
                 </TouchableOpacity>
@@ -318,6 +374,71 @@ const styles = StyleSheet.create({
     minHeight: 140,
     position: 'relative',
   },
+  glassCard: {
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 3,
+    overflow: 'hidden',
+  },
+  glassCardDark: {
+    shadowColor: '#fff',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 5,
+    overflow: 'hidden',
+  },
+  gradientTop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '40%',
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    opacity: 0.8,
+    zIndex: 0,
+  },
+  gradientMiddle: {
+    position: 'absolute',
+    top: '20%',
+    left: 0,
+    right: 0,
+    height: '60%',
+    borderRadius: 6,
+    opacity: 0.6,
+    zIndex: 0,
+  },
+
+  innerGlow: {
+    position: 'absolute',
+    top: 1,
+    left: 1,
+    right: 1,
+    bottom: 1,
+    borderRadius: 11,
+    borderWidth: 1,
+    zIndex: 0,
+  },
+  shimmerEffect: {
+    position: 'absolute',
+    top: -10,
+    left: '20%',
+    width: '60%',
+    height: '120%',
+    borderRadius: 12,
+    transform: [{ rotate: '25deg' }],
+    opacity: 0.5,
+    zIndex: 0,
+  },
   featuredBadge: {
     position: 'absolute',
     top: -8,
@@ -325,7 +446,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
-    zIndex: 1,
+    zIndex: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   featuredText: {
     fontSize: 9,
@@ -335,24 +464,28 @@ const styles = StyleSheet.create({
     fontSize: 28,
     marginBottom: 8,
     textAlign: 'center',
+    zIndex: 1,
   },
   itemBusiness: {
     fontSize: 13,
     fontWeight: 'bold',
     marginBottom: 4,
     textAlign: 'center',
+    zIndex: 1,
   },
   itemDescription: {
     fontSize: 11,
     marginBottom: 8,
     textAlign: 'center',
     lineHeight: 14,
+    zIndex: 1,
   },
   dealDetails: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 'auto',
+    zIndex: 1,
   },
   dealType: {
     fontSize: 10,
