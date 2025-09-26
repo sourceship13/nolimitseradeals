@@ -15,9 +15,13 @@ interface ToolbarProps {
 
 const Toolbar: React.FC<ToolbarProps> = ({ title = '', onBack, onSettings, showSettings }) => {
   const { isDarkMode } = useAuth();
+  
+  // Transparent background with 5% opacity
+  const transparentBg = isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+  
   return (
-    <SafeAreaView edges={["top"]} style={{ backgroundColor: isDarkMode ? '#111' : '#fff' }}>
-      <View style={[styles.toolbar, { backgroundColor: isDarkMode ? '#111' : '#fff', borderBottomColor: isDarkMode ? '#222' : '#eee' }]}>  
+    <SafeAreaView edges={["top"]} style={{ backgroundColor: transparentBg }}>
+      <View style={[styles.toolbar, { backgroundColor: transparentBg, borderBottomWidth: 0 }]}>  
         {onBack ? (
           <TouchableOpacity
             onPress={onBack}
