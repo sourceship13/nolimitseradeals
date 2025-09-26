@@ -90,16 +90,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const result = await ApiService.getCategories();
       
       if (result.success && result.data) {
+        console.log('📂 Fetched categories from API:', result.data.length);
         setAvailableCategories(result.data);
         
-        // Initialize all categories as selected by default if no saved preferences
+        // Handle category preferences more intelligently
         const savedCategories = await AsyncStorage.getItem('categories');
-        if (!savedCategories) {
+        if (savedCategories) {
+          // Merge existing preferences with new categories
+          const parsedCategories = JSON.parse(savedCategories);
+          const mergedCategories: Record<string, boolean> = {};
+          
+          result.data.forEach((cat: Category) => {
+            // Use saved preference if exists, otherwise default to true for new categories
+            mergedCategories[cat.slug] = parsedCategories[cat.slug] !== undefined 
+              ? parsedCategories[cat.slug] 
+              : true;
+          });
+          
+          setCategoriesState(mergedCategories);
+          // Re-save the merged categories to storage
+          await AsyncStorage.setItem('categories', JSON.stringify(mergedCategories));
+        } else {
+          // No saved preferences - set all to true
           const defaultCategories: Record<string, boolean> = {};
           result.data.forEach((cat: Category) => {
             defaultCategories[cat.slug] = true;
           });
           setCategoriesState(defaultCategories);
+          await AsyncStorage.setItem('categories', JSON.stringify(defaultCategories));
         }
         
         return result.data;
@@ -174,16 +192,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (savedCategories !== null) {
         const parsedCategories = JSON.parse(savedCategories);
         
-        // Validate saved categories against available categories
-        const validCategories: Record<string, boolean> = {};
-        availableCategories.forEach(cat => {
-          // Use the saved preference if it exists, otherwise default to true
-          validCategories[cat.slug] = parsedCategories[cat.slug] !== undefined 
-            ? parsedCategories[cat.slug] 
-            : true;
-        });
-        
-        setCategoriesState(validCategories);
+        if (availableCategories.length > 0) {
+          // Validate saved categories against available categories
+          const validCategories: Record<string, boolean> = {};
+          availableCategories.forEach(cat => {
+            // Use the saved preference if it exists, otherwise default to true
+            validCategories[cat.slug] = parsedCategories[cat.slug] !== undefined 
+              ? parsedCategories[cat.slug] 
+              : true;
+          });
+          setCategoriesState(validCategories);
+        } else {
+          // If availableCategories is empty, just restore the saved categories as-is
+          // This prevents clearing categories when availableCategories hasn't loaded yet
+          console.log('⚠️ Loading saved categories without validation (availableCategories empty)');
+          setCategoriesState(parsedCategories);
+        }
       } else if (availableCategories.length > 0) {
         // If no saved preferences but we have categories, set all to true
         const defaultCategories: Record<string, boolean> = {};
@@ -203,15 +227,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       appState.current.match(/inactive|background/) &&
       nextAppState === 'active'
     ) {
+      console.log('📱 App came to foreground, refreshing data...');
+      
+      // Always try to restore categories from storage first
+      restoreCategoriesFromStorage();
+      
       // App has come to the foreground
       if (user) {
         // Refresh user data when app comes back to foreground
         refreshUser();
         // Refresh categories when app comes back to foreground (only if user is authenticated)
         fetchCategories();
+      } else {
+        // Even without user, try to fetch categories for guest mode
+        fetchCategories();
       }
     }
     appState.current = nextAppState;
+  };
+
+  // Restore categories from storage without validation against availableCategories
+  const restoreCategoriesFromStorage = async () => {
+    try {
+      const savedCategories = await AsyncStorage.getItem('categories');
+      if (savedCategories !== null) {
+        const parsedCategories = JSON.parse(savedCategories);
+        console.log('🔄 Restoring categories from storage:', parsedCategories);
+        setCategoriesState(parsedCategories);
+        return parsedCategories;
+      }
+    } catch (error) {
+      console.error('Error restoring categories from storage:', error);
+    }
+    return null;
   };
 
   // Enhanced setDarkMode that persists preference
@@ -226,11 +274,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Enhanced setCategories that persists preference
   const setCategories = async (value: Record<string, boolean>) => {
+    console.log('💾 Saving categories to storage:', value);
     setCategoriesState(value);
     try {
       await AsyncStorage.setItem('categories', JSON.stringify(value));
+      console.log('✅ Categories saved successfully');
     } catch (error) {
-      console.error('Error saving category preferences:', error);
+      console.error('❌ Error saving categories:', error);
     }
   };
 
