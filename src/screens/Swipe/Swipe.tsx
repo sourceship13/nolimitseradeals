@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, PanGestureHandler } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, } from 'react-native';
 import { useAuth, getColors } from '../../libs/hooks/useAuth';
 import Toolbar from '../../components/Toolbar';
 import ApiService from '../../services/api.service';
