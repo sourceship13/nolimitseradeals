@@ -232,6 +232,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Always try to restore categories from storage first
       restoreCategoriesFromStorage();
       
+      // Proactively refresh tokens when app comes to foreground (prevents 401 errors)
+      AuthService.proactiveTokenRefresh();
+      
       // App has come to the foreground
       if (user) {
         // Refresh user data when app comes back to foreground

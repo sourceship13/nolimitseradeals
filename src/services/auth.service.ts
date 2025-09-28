@@ -130,7 +130,7 @@ class AuthService {
     }
   }
 
-  // Public method for making authenticated requests
+  // Public method for making authenticated requests with automatic token refresh
   public async makeAuthenticatedRequest(
     url: string,
     options: RequestInit = {}
@@ -138,10 +138,44 @@ class AuthService {
     console.log(`🔐 AuthService.makeAuthenticatedRequest: Called with URL: ${url}`);
     console.log(`🔐 AuthService.makeAuthenticatedRequest: Options received:`, options);
     
-    const result = await this.fetchWithConfig(url, options);
-    
-    console.log(`🔐 AuthService.makeAuthenticatedRequest: Returning response with status: ${result.status}`);
-    return result;
+    try {
+      // First attempt with current token
+      const response = await this.fetchWithConfig(url, options);
+      
+      // If not 401, return the response
+      if (response.status !== 401) {
+        console.log(`🔐 AuthService.makeAuthenticatedRequest: Success with status: ${response.status}`);
+        return response;
+      }
+
+      console.log(`🔄 AuthService.makeAuthenticatedRequest: Got 401, attempting token refresh...`);
+      
+      // If 401, try to refresh token
+      const newAccessToken = await this.refreshAccessToken();
+      console.log(`✅ AuthService.makeAuthenticatedRequest: Token refreshed successfully`);
+      
+      // Retry with new token
+      const retryResponse = await fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${newAccessToken}`,
+        },
+      });
+
+      console.log(`🔐 AuthService.makeAuthenticatedRequest: Retry response status: ${retryResponse.status}`);
+      return retryResponse;
+    } catch (error) {
+      console.error(`❌ AuthService.makeAuthenticatedRequest: Error:`, error);
+      
+      // If refresh failed, clear tokens and throw
+      if (error instanceof Error && (error.message.includes('refresh') || error.message.includes('No refresh token'))) {
+        console.log(`🧹 AuthService.makeAuthenticatedRequest: Clearing tokens due to refresh failure`);
+        await this.clearTokens();
+      }
+      throw error;
+    }
   }
 
   // Make authenticated request with automatic token refresh
@@ -183,19 +217,25 @@ class AuthService {
 
   // Refresh access token
   private async refreshAccessToken(): Promise<string> {
+    console.log(`🔄 AuthService.refreshAccessToken: Starting token refresh process...`);
+    
     // Prevent multiple simultaneous refresh calls
     if (this.refreshPromise) {
+      console.log(`⏳ AuthService.refreshAccessToken: Refresh already in progress, waiting...`);
       return this.refreshPromise;
     }
 
     this.refreshPromise = (async () => {
       try {
+        console.log(`📱 AuthService.refreshAccessToken: Getting refresh token from storage...`);
         const refreshToken = await this.getRefreshToken();
         
         if (!refreshToken) {
+          console.error(`❌ AuthService.refreshAccessToken: No refresh token found in storage`);
           throw new Error('No refresh token available');
         }
 
+        console.log(`📤 AuthService.refreshAccessToken: Sending refresh request to ${API_BASE_URL}/auth/refresh`);
         const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
           method: 'POST',
           headers: {
@@ -204,25 +244,64 @@ class AuthService {
           body: JSON.stringify({ refreshToken }),
         });
 
+        console.log(`📥 AuthService.refreshAccessToken: Refresh response status: ${response.status}`);
+
         if (!response.ok) {
-          throw new Error('Token refresh failed');
+          const errorData = await response.text();
+          console.error(`❌ AuthService.refreshAccessToken: Refresh failed with status ${response.status}: ${errorData}`);
+          throw new Error(`Token refresh failed: ${response.status} - ${errorData}`);
         }
 
         const data = await response.json();
+        console.log(`📦 AuthService.refreshAccessToken: Refresh response data keys:`, Object.keys(data));
+        
         const { accessToken, refreshToken: newRefreshToken } = data;
 
+        if (!accessToken) {
+          console.error(`❌ AuthService.refreshAccessToken: No access token in refresh response`);
+          throw new Error('Invalid refresh response: missing access token');
+        }
+
+        console.log(`💾 AuthService.refreshAccessToken: Storing new tokens...`);
         await this.storeTokens({
           accessToken,
-          refreshToken: newRefreshToken,
+          refreshToken: newRefreshToken || refreshToken, // Use new refresh token if provided, otherwise keep current one
         });
 
+        console.log(`✅ AuthService.refreshAccessToken: Token refresh completed successfully`);
         return accessToken;
+      } catch (error) {
+        console.error(`💥 AuthService.refreshAccessToken: Token refresh failed:`, error);
+        throw error;
       } finally {
         this.refreshPromise = null;
       }
     })();
 
     return this.refreshPromise;
+  }
+
+  // Public method to proactively refresh tokens (for app state changes, etc.)
+  public async proactiveTokenRefresh(): Promise<void> {
+    try {
+      console.log(`🔄 AuthService.proactiveTokenRefresh: Starting proactive token refresh...`);
+      
+      // Check if we have tokens
+      const accessToken = await this.getAccessToken();
+      const refreshToken = await this.getRefreshToken();
+      
+      if (!accessToken || !refreshToken) {
+        console.log(`⚠️ AuthService.proactiveTokenRefresh: No tokens found, skipping refresh`);
+        return;
+      }
+      
+      // Attempt to refresh
+      await this.refreshAccessToken();
+      console.log(`✅ AuthService.proactiveTokenRefresh: Proactive refresh completed successfully`);
+    } catch (error) {
+      console.error(`❌ AuthService.proactiveTokenRefresh: Proactive refresh failed (this is expected if refresh token is also expired):`, error);
+      // Don't throw - this is a background operation
+    }
   }
 
   async verifyCode(identifier: string, code: string) {
