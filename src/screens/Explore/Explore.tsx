@@ -59,9 +59,13 @@ const ExploreScreen = ({ navigation }: any) => {
       })
     : deals;
 
-  // Group featured deals (priority_score > 0) first
+  // Sort deals: Premium first, then featured deals (priority_score > 0), then regular deals
   const sortedDeals = [...filteredDeals].sort((a, b) => {
-    // Featured deals first (higher priority score = higher position)
+    // Premium deals first (is_premium = true)
+    if (a.is_premium_business !== b.is_premium_business) {
+      return b.is_premium_business ? 1 : -1;
+    }
+    // Then featured deals (higher priority score = higher position)
     if (a.priority_score !== b.priority_score) {
       return (b.priority_score || 0) - (a.priority_score || 0);
     }
@@ -70,6 +74,7 @@ const ExploreScreen = ({ navigation }: any) => {
 
   const renderDealCard = ({ item }: { item: any }) => {
     const isFeatured = item.priority_score && item.priority_score > 0;
+    const isPremium = item.is_premium === true;
     
     return (
       <TouchableOpacity
@@ -80,12 +85,14 @@ const ExploreScreen = ({ navigation }: any) => {
             backgroundColor: isDarkMode 
               ? 'rgba(255, 255, 255, 0.06)' 
               : 'rgba(255, 255, 255, 0.15)',
-            borderColor: isFeatured 
-              ? colors.primary 
-              : isDarkMode 
-                ? 'rgba(255, 255, 255, 0.2)' 
-                : 'rgba(0, 0, 0, 0.05)',
-            borderWidth: isFeatured ? 2 : 1,
+            borderColor: isPremium
+              ? '#FF8C00' // Orange border for premium deals
+              : isFeatured 
+                ? colors.primary 
+                : isDarkMode 
+                  ? 'rgba(255, 255, 255, 0.2)' 
+                  : 'rgba(0, 0, 0, 0.05)',
+            borderWidth: isPremium ? 3 : (isFeatured ? 2 : 1),
           }
         ]}
         onPress={() => navigation.navigate('DealDetail', { deal: item })}
@@ -111,7 +118,20 @@ const ExploreScreen = ({ navigation }: any) => {
           </>
         )}
         
-        {isFeatured ? (
+        {isPremium ? (
+          <View style={[
+            styles.premiumBadge, 
+            { 
+              backgroundColor: '#FF8C00',
+              borderWidth: 1,
+              borderColor: isDarkMode
+                ? 'rgba(255, 255, 255, 0.3)'
+                : '#FF7700'
+            }
+          ]}>
+            <Text style={[styles.premiumText, { color: '#FFFFFF' }]}>PREMIUM</Text>
+          </View>
+        ) : isFeatured ? (
           <View style={[
             styles.featuredBadge, 
             { 
@@ -459,6 +479,28 @@ const styles = StyleSheet.create({
   featuredText: {
     fontSize: 9,
     fontWeight: 'bold',
+  },
+  premiumBadge: {
+    position: 'absolute',
+    top: -8,
+    right: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    zIndex: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  premiumText: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
   },
   itemImage: {
     fontSize: 28,
