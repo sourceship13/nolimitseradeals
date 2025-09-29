@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, FlatList, ImageBackground, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, FlatList, ImageBackground, Dimensions, Platform } from 'react-native';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useAuth, getColors } from '../../libs/hooks/useAuth';
 import Toolbar from '../../components/Toolbar';
 import ApiService from '../../services/api.service';
+
 
 
 const PLACEHOLDER_DEAL = {
@@ -87,6 +89,8 @@ const SwipeScreen = ({ navigation }: any) => {
           <Text style={[styles.exploreBtnText, { color: colors.text }]}>Explore</Text>
         </TouchableOpacity>
       </View>
+      
+
 
       {/* 3. Full-screen content area */}
       <View style={styles.contentContainer}>
@@ -128,9 +132,22 @@ const SwipeScreen = ({ navigation }: any) => {
               
               {/* Card content overlay on image */}
               <View style={styles.cardOverlay}>
-                <View style={styles.cardContent}>
+                <View style={{ ...styles.cardContent, justifyContent: 'center' }}>
                   {/* <Text style={styles.dealImage}>{currentDeal.image ? currentDeal.image : '🛍️'}</Text> */}
-                  <Text style={styles.dealBusiness}>{currentDeal.business || currentDeal.business_name || ''}</Text>
+                  <View style={styles.businessRow}>
+                    <Text style={styles.dealBusiness}>{currentDeal.business || currentDeal.business_name || ''}</Text>
+                    {
+                      currentDeal.is_premium_business ? (
+                        <MaterialIcons 
+                      name={'verified'}
+                      size={20}
+                      color="#0095f6"
+                      style={styles.businessIcon}
+                    />)
+                    : null
+                    }
+                    
+                  </View>
                   <Text style={styles.dealOffer}>{currentDeal.description || currentDeal.descrption || ''}</Text>
                   <Text style={styles.dealLocation}>{currentDeal.category_name || ''}</Text>
                   <Text style={styles.dealExpires}>{currentDeal.expires || currentDeal.expiry || ''}</Text>
@@ -187,6 +204,7 @@ const styles = StyleSheet.create({
   topBarTitle: {
     fontSize: 18,
     fontWeight: 'bold',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   exploreBtn: {
     paddingHorizontal: 16,
@@ -196,6 +214,7 @@ const styles = StyleSheet.create({
   exploreBtnText: {
     fontSize: 16,
     fontWeight: 'bold',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   contentContainer: {
     flex: 1,
@@ -231,42 +250,59 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
     zIndex: 2,
+    height: screenHeight * 0.11, // 1/8 of screen height
   },
   cardContent: {
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    padding: 24,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    padding: 10,
     alignItems: 'flex-start',
     width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    textAlign: 'center',
+  },
+  businessRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+
+  },
+  businessIcon: {
+    marginTop:8
   },
   dealImage: {
     fontSize: 64,
     marginBottom: 12,
   },
   dealBusiness: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 8,
-    textAlign: 'center',
-    fontFamily: 'Inter',
+    marginTop:8,
+    marginRight:8,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   dealOffer: {
     fontSize: 16,
     color: '#fff',
-    marginBottom: 8,
     textAlign: 'center',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    marginVertical:4,
   },
   dealLocation: {
     fontSize: 14,
     color: '#fff',
-    marginBottom: 4,
+    marginBottom: 2,
     textAlign: 'center',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    marginVertical:2,
   },
   dealExpires: {
     fontSize: 12,
     color: '#fff',
     marginBottom: 8,
     textAlign: 'center',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   actionContainer: {
     height: screenHeight * 0.1, // 1/10 of screen height
