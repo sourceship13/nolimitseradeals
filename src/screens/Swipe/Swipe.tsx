@@ -220,6 +220,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginBottom: 8,
     textAlign: 'center',
+    fontFamily: 'Inter',
   },
   dealOffer: {
     fontSize: 16,
