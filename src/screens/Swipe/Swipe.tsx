@@ -140,7 +140,7 @@ const SwipeScreen = ({ navigation }: any) => {
                       currentDeal.is_premium_business ? (
                         <MaterialIcons 
                       name={'verified'}
-                      size={20}
+                      size={18}
                       color="#0095f6"
                       style={styles.businessIcon}
                     />)
