@@ -54,6 +54,17 @@ const SwipeScreen = ({ navigation }: any) => {
     }
   };
 
+  const handlePreviousDeal = () => {
+    setCurrentDealIndex((prev) => {
+      if (deals.length === 0) return 0;
+      return prev === 0 ? deals.length - 1 : prev - 1;
+    });
+  };
+
+  const handleNextDeal = () => {
+    setCurrentDealIndex((prev) => deals.length > 0 ? (prev + 1) % deals.length : 0);
+  };
+
   return (
     <View style={styles.screenContainer}>
       {/* 1. Toolbar at top */}
@@ -129,11 +140,24 @@ const SwipeScreen = ({ navigation }: any) => {
             
             {/* 4. Action buttons at bottom - 1/10 of screen height */}
             <View style={styles.actionContainer}>
+              {/* Previous deal button */}
+              <TouchableOpacity style={[styles.navBtn, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]} onPress={handlePreviousDeal}>
+                <Text style={{ color: colors.dealArrows, fontSize: 20 }}>←</Text>
+              </TouchableOpacity>
+              
+              {/* Dislike button */}
               <TouchableOpacity style={[styles.actionBtn, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]} onPress={() => handleSwipe('left')}>
                 <Text style={{ color: colors.error, fontSize: 24 }}>✗</Text>
               </TouchableOpacity>
+              
+              {/* Like button */}
               <TouchableOpacity style={[styles.actionBtn, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]} onPress={() => handleSwipe('right')}>
                 <Text style={{ color: colors.primary, fontSize: 24 }}>♥</Text>
+              </TouchableOpacity>
+              
+              {/* Next deal button */}
+              <TouchableOpacity style={[styles.navBtn, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]} onPress={handleNextDeal}>
+                <Text style={{ color: colors.dealArrows, fontSize: 20 }}>→</Text>
               </TouchableOpacity>
             </View>
           </>
@@ -193,7 +217,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   imageOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   cardOverlay: {
@@ -252,7 +280,7 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     padding: 20,
     alignItems: 'center',
-    marginHorizontal: 30,
+    marginHorizontal: 15,
     minWidth: 64,
     shadowColor: '#000',
     shadowOffset: {
@@ -262,6 +290,21 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
+  },
+  navBtn: {
+    borderRadius: 25,
+    padding: 15,
+    alignItems: 'center',
+    marginHorizontal: 10,
+    minWidth: 50,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
 });
 
