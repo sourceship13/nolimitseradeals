@@ -126,10 +126,10 @@ const ExploreScreen = ({ navigation }: any) => {
               borderWidth: 1,
               borderColor: isDarkMode
                 ? 'rgba(255, 255, 255, 0.3)'
-                : '#FF7700'
+                : '#FF7700', 
             }
           ]}>
-            <Text style={[styles.premiumText, { color: '#FFFFFF' }]}>PREMIUM</Text>
+            <Text style={[styles.premiumText, { color: '#FFFFFF', fontSize:24 }]}>PREMIUM</Text>
           </View>
         ) : isFeatured ? (
           <View style={[
