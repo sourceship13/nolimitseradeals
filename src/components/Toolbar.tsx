@@ -24,19 +24,23 @@ const Toolbar: React.FC<ToolbarProps> = ({ title = '', onBack, onSettings, showS
   return (
     <SafeAreaView edges={["top"]} style={{ backgroundColor: transparentBg }}>
       <View style={[styles.toolbar, { backgroundColor: transparentBg, borderBottomWidth: 0 }]}>  
-        {onBack ? (
-          <TouchableOpacity
-            onPress={onBack}
-            style={styles.backBtn}
-            hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="chevron-back" size={32} color={isDarkMode ? '#fff' : '#222'} />
-          </TouchableOpacity>
-        ) : (
-          <View style={{ width: 40 }} />
-        )}
+        <View style={styles.leftContainer}>
+          {onBack ? (
+            <TouchableOpacity
+              onPress={onBack}
+              style={styles.backBtn}
+              hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="chevron-back" size={32} color={isDarkMode ? '#fff' : '#222'} />
+            </TouchableOpacity>
+          ) : (
+            <View style={{ width: 48 }} />
+          )}
+        </View>
+        
         <Text style={[styles.title, { color: isDarkMode ? '#fff' : '#111' }]}>{title}</Text>
+        
         <View style={styles.rightButtons}>
           {showRedemptions ? (
             <TouchableOpacity
@@ -72,7 +76,6 @@ const styles = StyleSheet.create({
     height: 56,
     borderBottomWidth: 1,
     paddingHorizontal: 8,
-    justifyContent: 'space-between',
   },
   backBtn: {
     width: 48,
@@ -89,8 +92,10 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   rightButtons: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
   },
   redemptionsBtn: {
     width: 48,
@@ -100,11 +105,19 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     marginRight: 4,
   },
+  leftContainer: {
+    flex: 1,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+  },
   title: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
     fontSize: 20,
     fontWeight: 'bold',
-    flex: 1,
-    textAlign: 'center',
+    zIndex: 1,
   },
 });
 
