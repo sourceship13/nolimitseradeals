@@ -74,6 +74,8 @@ const SwipeScreen = ({ navigation }: any) => {
         title="DEALZ"
         showSettings={true}
         onSettings={() => navigation.navigate('Settings')}
+        showRedemptions={true}
+        onRedemptions={() => navigation.navigate('SavedDeals')}
       />
       
       {/* 2. TopBar with Recent Deals and Explore button */}

@@ -10,10 +10,12 @@ interface ToolbarProps {
   onBack?: () => void;
   onSettings?: () => void;
   showSettings?: boolean;
+  onRedemptions?: () => void;
+  showRedemptions?: boolean;
 }
 
 
-const Toolbar: React.FC<ToolbarProps> = ({ title = '', onBack, onSettings, showSettings }) => {
+const Toolbar: React.FC<ToolbarProps> = ({ title = '', onBack, onSettings, showSettings, onRedemptions, showRedemptions }) => {
   const { isDarkMode } = useAuth();
   
   // Transparent background with 5% opacity
@@ -35,18 +37,29 @@ const Toolbar: React.FC<ToolbarProps> = ({ title = '', onBack, onSettings, showS
           <View style={{ width: 40 }} />
         )}
         <Text style={[styles.title, { color: isDarkMode ? '#fff' : '#111' }]}>{title}</Text>
-        {showSettings ? (
-          <TouchableOpacity
-            onPress={onSettings}
-            style={styles.settingsBtn}
-            hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="settings-sharp" size={28} color={isDarkMode ? '#fff' : '#222'} />
-          </TouchableOpacity>
-        ) : (
-          <View style={{ width: 40 }} />
-        )}
+        <View style={styles.rightButtons}>
+          {showRedemptions ? (
+            <TouchableOpacity
+              onPress={onRedemptions}
+              style={styles.redemptionsBtn}
+              hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="bookmark" size={24} color={isDarkMode ? '#fff' : '#222'} />
+            </TouchableOpacity>
+          ) : null}
+          {showSettings ? (
+            <TouchableOpacity
+              onPress={onSettings}
+              style={styles.settingsBtn}
+              hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="settings-sharp" size={28} color={isDarkMode ? '#fff' : '#222'} />
+            </TouchableOpacity>
+          ) : null}
+          {!showSettings && !showRedemptions ? <View style={{ width: 40 }} /> : null}
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -74,6 +87,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 24,
+  },
+  rightButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  redemptionsBtn: {
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 24,
+    marginRight: 4,
   },
   title: {
     fontSize: 20,

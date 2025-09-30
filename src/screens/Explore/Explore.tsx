@@ -204,6 +204,8 @@ const ExploreScreen = ({ navigation }: any) => {
         onBack={() => navigation.goBack()}
         showSettings={true}
         onSettings={() => navigation.navigate('Settings')}
+        showRedemptions={true}
+        onRedemptions={() => navigation.navigate('SavedDeals')}
       />
       
       {/* Category Filter Bar */}
