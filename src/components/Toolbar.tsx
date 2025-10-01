@@ -29,8 +29,10 @@ const Toolbar: React.FC<ToolbarProps> = ({ title = '', onBack, onSettings, showS
             <TouchableOpacity
               onPress={onBack}
               style={styles.backBtn}
-              hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
-              activeOpacity={0.7}
+              hitSlop={{ top: 32, bottom: 32, left: 32, right: 32 }}
+              activeOpacity={0.6}
+              delayPressIn={0}
+              delayPressOut={50}
             >
               <Ionicons name="chevron-back" size={32} color={isDarkMode ? '#fff' : '#222'} />
             </TouchableOpacity>
@@ -39,15 +41,19 @@ const Toolbar: React.FC<ToolbarProps> = ({ title = '', onBack, onSettings, showS
           )}
         </View>
         
-        <Text style={[styles.title, { color: isDarkMode ? '#fff' : '#111' }]}>{title}</Text>
+        <View style={styles.titleContainer} pointerEvents="none">
+          <Text style={[styles.title, { color: isDarkMode ? '#fff' : '#111' }]}>{title}</Text>
+        </View>
         
         <View style={styles.rightButtons}>
           {showRedemptions ? (
             <TouchableOpacity
               onPress={onRedemptions}
               style={styles.redemptionsBtn}
-              hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
-              activeOpacity={0.7}
+              hitSlop={{ top: 32, bottom: 32, left: 32, right: 32 }}
+              activeOpacity={0.6}
+              delayPressIn={0}
+              delayPressOut={50}
             >
               <Ionicons name="bookmark" size={24} color={isDarkMode ? '#fff' : '#222'} />
             </TouchableOpacity>
@@ -56,8 +62,10 @@ const Toolbar: React.FC<ToolbarProps> = ({ title = '', onBack, onSettings, showS
             <TouchableOpacity
               onPress={onSettings}
               style={styles.settingsBtn}
-              hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
-              activeOpacity={0.7}
+              hitSlop={{ top: 32, bottom: 32, left: 32, right: 32 }}
+              activeOpacity={0.6}
+              delayPressIn={0}
+              delayPressOut={50}
             >
               <Ionicons name="settings-sharp" size={28} color={isDarkMode ? '#fff' : '#222'} />
             </TouchableOpacity>
@@ -78,18 +86,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   backBtn: {
-    width: 48,
-    height: 48,
+    width: 56,
+    height: 56,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 24,
+    borderRadius: 28,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    zIndex: 10,
   },
   settingsBtn: {
-    width: 48,
-    height: 48,
+    width: 56,
+    height: 56,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 24,
+    borderRadius: 28,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    zIndex: 10,
   },
   rightButtons: {
     flex: 1,
@@ -98,26 +110,32 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   redemptionsBtn: {
-    width: 48,
-    height: 48,
+    width: 56,
+    height: 56,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 24,
+    borderRadius: 28,
     marginRight: 4,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    zIndex: 10,
   },
   leftContainer: {
     flex: 1,
     alignItems: 'flex-start',
     justifyContent: 'center',
   },
-  title: {
+  titleContainer: {
     position: 'absolute',
     left: 0,
     right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 0,
+  },
+  title: {
     textAlign: 'center',
     fontSize: 20,
     fontWeight: 'bold',
-    zIndex: 1,
   },
 });
 
