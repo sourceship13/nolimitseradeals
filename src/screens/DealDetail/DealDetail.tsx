@@ -17,12 +17,88 @@ import Toolbar from '../../components/Toolbar';
 import ApiService from '../../services/api.service';
 import DealShareButton from '../../components/DealShareButton';
 
+// Type definitions for better type safety
+interface DealDetailProps {
+  navigation?: any;
+  route?: {
+    params?: {
+      deal?: any;
+    };
+  };
+}
+
+// Error boundary component for catching render errors
+class DealDetailErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error?: Error }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: any) {
+    console.error('DealDetail Error Boundary caught an error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+          <Text style={{ fontSize: 18, marginBottom: 10 }}>Something went wrong</Text>
+          <Text style={{ fontSize: 14, color: '#666', textAlign: 'center' }}>
+            {this.state.error?.message || 'Unknown error occurred'}
+          </Text>
+        </View>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 const { width: screenWidth } = Dimensions.get('window');
 
-const DealDetailScreen = ({ navigation, route }: any) => {
-  const { deal: initialDeal } = route.params || {};
+const DealDetailScreen: React.FC<DealDetailProps> = (props) => {
+  // Bulletproof parameter extraction 
+  const safeProps = props || {};
+  const navigation = safeProps.navigation || null;
+  const route = safeProps.route || null;
+  
+  let initialDeal = null;
+  
+  // Super defensive parameter extraction
+  if (route && typeof route === 'object' && 'params' in route) {
+    const params = route.params;
+    if (params && typeof params === 'object' && 'deal' in params) {
+      initialDeal = params.deal;
+    }
+  }
+  
+  console.log('DealDetailScreen debug:', { 
+    propsReceived: !!props,
+    navigationExists: !!navigation, 
+    routeExists: !!route,
+    paramsExists: !!(route && route.params),
+    dealExists: !!initialDeal,
+    dealId: initialDeal?.id || 'no-id'
+  });
   const { isDarkMode, user } = useAuth();
   const colors = getColors(isDarkMode);
+
+  // Debug logging to help identify navigation issues
+  useEffect(() => {
+    console.log('DealDetail mounted with:', {
+      hasRoute: !!route,
+      hasParams: !!route?.params,
+      hasDeal: !!initialDeal,
+      dealId: initialDeal?.id
+    });
+  }, [route, initialDeal]);
   
   const [deal, setDeal] = useState(initialDeal || null);
   const [isSaved, setIsSaved] = useState(false);
@@ -37,7 +113,8 @@ const DealDetailScreen = ({ navigation, route }: any) => {
 
   const checkIfSaved = async () => {
     try {
-      const savedDeals = await ApiService.getSavedDeals();
+      const response = await ApiService.getSavedDeals();
+      const savedDeals = response.data || [];
       const isAlreadySaved = savedDeals.some((savedDeal: any) => savedDeal.id === deal?.id);
       setIsSaved(isAlreadySaved);
     } catch (error) {
@@ -46,20 +123,30 @@ const DealDetailScreen = ({ navigation, route }: any) => {
   };
 
   const handleSave = async () => {
-    if (!deal?.id) return;
+    if (!deal?.id || !user?.id) {
+      Alert.alert('Error', 'You must be logged in to save deals');
+      return;
+    }
     
     setLoading(true);
     try {
       if (isSaved) {
-        await ApiService.unsaveDeal(deal.id);
+        // Unsave the deal
+        await ApiService.makeRequest(`/api/users/deals/save/${deal.id}`, {
+          method: 'DELETE'
+        });
         setIsSaved(false);
         Alert.alert('Success', 'Deal removed from saved deals');
       } else {
-        await ApiService.saveDeal(deal.id);
+        // Save the deal
+        await ApiService.makeRequest(`/api/users/deals/save/${deal.id}`, {
+          method: 'POST'
+        });
         setIsSaved(true);
         Alert.alert('Success', 'Deal saved successfully!');
       }
     } catch (error: any) {
+      console.error('Error saving/unsaving deal:', error);
       Alert.alert('Error', error.message || 'Something went wrong');
     } finally {
       setLoading(false);
@@ -77,16 +164,33 @@ const DealDetailScreen = ({ navigation, route }: any) => {
     );
   };
 
+  // Handle missing navigation or deal
+  if (!navigation) {
+    console.error('DealDetailScreen: navigation is undefined');
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={styles.centerContent}>
+          <Text style={[styles.errorText, { color: colors.text }]}>Navigation error - props missing</Text>
+          <Text style={[styles.errorText, { color: colors.textSecondary, fontSize: 12, marginTop: 8 }]}>
+            Check console for details
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   if (!deal) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <Toolbar
           title="Deal Details"
-          showBack={true}
           onBack={() => navigation.goBack()}
         />
         <View style={styles.centerContent}>
           <Text style={[styles.errorText, { color: colors.text }]}>No deal found</Text>
+          <Text style={[styles.errorText, { color: colors.textSecondary, fontSize: 14, marginTop: 8 }]}>
+            Please navigate to this screen from the deals list
+          </Text>
         </View>
       </View>
     );
@@ -106,7 +210,6 @@ const DealDetailScreen = ({ navigation, route }: any) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Toolbar
         title="Deal Details"
-        showBack={true}
         onBack={() => navigation.goBack()}
       />
       
@@ -186,7 +289,7 @@ const DealDetailScreen = ({ navigation, route }: any) => {
           <View style={styles.actionButtons}>
             <TouchableOpacity
               style={[styles.saveButton, { 
-                backgroundColor: isSaved ? colors.success : colors.border,
+                backgroundColor: isSaved ? colors.secondary : colors.border,
                 opacity: loading ? 0.7 : 1
               }]}
               onPress={handleSave}
@@ -344,4 +447,11 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DealDetailScreen;
+// Wrap with error boundary for additional safety
+const DealDetailWithErrorBoundary: React.FC<DealDetailProps> = (props) => (
+  <DealDetailErrorBoundary>
+    <DealDetailScreen {...props} />
+  </DealDetailErrorBoundary>
+);
+
+export default DealDetailWithErrorBoundary;

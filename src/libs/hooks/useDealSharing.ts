@@ -6,12 +6,19 @@ import { useAuth } from './useAuth';
 interface Contact {
   recordID: string;
   displayName: string;
-  givenName?: string;
-  familyName?: string;
+  givenName: string | null;
+  familyName: string;
+  middleName: string;
+  company: string | null;
   phoneNumbers: Array<{
     label: string;
     number: string;
   }>;
+  emailAddresses: Array<{
+    label: string;
+    email: string;
+  }>;
+  [key: string]: any; // For additional properties from react-native-contacts
 }
 
 interface ShareProgress {
@@ -145,7 +152,12 @@ export const useDealSharing = (dealId?: string, requiredShares: number = 3) => {
         return originalContact || {
           recordID: sc.contactId,
           displayName: sc.name,
-          phoneNumbers: [{ label: 'mobile', number: sc.phoneNumber }]
+          givenName: null,
+          familyName: '',
+          middleName: '',
+          company: null,
+          phoneNumbers: [{ label: 'mobile', number: sc.phoneNumber }],
+          emailAddresses: []
         };
       });
       

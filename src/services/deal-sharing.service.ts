@@ -6,12 +6,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 interface Contact {
   recordID: string;
   displayName: string;
-  givenName?: string;
-  familyName?: string;
+  givenName: string | null;
+  familyName: string;
+  middleName: string;
+  company: string | null;
   phoneNumbers: Array<{
     label: string;
     number: string;
   }>;
+  emailAddresses: Array<{
+    label: string;
+    email: string;
+  }>;
+  [key: string]: any; // For additional properties from react-native-contacts
 }
 
 interface ShareProgress {
@@ -107,11 +114,25 @@ class DealSharingService {
       console.log(`📞 Filtered to ${contactsWithPhones.length} contacts with phone numbers`);
       
       if (contactsWithPhones.length > 0) {
-        console.log('📞 Sample contact:', JSON.stringify(contactsWithPhones[0], null, 2));
+        console.log('📞 Sample contact raw data:', JSON.stringify(contactsWithPhones[0], null, 2));
       }
       
-      // Return the real contacts, NOT mock data
-      return contactsWithPhones;
+      // Transform contacts to ensure displayName is available
+      const transformedContacts = contactsWithPhones.map(contact => ({
+        ...contact,
+        displayName: contact.displayName || 
+                    `${contact.givenName || ''} ${contact.familyName || ''}`.trim() ||
+                    contact.givenName ||
+                    contact.familyName ||
+                    'Unknown Contact'
+      }));
+      
+      if (transformedContacts.length > 0) {
+        console.log('📞 Sample transformed contact:', JSON.stringify(transformedContacts[0], null, 2));
+      }
+      
+      // Return the transformed contacts
+      return transformedContacts;
       
     } catch (error) {
       console.error('❌ Error loading contacts:', error);
