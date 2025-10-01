@@ -166,7 +166,7 @@ const DealShareButton: React.FC<DealShareButtonProps> = ({
           </View>
 
           {/* DEBUG DISPLAY - ADD THIS SECTION */}
-          <View style={styles.debugContainer}>
+          {/* <View style={styles.debugContainer}>
             <Text style={styles.debugTitle}>🐛 Debug Info:</Text>
             <Text style={styles.debugText}>Contacts loaded: {contacts.length}</Text>
             <Text style={styles.debugText}>Permission status: {hasContactsPermission?.toString() || 'null'}</Text>
@@ -177,7 +177,7 @@ const DealShareButton: React.FC<DealShareButtonProps> = ({
                 First contact: {JSON.stringify(contacts[0], null, 2).substring(0, 100)}...
               </Text>
             )}
-          </View>
+          </View> */}
 
           {/* Deal Info */}
           <View style={styles.dealInfo}>
