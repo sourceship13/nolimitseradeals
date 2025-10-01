@@ -1,6 +1,7 @@
 // src/services/api.service.ts
+import { Platform } from 'react-native';
 import AuthService from './auth.service';
-import ApiConfig from '../libs/utils/api.utils';
+import ApiConfig, { apiConfig } from '../libs/utils/api.utils';
 
 interface ApiResponse<T = any> {
   data?: T;
@@ -42,8 +43,22 @@ class ApiService {
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
     
-    console.log(`🔍 API Request: ${endpoint}`);
+    // Enhanced debug logging for physical device troubleshooting
+    console.log('=================================');
+    console.log('� API SERVICE DEBUG');
+    console.log('=================================');
+    console.log(`📍 Endpoint: ${endpoint}`);
+    console.log(`🌐 Full URL: ${url}`);
     console.log(`🔒 Requires Auth: ${this.requiresAuth(endpoint)}`);
+    console.log(`📱 Platform: ${Platform.OS}`);
+    console.log(`🔧 Dev Mode: ${__DEV__ ? 'YES' : 'NO'}`);
+    console.log(`🏠 Base URL: ${this.baseURL}`);
+    console.log(`📋 API Config:`, {
+      environment: apiConfig.environment,
+      isLocal: apiConfig.isLocal,
+      baseURL: apiConfig.baseURL
+    });
+    console.log('=================================');
     
     try {
       let response: Response;
@@ -91,6 +106,22 @@ class ApiService {
       return data;
     } catch (error) {
       console.error(`💥 API Error (${endpoint}):`, error);
+      
+      // Enhanced error reporting for network issues
+      if (error instanceof TypeError && error.message.includes('Network request failed')) {
+        console.error(`🚨 Network Error Details:`);
+        console.error(`📡 Trying to connect to: ${url}`);
+        console.error(`🌐 Current API Config:`, {
+          environment: apiConfig.environment,
+          baseURL: this.baseURL,
+          isLocal: apiConfig.isLocal
+        });
+        console.error(`💡 Suggestion: Check if device can reach the server`);
+        
+        // Throw a more user-friendly error
+        throw new Error(`Unable to connect to server. Please check your internet connection and try again.`);
+      }
+      
       throw error;
     }
   }

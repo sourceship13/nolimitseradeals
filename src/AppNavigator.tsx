@@ -11,6 +11,9 @@ import SavedDealsScreen from './screens/SavedDeals/SavedDeals';
 import SettingsScreen from './screens/Settings/Settings';
 import VerificationScreen from './VerificationScreen/VerificationScreen';
 import DebugScreen from './screens/Debug/Debug';
+import DemoShareScreen from './screens/DemoShareScreen';
+import PermissionTestScreen from './screens/PermissionTestScreen';
+import NetworkDebugScreen from './screens/NetworkDebugScreen';
 import { useAuth } from './libs/hooks/useAuth';
 import { ActivityIndicator, View } from 'react-native';
 
@@ -45,6 +48,7 @@ const AppNavigator = () => {
             <Stack.Screen name="SignUp" component={SignUpScreen} />
             <Stack.Screen name="Verification" component={VerificationScreen} />
             <Stack.Screen name="Debug" component={DebugScreen} />
+            <Stack.Screen name="NetworkDebug" component={NetworkDebugScreen} />
           </>
         ) : (
           // Authenticated user screens
@@ -56,6 +60,9 @@ const AppNavigator = () => {
             <Stack.Screen name="SavedDeals" component={SavedDealsScreen} />
             <Stack.Screen name="Settings" component={SettingsScreen} />
             <Stack.Screen name="Debug" component={DebugScreen} />
+            <Stack.Screen name="DemoShare" component={DemoShareScreen} />
+            <Stack.Screen name="PermissionTest" component={PermissionTestScreen} />
+            <Stack.Screen name="NetworkDebug" component={NetworkDebugScreen} />
           </>
         )}
       </Stack.Navigator>

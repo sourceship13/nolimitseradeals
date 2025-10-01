@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Platform } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -21,14 +21,36 @@ const SignInScreen = ({ navigation }: any) => {
 
     try {
       setLoading(true);
-      console.log('🔄 SignIn: Attempting login with email:', email);
+      console.log('=================================');
+      console.log('� SIGN IN DEBUG');
+      console.log('=================================');
+      console.log('📧 Email:', email);
+      console.log('📱 Platform:', Platform.OS);
+      console.log('🔧 Dev Mode:', __DEV__ ? 'YES' : 'NO');
+      console.log('⏰ Timestamp:', new Date().toISOString());
+      console.log('=================================');
       
       await login({ email, password });
       
       console.log('✅ SignIn: Login successful, AppNavigator will handle navigation automatically');
     } catch (error) {
       console.error('❌ SignIn: Login failed:', error);
-      Alert.alert('Sign In Failed', String(error));
+      
+      const errorMessage = (error as Error)?.message || String(error);
+      
+      // Show different messages based on error type
+      if (errorMessage.includes('Unable to connect to server') || errorMessage.includes('Network request failed')) {
+        Alert.alert(
+          'Connection Problem', 
+          'Unable to connect to the server. Please check your internet connection and try again.\n\nYou can also check Settings → Network Debug to verify the connection.',
+          [
+            { text: 'OK', style: 'default' },
+            { text: 'Check Network', onPress: () => navigation.navigate('NetworkDebug') }
+          ]
+        );
+      } else {
+        Alert.alert('Sign In Failed', errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -69,6 +91,16 @@ const SignInScreen = ({ navigation }: any) => {
       <TouchableOpacity style={[styles.buttonOutline, { borderColor: colors.text }]} onPress={() => navigation.navigate('SignUp')}>
         <Text style={{ color: colors.text, fontWeight: 'bold' }}>Create Account</Text>
       </TouchableOpacity>
+      
+      {/* Network Debug Button for Development */}
+      {__DEV__ && (
+        <TouchableOpacity 
+          style={[styles.debugButton, { backgroundColor: colors.error }]} 
+          onPress={() => navigation.navigate('NetworkDebug')}
+        >
+          <Text style={{ color: '#fff', fontSize: 12, fontWeight: 'bold' }}>🔧 Network Debug</Text>
+        </TouchableOpacity>
+      )}
 
       {/* Social Sign In Buttons */}
       <View style={styles.socialContainer}>
@@ -163,12 +195,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   debugButton: {
-    position: 'absolute',
-    bottom: 50,
-    right: 20,
+    marginTop: 20,
     padding: 8,
-    borderRadius: 5,
-    borderWidth: 1,
+    borderRadius: 8,
+    alignItems: 'center',
+    alignSelf: 'center',
   },
 });
 

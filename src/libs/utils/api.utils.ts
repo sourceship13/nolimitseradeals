@@ -1,19 +1,95 @@
 import { Platform } from 'react-native';
+import DeviceDetector from './deviceDetector';
 
 // Environment type
 type Environment = 'local' | 'staging' | 'production';
 
-// Auto-detect environment based on __DEV__ flag
-// You can override this by uncommenting the line below
-const getEnvironment = (): Environment => {
-  // OPTION 1: Auto-detect based on dev/release build
+// Detect if running on physical device (not simulator)
+const isPhysicalDevice = (): boolean => {
+  // Enhanced detection using multiple signals
   if (__DEV__) {
-    return 'local'; // Use local server in development
+    // In development, use heuristics to detect physical devices
+    
+    // Android emulators often have these characteristics
+    if (Platform.OS === 'android') {
+      const { constants } = Platform;
+      const isEmulator = (
+        constants?.Brand === 'google' ||
+        constants?.Model?.toLowerCase().includes('sdk') ||
+        constants?.Model?.toLowerCase().includes('emulator') ||
+        constants?.Fingerprint?.includes('generic')
+      );
+      
+      console.log('🤖 ANDROID DEVICE DETECTION:', {
+        brand: constants?.Brand,
+        model: constants?.Model,
+        fingerprint: constants?.Fingerprint,
+        isEmulator: isEmulator,
+        isPhysical: !isEmulator
+      });
+      
+      return !isEmulator;
+    }
+    
+    // iOS: Since metro bundler loaded from network IP (192.168.26.17:8081)
+    // this indicates we're on a physical device, not simulator
+    // For now, let's default to physical device for iOS in dev mode
+    const isLikelyPhysical = true; // Physical devices need network IP for metro
+    
+    console.log('📱 iOS DEVICE DETECTION:', {
+      platform: 'iOS',
+      devMode: __DEV__,
+      assumption: 'physical device (metro from network IP)',
+      isPhysical: isLikelyPhysical,
+      note: 'Metro bundler from 192.168.26.17 indicates physical device'
+    });
+    
+    return isLikelyPhysical;
   }
-  return 'staging'; // Use staging in release builds
   
-  // OPTION 2: Manual override (uncomment to use)
-  // return 'staging'; // Force specific environment
+  // In release builds, always assume physical device
+  console.log('🏭 RELEASE BUILD - Assuming physical device');
+  return true;
+};
+
+// Override for testing - can be set via NetworkDebug screen
+let FORCE_PHYSICAL_DEVICE: boolean | null = null;
+
+// Override for development - set to 'local' to use Mac IP for physical devices
+const FORCE_LOCAL_DEVELOPMENT = true; // Set to true for local Mac development
+
+// Auto-detect environment based on device type and build
+const getEnvironment = (): Environment => {
+  const actuallyPhysical = FORCE_PHYSICAL_DEVICE !== null ? FORCE_PHYSICAL_DEVICE : isPhysicalDevice();
+  
+  console.log('🌍 ENVIRONMENT SELECTION:', {
+    forcePhysical: FORCE_PHYSICAL_DEVICE,
+    detectedPhysical: isPhysicalDevice(),
+    finalPhysical: actuallyPhysical,
+    devMode: __DEV__,
+    forceLocalDev: FORCE_LOCAL_DEVELOPMENT
+  });
+  
+  // Override for local development: Use local environment even for physical devices
+  if (__DEV__ && FORCE_LOCAL_DEVELOPMENT) {
+    console.log('   → Selected: LOCAL (Development Override - Physical Device will use Mac IP)');
+    return 'local';
+  }
+  
+  // Always use staging/cloud for physical devices (when not in local dev mode)
+  if (actuallyPhysical) {
+    console.log('   → Selected: STAGING (Physical Device)');
+    return 'staging';
+  }
+  
+  // Use local only for simulator in development
+  if (__DEV__) {
+    console.log('   → Selected: LOCAL (Simulator Dev)');
+    return 'local'; // Use local server in development on simulator
+  }
+  
+  console.log('   → Selected: STAGING (Release Build)');
+  return 'staging'; // Default to staging for release builds
 };
 
 class ApiConfig {
@@ -23,8 +99,8 @@ class ApiConfig {
     local: {
       ios: 'http://localhost:8080',
       android: 'http://10.0.2.2:8080',
-      // For physical devices, use your computer's IP
-      physical: 'http://192.168.1.100:8080', // Replace with your actual IP
+      // For physical devices, use your Mac's network IP
+      physical: 'http://192.168.26.17:8080', // Auto-detected Mac IP
     },
     staging: 'https://f3x2ipn2yf.us-east-1.awsapprunner.com',
     production: 'https://f3x2ipn2yf.us-east-1.awsapprunner.com',
@@ -52,26 +128,40 @@ class ApiConfig {
   }
   
   get baseURL(): string {
+    const physicalDevice = isPhysicalDevice();
+    
+    console.log('🔧 BASE URL SELECTION DEBUG:');
+    console.log(`   Environment: ${this.currentEnv}`);
+    console.log(`   Is Physical Device: ${physicalDevice}`);
+    console.log(`   Platform: ${Platform.OS}`);
+    
     switch (this.currentEnv) {
       case 'local':
-        // Check if running on physical device (you need to implement this check)
-        const isPhysicalDevice = false; // Set to true when testing on physical device
-        
-        if (isPhysicalDevice) {
+        // Smart local URL selection based on device type
+        if (physicalDevice) {
+          // Physical devices use Mac's network IP to connect to localhost
+          console.log(`   Selected: Physical Device URL → ${this.urls.local.physical}`);
           return this.urls.local.physical;
         }
         
-        return Platform.OS === 'ios'
+        // Simulators use standard localhost
+        const simulatorURL = Platform.OS === 'ios'
           ? this.urls.local.ios
           : this.urls.local.android;
+        console.log(`   Selected: Simulator URL → ${simulatorURL}`);
+        return simulatorURL;
           
       case 'staging':
+        console.log(`   Selected: Staging URL → ${this.urls.staging}`);
         return this.urls.staging;
         
       case 'production':
+        console.log(`   Selected: Production URL → ${this.urls.production}`);
         return this.urls.production;
         
       default:
+        // Fallback to staging for safety
+        console.log(`   Selected: Fallback to Staging → ${this.urls.staging}`);
         return this.urls.staging;
     }
   }
@@ -119,4 +209,24 @@ console.log('=================================');
 // Export helper function to switch environments during runtime (useful for testing)
 export const switchEnvironment = (env: Environment) => {
   apiConfig.setEnvironment(env);
+};
+
+// Export helper to force physical device detection (for testing)
+export const forcePhysicalDevice = (isPhysical: boolean | null) => {
+  FORCE_PHYSICAL_DEVICE = isPhysical;
+  console.log('🔧 FORCE PHYSICAL DEVICE:', isPhysical);
+  // Refresh the configuration
+  const newEnv = getEnvironment();
+  apiConfig.setEnvironment(newEnv);
+};
+
+// Export helper to get current detection status
+export const getDeviceDetectionStatus = () => {
+  return {
+    forced: FORCE_PHYSICAL_DEVICE,
+    detected: isPhysicalDevice(),
+    final: FORCE_PHYSICAL_DEVICE !== null ? FORCE_PHYSICAL_DEVICE : isPhysicalDevice(),
+    environment: apiConfig.environment,
+    baseURL: apiConfig.baseURL
+  };
 };

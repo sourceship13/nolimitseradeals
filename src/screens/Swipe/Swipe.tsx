@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Animated, FlatList, ImageBack
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useAuth, getColors } from '../../libs/hooks/useAuth';
 import Toolbar from '../../components/Toolbar';
+import DealShareButton from '../../components/DealShareButton';
 import ApiService from '../../services/api.service';
 
 
@@ -155,6 +156,14 @@ const SwipeScreen = ({ navigation }: any) => {
                   <Text style={styles.dealExpires}>{currentDeal.expires || currentDeal.expiry || ''}</Text>
                 </View>
               </View>
+            </View>
+            
+            {/* Share Button Container - Above action buttons */}
+            <View style={styles.shareContainer}>
+              <DealShareButton 
+                deal={currentDeal} 
+                requiredShares={3}
+              />
             </View>
             
             {/* 4. Action buttons at bottom - 1/10 of screen height */}
@@ -343,6 +352,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 4,
+  },
+  shareContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
 });
 

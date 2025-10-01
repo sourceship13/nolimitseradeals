@@ -133,13 +133,32 @@ const SettingsScreen = ({ navigation }: any) => {
         </View>
 
         <TouchableOpacity 
-          style={[styles.button, { backgroundColor: colors.error, marginTop: 24 }]} 
-          onPress={handleLogout}
-        > 
-          <Text style={{ color: colors.background, fontWeight: 'bold' }}>Sign Out</Text>
+          style={[styles.button, { backgroundColor: colors.error, marginBottom: 8 }]} 
+          onPress={() => navigation.navigate('NetworkDebug')}
+        >
+          <Text style={{ color: '#fff', fontWeight: 'bold' }}>🔧 Network Debug</Text>
         </TouchableOpacity>
         
-        {/* Debug Section */}
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: colors.primary, marginBottom: 8 }]} 
+          onPress={() => navigation.navigate('PermissionTest')}
+        >
+          <Text style={{ color: '#fff', fontWeight: 'bold' }}>Test Permissions</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: colors.primary, marginBottom: 16 }]} 
+          onPress={() => navigation.navigate('DemoShare')}
+        >
+          <Text style={{ color: '#fff', fontWeight: 'bold' }}>Test Deal Sharing</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: colors.error }]} 
+          onPress={handleLogout}
+        >
+          <Text style={{ color: '#fff', fontWeight: 'bold' }}>Sign Out</Text>
+        </TouchableOpacity>        {/* Debug Section */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Developer Options</Text>
           <TouchableOpacity 
