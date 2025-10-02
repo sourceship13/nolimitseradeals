@@ -107,11 +107,18 @@ export const useDealSharing = (dealId?: string, requiredShares: number = 3) => {
       const importedContacts = await DealSharingService.loadContacts();
       console.log(`✅ Contacts loaded successfully: ${importedContacts.length} contacts`);
       
-      if (importedContacts.length > 0) {
-        console.log('📞 First contact:', JSON.stringify(importedContacts[0], null, 2));
+      // Ensure contacts are sorted alphabetically (double-check)
+      const sortedContacts = importedContacts.sort((a, b) => {
+        const nameA = a.displayName.toLowerCase();
+        const nameB = b.displayName.toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
+      
+      if (sortedContacts.length > 0) {
+        console.log('📞 First contact (alphabetically):', JSON.stringify(sortedContacts[0], null, 2));
       }
       
-      setContacts(importedContacts);
+      setContacts(sortedContacts);
     } catch (error) {
       console.error('❌ Error loading contacts:', error);
       Alert.alert('Error', 'Failed to load contacts. Please try again.');

@@ -141,12 +141,20 @@ class DealSharingService {
                     'Unknown Contact'
       }));
       
-      if (transformedContacts.length > 0) {
-        console.log('📞 Sample transformed contact:', JSON.stringify(transformedContacts[0], null, 2));
+      // Sort contacts alphabetically by displayName
+      const sortedContacts = transformedContacts.sort((a, b) => {
+        const nameA = a.displayName.toLowerCase();
+        const nameB = b.displayName.toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
+      
+      console.log(`📞 Contacts sorted alphabetically: ${sortedContacts.length} contacts`);
+      if (sortedContacts.length > 0) {
+        console.log('📞 First contact (alphabetically):', JSON.stringify(sortedContacts[0], null, 2));
       }
       
-      // Return the transformed contacts
-      return transformedContacts;
+      // Return the sorted contacts
+      return sortedContacts;
       
     } catch (error) {
       console.error('❌ Error loading contacts:', error);
