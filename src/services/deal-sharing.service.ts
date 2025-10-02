@@ -1,4 +1,4 @@
-import { PermissionsAndroid, Platform, Alert } from 'react-native';
+import { PermissionsAndroid, Platform, Alert, Linking } from 'react-native';
 import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import Contacts from 'react-native-contacts';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -48,6 +48,9 @@ class DealSharingService {
         ? PERMISSIONS.IOS.CONTACTS 
         : PERMISSIONS.ANDROID.READ_CONTACTS;
 
+      console.log('📱 Platform:', Platform.OS);
+      console.log('📱 Using permission:', permission);
+
       const result = await check(permission);
       console.log('📱 Permission check result:', result);
       
@@ -61,11 +64,21 @@ class DealSharingService {
         case RESULTS.UNAVAILABLE:
           return 'unavailable';
         default:
+          console.log('📱 Unknown permission result:', result);
           return 'denied';
       }
     } catch (error) {
       console.error('❌ Error checking permission:', error);
-      return 'denied';
+      console.error('❌ Error details:', JSON.stringify(error));
+      
+      // Show alert for permission handler error
+      Alert.alert(
+        'Permission Handler Error',
+        `Could not check contacts permission: ${error instanceof Error ? error.message : String(error)}. Please ensure the app is properly built with permission handlers.`,
+        [{ text: 'OK' }]
+      );
+      
+      return 'unavailable';
     }
   }
 
@@ -171,7 +184,7 @@ class DealSharingService {
         return false;
       }
 
-      // Send SMS via server API
+      // Send SMS via native SMS composer
       const smsSuccess = await this.sendSMSViaAPI(phoneNumbers, shareMessage, dealInfo);
       
       if (smsSuccess) {
@@ -179,16 +192,16 @@ class DealSharingService {
         await this.trackShares(dealId, selectedContacts.length);
         
         Alert.alert(
-          'SMS Sent!',
-          `Deal successfully shared via SMS with ${selectedContacts.length} contacts from your messaging app!`,
+          'SMS Sent Successfully!',
+          `Deal shared with ${selectedContacts.length} contacts via your device's SMS app!`,
           [{ text: 'OK' }]
         );
         
         return true;
       } else {
         Alert.alert(
-          'SMS Cancelled',
-          'SMS sending was cancelled. You can try again anytime to unlock this deal.',
+          'SMS Not Sent',
+          'SMS was not sent. You can try again to share this deal and unlock it.',
           [{ text: 'OK' }]
         );
         return false;
@@ -207,33 +220,134 @@ class DealSharingService {
 
   private async sendSMSViaAPI(phoneNumbers: string[], message: string, dealInfo: any): Promise<boolean> {
     try {
-      console.log('📤 Opening native SMS composer for:', phoneNumbers.length, 'recipients');
+      console.log('📤 Sending SMS to:', phoneNumbers.length, 'recipients');
+      console.log('📞 Recipients:', phoneNumbers);
+      console.log('📝 Message preview:', message.substring(0, 100) + '...');
+      console.log('📱 Platform:', Platform.OS);
       
-      return new Promise((resolve) => {
+      if (phoneNumbers.length === 0) {
+        console.error('❌ No phone numbers provided');
+        return false;
+      }
+
+      // Clean and validate phone numbers
+      const cleanedNumbers = phoneNumbers
+        .map(num => num.replace(/[^\d+\-\(\)\s]/g, '')) // Keep digits, +, -, (), spaces
+        .map(num => num.trim())
+        .filter(num => num.length >= 7); // Minimum phone number length
+      
+      console.log('📞 Cleaned recipients:', cleanedNumbers);
+      
+      if (cleanedNumbers.length === 0) {
+        console.error('❌ No valid phone numbers after cleaning');
+        Alert.alert(
+          'Invalid Phone Numbers',
+          'None of the selected contacts have valid phone numbers.',
+          [{ text: 'OK' }]
+        );
+        return false;
+      }
+
+      // Platform-specific SMS implementation
+      if (Platform.OS === 'ios') {
+        return await this.sendSMSiOS(cleanedNumbers, message);
+      } else {
+        return await this.sendSMSAndroid(cleanedNumbers, message);
+      }
+      
+    } catch (error) {
+      console.error('❌ SMS Method Error:', error);
+      return false;
+    }
+  }
+
+  private async sendSMSiOS(phoneNumbers: string[], message: string): Promise<boolean> {
+    try {
+      console.log('🍎 Using iOS native Messages app via Linking...');
+      
+      // Create SMS URL for iOS
+      const encodedMessage = encodeURIComponent(message);
+      let smsUrl: string;
+
+      if (phoneNumbers.length === 1) {
+        // Single recipient - most reliable format
+        smsUrl = `sms:${phoneNumbers[0]}&body=${encodedMessage}`;
+      } else {
+        // Multiple recipients - iOS format
+        const recipients = phoneNumbers.join(',');
+        smsUrl = `sms://open?addresses=${recipients}&body=${encodedMessage}`;
+        
+        // Alternative format for iOS if the above doesn't work
+        if (!(await Linking.canOpenURL(smsUrl))) {
+          console.log('🔄 Trying alternative iOS SMS format...');
+          smsUrl = `sms:${recipients}&body=${encodedMessage}`;
+        }
+      }
+      
+      console.log('📱 iOS SMS URL:', smsUrl);
+      console.log('📱 Recipients count:', phoneNumbers.length);
+      
+      // Check if SMS URL can be opened
+      const canOpen = await Linking.canOpenURL(smsUrl);
+      console.log('📱 Can open SMS URL:', canOpen);
+      
+      if (!canOpen) {
+        throw new Error('SMS URL scheme not supported');
+      }
+      
+      // Open iOS Messages app
+      await Linking.openURL(smsUrl);
+      console.log('✅ iOS Messages app opened successfully');
+      
+      // On iOS with Linking, we assume success since the Messages app opened
+      return true;
+      
+    } catch (error) {
+      console.error('❌ iOS SMS Error:', error);
+      
+      // Fallback to react-native-sms for iOS if Linking fails
+      console.log('🔄 Falling back to react-native-sms for iOS...');
+      return await this.sendSMSAndroid(phoneNumbers, message);
+    }
+  }
+
+  private async sendSMSAndroid(phoneNumbers: string[], message: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      try {
+        console.log('🤖 Using react-native-sms for Android/Fallback...');
+        
         SendSMS.send({
           body: message,
           recipients: phoneNumbers,
           allowAndroidSendWithoutReadPermission: true
         }, (completed: boolean, cancelled: boolean, error: boolean) => {
-          console.log('📱 SMS Composer Result:', { completed, cancelled, error });
+          console.log('📱 SMS Composer Result - Completed:', completed, 'Cancelled:', cancelled, 'Error:', error);
           
           if (completed) {
-            console.log('✅ SMS sent successfully via native app');
+            console.log('✅ SMS sent successfully to', phoneNumbers.length, 'recipients');
             resolve(true);
           } else if (cancelled) {
             console.log('📱 User cancelled SMS sending');
             resolve(false);
           } else if (error) {
-            console.log('❌ SMS Composer Error:', error);
+            console.log('❌ SMS Composer Error');
+            resolve(false);
+          } else {
+            console.log('❓ Unknown SMS result, treating as cancelled');
             resolve(false);
           }
         });
-      });
-      
-    } catch (error) {
-      console.error('❌ SMS Composer Error:', error);
-      return false;
-    }
+        
+      } catch (sendError) {
+        console.error('❌ react-native-sms Error:', sendError);
+        Alert.alert(
+          'SMS Error',
+          'Could not open SMS composer. Please check your device settings.',
+          [{ text: 'OK' }]
+        );
+        resolve(false);
+      }
+    });
   }
 
   private createShareMessage(dealInfo: any): string {

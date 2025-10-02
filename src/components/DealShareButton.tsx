@@ -56,8 +56,11 @@ const DealShareButton: React.FC<DealShareButtonProps> = ({
   }, [waitingForPermission, hasContactsPermission, contacts]);
 
   const handlePress = async () => {
+    console.log('🔄 Button pressed. Permission status:', hasContactsPermission);
+    
     // Check contacts permission first
     if (hasContactsPermission !== 'granted') {
+      console.log('❌ Permission not granted, showing permission dialog');
       Alert.alert(
         'Contacts Permission Required',
         'We need access to your contacts to share deals with friends. Would you like to grant permission?',
@@ -88,7 +91,8 @@ const DealShareButton: React.FC<DealShareButtonProps> = ({
       return;
     }
     
-    // Permission already granted, show modal
+    // Permission already granted, show modal directly
+    console.log('✅ Permission granted, opening contact modal');
     setShowModal(true);
   };
 

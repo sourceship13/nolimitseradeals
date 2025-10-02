@@ -51,15 +51,23 @@ export const useDealSharing = (dealId?: string, requiredShares: number = 3) => {
     }
   }, [dealId, user?.id]);
 
+  // Check permission status on hook initialization
+  useEffect(() => {
+    checkPermissionStatus();
+  }, []);
+
   const checkPermissionStatus = async () => {
     console.log('🔄 Checking permission status...');
     try {
       const permissionStatus = await DealSharingService.checkContactsPermissionStatus();
-      console.log('📱 Permission status:', permissionStatus);
+      console.log('📱 Permission status result:', permissionStatus);
       setHasContactsPermission(permissionStatus);
       
       if (permissionStatus === 'granted') {
+        console.log('✅ Permission granted, loading contacts...');
         await loadContacts();
+      } else {
+        console.log('❌ Permission not granted:', permissionStatus);
       }
     } catch (error) {
       console.error('❌ Error checking permission status:', error);
@@ -73,9 +81,10 @@ export const useDealSharing = (dealId?: string, requiredShares: number = 3) => {
       const granted = await DealSharingService.requestContactsPermission();
       
       if (granted) {
+        console.log('✅ Permission granted successfully');
         setHasContactsPermission('granted');
         await loadContacts();
-        Alert.alert('Success', 'Contacts loaded successfully!');
+        // Don't show alert here - will be handled by the button component
       } else {
         setHasContactsPermission('denied');
         Alert.alert(
