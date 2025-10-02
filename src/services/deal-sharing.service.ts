@@ -2,6 +2,7 @@ import { PermissionsAndroid, Platform, Alert } from 'react-native';
 import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import Contacts from 'react-native-contacts';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import SendSMS from 'react-native-sms';
 
 interface Contact {
   recordID: string;
@@ -152,22 +153,47 @@ class DealSharingService {
       // Create SMS content
       const shareMessage = this.createShareMessage(dealInfo);
       
-      // For now, we'll simulate SMS sending by logging
-      // Later we can integrate with react-native-sms
+      // Extract and clean phone numbers
+      const phoneNumbers = selectedContacts
+        .map(contact => contact.phoneNumbers[0]?.number)
+        .filter(number => number)
+        .map(number => number.replace(/[^\d+]/g, '')); // Clean phone numbers
+      
       console.log('📱 SMS Content:', shareMessage);
-      console.log('📞 Recipients:', selectedContacts.map(c => c.phoneNumbers[0]?.number));
+      console.log('📞 Recipients:', phoneNumbers);
       
-      // Track the shares locally
-      await this.trackShares(dealId, selectedContacts.length);
+      if (phoneNumbers.length === 0) {
+        Alert.alert(
+          'No Valid Phone Numbers',
+          'Selected contacts do not have valid phone numbers.',
+          [{ text: 'OK' }]
+        );
+        return false;
+      }
+
+      // Send SMS via server API
+      const smsSuccess = await this.sendSMSViaAPI(phoneNumbers, shareMessage, dealInfo);
       
-      // TODO: Integrate with SMS sending
-      Alert.alert(
-        'Sharing Complete',
-        `Deal shared with ${selectedContacts.length} contacts!`,
-        [{ text: 'OK' }]
-      );
+      if (smsSuccess) {
+        // Track the shares locally
+        await this.trackShares(dealId, selectedContacts.length);
+        
+        Alert.alert(
+          'SMS Sent!',
+          `Deal successfully shared via SMS with ${selectedContacts.length} contacts from your messaging app!`,
+          [{ text: 'OK' }]
+        );
+        
+        return true;
+      } else {
+        Alert.alert(
+          'SMS Cancelled',
+          'SMS sending was cancelled. You can try again anytime to unlock this deal.',
+          [{ text: 'OK' }]
+        );
+        return false;
+      }
       
-      return true;
     } catch (error) {
       console.error('❌ Error sharing with contacts:', error);
       Alert.alert(
@@ -175,6 +201,37 @@ class DealSharingService {
         'Could not share the deal. Please try again.',
         [{ text: 'OK' }]
       );
+      return false;
+    }
+  }
+
+  private async sendSMSViaAPI(phoneNumbers: string[], message: string, dealInfo: any): Promise<boolean> {
+    try {
+      console.log('📤 Opening native SMS composer for:', phoneNumbers.length, 'recipients');
+      
+      return new Promise((resolve) => {
+        SendSMS.send({
+          body: message,
+          recipients: phoneNumbers,
+          allowAndroidSendWithoutReadPermission: true
+        }, (completed: boolean, cancelled: boolean, error: boolean) => {
+          console.log('📱 SMS Composer Result:', { completed, cancelled, error });
+          
+          if (completed) {
+            console.log('✅ SMS sent successfully via native app');
+            resolve(true);
+          } else if (cancelled) {
+            console.log('📱 User cancelled SMS sending');
+            resolve(false);
+          } else if (error) {
+            console.log('❌ SMS Composer Error:', error);
+            resolve(false);
+          }
+        });
+      });
+      
+    } catch (error) {
+      console.error('❌ SMS Composer Error:', error);
       return false;
     }
   }
