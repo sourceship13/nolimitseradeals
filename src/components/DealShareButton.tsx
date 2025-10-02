@@ -99,13 +99,15 @@ const DealShareButton: React.FC<DealShareButtonProps> = ({
     }
 
     try {
+      const contactCount = selectedContacts.length;
+      setShowModal(false); // Close modal immediately
+      
       await shareDeal(deal);
-      setShowModal(false);
-      clearSelection();
-      Alert.alert(
-        'Success!', 
-        `Deal shared with ${selectedContacts.length} contact(s)!`
-      );
+      
+      // The shareDeal function automatically updates shareProgress via loadShareProgress()
+      // Button text will now show updated count (e.g., "2/3" after sharing with 2 people)
+      console.log(`✅ Share initiated with ${contactCount} contacts - progress will update after SMS completion`);
+      
     } catch (error) {
       Alert.alert('Error', 'Failed to share deal. Please try again.');
     }
