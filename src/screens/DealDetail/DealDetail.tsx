@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,9 @@ import {
   Dimensions,
   Platform,
   FlatList,
-  Alert
+  Alert,
+  Animated,
+  ActivityIndicator
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useAuth, getColors } from '../../libs/hooks/useAuth';
@@ -112,6 +114,27 @@ const DealDetailScreen: React.FC<DealDetailProps> = (props) => {
   const [isSaved, setIsSaved] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isLoadingHeartStatus, setIsLoadingHeartStatus] = useState(true);
+  
+  // Animation values for fade transition
+  const loadingOpacity = useRef(new Animated.Value(1)).current;
+  const contentOpacity = useRef(new Animated.Value(0)).current;
+
+  // Initialize animation values and debug deal structure
+  useEffect(() => {
+    console.log('🔍 DEAL STRUCTURE DEBUG:', {
+      hasInitialDeal: !!initialDeal,
+      dealObject: initialDeal,
+      deal_id: initialDeal?.deal_id,
+      id: initialDeal?.id,
+      dealIdExists: !!(initialDeal?.deal_id || initialDeal?.id)
+    });
+    
+    // Ensure animation values are properly initialized
+    loadingOpacity.setValue(1);
+    contentOpacity.setValue(0);
+    console.log('🎬 Animation values initialized: loading=1, content=0');
+  }, []);
 
   useEffect(() => {
     console.log('🔄 DealDetail useEffect triggered:', {
@@ -122,18 +145,54 @@ const DealDetailScreen: React.FC<DealDetailProps> = (props) => {
       heartedDealsExists: !!heartedDeals
     });
     
-    if (deal?.deal_id && isAuthenticated) {
+    const dealId = deal?.deal_id || deal?.id;
+    console.log('🎯 UseEffect logic check:', { 
+      dealId, 
+      isAuthenticated, 
+      shouldCheckHeartStatus: !!(dealId && isAuthenticated) 
+    });
+    
+    if (dealId && isAuthenticated) {
       // Check heart status directly from API for accuracy
       checkDealHeartStatus();
+    } else {
+      // No authentication or deal, but still show loading for UX
+      console.log('📋 Skipping heart status check - no auth or deal');
+      setTimeout(() => {
+        startFadeTransition();
+      }, 600); // Brief loading even when skipping API call
     }
+    
+    // Safety fallback: ensure content shows after 3 seconds regardless
+    const fallbackTimer = setTimeout(() => {
+      console.log('⏰ Fallback timer triggered - forcing content to show');
+      startFadeTransition();
+    }, 3000);
+    
+    return () => clearTimeout(fallbackTimer);
   }, [deal?.deal_id, isAuthenticated]);
 
   const checkDealHeartStatus = async () => {
-    if (!deal?.deal_id) return;
+    const dealId = deal?.deal_id || deal?.id;
+    console.log('🔍 Deal ID check:', { deal_id: deal?.deal_id, id: deal?.id, finalDealId: dealId });
+    
+    if (!dealId) {
+      console.log('⚠️ No deal_id or id found, skipping heart status check');
+      // Still show loading for a brief moment for UX
+      await new Promise<void>(resolve => setTimeout(() => resolve(), 500));
+      startFadeTransition();
+      return;
+    }
     
     try {
-      console.log('💖 Checking heart status for deal:', deal.deal_id);
-      const response = await ApiService.checkHeartStatus(deal.deal_id);
+      console.log('💖 Checking heart status for deal:', dealId);
+      setIsLoadingHeartStatus(true);
+      
+      // Start the API call and minimum duration timer simultaneously
+      const [response] = await Promise.all([
+        ApiService.checkHeartStatus(dealId),
+        new Promise<void>(resolve => setTimeout(() => resolve(), 800)) // Minimum 800ms loading
+      ]);
       
       if (response.success && response.data) {
         const { isHearted, heartCount } = response.data;
@@ -150,10 +209,39 @@ const DealDetailScreen: React.FC<DealDetailProps> = (props) => {
       // Fallback to global hearted deals state on error
       const isAlreadySaved = isDealHearted(deal.deal_id);
       setIsSaved(isAlreadySaved);
+    } finally {
+      // Start fade transition (it will handle setting loading to false)
+      startFadeTransition();
     }
   };
 
-
+  const startFadeTransition = () => {
+    console.log('🎬 Starting fade transition - Loading out, Content in');
+    
+    // First set loading to false, then start the animation
+    setIsLoadingHeartStatus(false);
+    
+    // Use staggered animation for smoother transition
+    Animated.sequence([
+      // Small delay to ensure state update
+      Animated.delay(50),
+      // Fade out loading and fade in content with slight overlap
+      Animated.parallel([
+        Animated.timing(loadingOpacity, {
+          toValue: 0,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+        Animated.timing(contentOpacity, {
+          toValue: 1,
+          duration: 350,
+          useNativeDriver: true,
+        }),
+      ])
+    ]).start(() => {
+      console.log('✅ Fade transition completed');
+    });
+  };
 
   const handleSave = async () => {
     console.log('🔍 handleSave debug - checking auth:', {
@@ -283,7 +371,30 @@ const DealDetailScreen: React.FC<DealDetailProps> = (props) => {
         onBack={() => navigation.goBack()}
       />
       
-      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+      {/* Loading Overlay - Always present, controlled by opacity */}
+      <Animated.View 
+        style={[
+          styles.loadingOverlay, 
+          { 
+            backgroundColor: colors.background,
+            opacity: loadingOpacity 
+          }
+        ]}
+        pointerEvents={isLoadingHeartStatus ? 'auto' : 'none'}
+      >
+        <ActivityIndicator 
+          size="large" 
+          color={colors.primary} 
+          style={styles.loadingIndicator}
+        />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+          Loading deal details...
+        </Text>
+      </Animated.View>
+      
+      {/* Main Content with Fade Animation */}
+      <Animated.View style={[styles.contentWrapper, { opacity: contentOpacity }]}>
+        <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         {/* Deal Images */}
         <View style={styles.imageContainer}>
           {deal.business_images && deal.business_images.length > 0 ? (
@@ -386,7 +497,8 @@ const DealDetailScreen: React.FC<DealDetailProps> = (props) => {
             </TouchableOpacity>
           </View>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </Animated.View>
     </View>
   );
 };
@@ -402,6 +514,28 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 60, // Below toolbar
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  loadingIndicator: {
+    marginBottom: 16,
+    transform: [{ scale: 1.2 }], // Make spinner slightly larger
+  },
+  loadingText: {
+    fontSize: 17,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontWeight: '500',
+  },
+  contentWrapper: {
+    flex: 1,
   },
   errorText: {
     fontSize: 18,
