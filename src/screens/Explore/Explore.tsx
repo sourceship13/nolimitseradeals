@@ -39,8 +39,43 @@ const ExploreScreen = ({ navigation }: any) => {
         
         // Handle both direct array and object with data property
         const dealsData = result.data || result;
-        setDeals(Array.isArray(dealsData) ? dealsData : []);
-        console.log('Fetched deals count:', Array.isArray(dealsData) ? dealsData.length : (dealsData as any)?.data?.length || 0);
+        const finalDeals = Array.isArray(dealsData) ? dealsData : [];
+        
+        // COMPREHENSIVE DATA DEBUGGING
+        console.log('=== DEALS DATA DEBUGGING ===');
+        console.log('📊 Raw API Response:', result);
+        console.log('📊 Processed deals array length:', finalDeals.length);
+        console.log('📊 First 3 deals structure:');
+        finalDeals.slice(0, 3).forEach((deal, index) => {
+          console.log(`  Deal ${index + 1}:`, {
+            id: deal.id,
+            business_name: deal.business_name,
+            description: deal.description?.substring(0, 50) + '...',
+            category_name: deal.category_name,
+            is_premium: deal.is_premium,
+            priority_score: deal.priority_score
+          });
+        });
+        
+        // Check for duplicates
+        const duplicates = finalDeals.filter((deal, index, array) => 
+          array.findIndex(d => d.id === deal.id) !== index
+        );
+        if (duplicates.length > 0) {
+          console.log('⚠️ DUPLICATE DEALS FOUND:', duplicates.length);
+          duplicates.forEach((dup, index) => {
+            console.log(`  Duplicate ${index + 1}:`, { id: dup.id, business_name: dup.business_name });
+          });
+        }
+        
+        // Check for missing IDs
+        const noIds = finalDeals.filter(deal => !deal.id);
+        if (noIds.length > 0) {
+          console.log('⚠️ DEALS WITHOUT IDs:', noIds.length);
+        }
+        
+        setDeals(finalDeals);
+        console.log('=== END DEALS DATA DEBUGGING ===');
       } catch (err: any) {
         setError(err.message || 'Unknown error');
         console.error('Error fetching deals:', err);
@@ -72,9 +107,19 @@ const ExploreScreen = ({ navigation }: any) => {
     return 0;
   });
 
-  const renderDealCard = ({ item }: { item: any }) => {
+  const renderDealCard = ({ item, index }: { item: any; index: number }) => {
+    // Debug card rendering for problematic positions
+    if (index === 0 || index === 1 || index === 8 || index === 9) {
+      console.log(`🎴 Rendering card ${index + 1}:`, {
+        id: item.id,
+        business_name: item.business_name,
+        hasDescription: !!item.description,
+        position: index
+      });
+    }
+    
     const isFeatured = item.priority_score && item.priority_score > 0;
-    const isPremium = item.is_premium === true;
+    const isPremium = item.is_premium === true || item.is_premium_business === true;
     
     return (
       <TouchableOpacity
@@ -151,10 +196,10 @@ const ExploreScreen = ({ navigation }: any) => {
           {item.image_url ? '🖼️' : getCategoryEmoji(item.category_name)}
         </Text>
         <Text style={[styles.itemBusiness, { color: colors.text }]} numberOfLines={1}>
-          {item.business_name}
+          {item.business_name || item.business || 'Unknown Business'}
         </Text>
         <Text style={[styles.itemDescription, { color: colors.textSecondary }]} numberOfLines={2}>
-          {item.description}
+          {item.description || item.descrption || 'No description available'}
         </Text>
         <View style={styles.dealDetails}>
           {item.deal_type ? (
@@ -317,11 +362,18 @@ const ExploreScreen = ({ navigation }: any) => {
             </Text>
             <FlatList
               data={sortedDeals}
-              keyExtractor={item => item.id?.toString?.() || `${item.business_name}-${item.description}-${Math.random()}`}
+              keyExtractor={(item, index) => {
+                // Create unique key combining multiple identifiers
+                const baseKey = item.id?.toString() || `${item.business_name}-${index}`;
+                return `deal-${baseKey}-${index}`;
+              }}
               numColumns={2}
               renderItem={renderDealCard}
               contentContainerStyle={styles.grid}
               columnWrapperStyle={styles.row}
+              initialNumToRender={10}
+              maxToRenderPerBatch={10}
+              removeClippedSubviews={true}
             />
           </>
         )}
@@ -382,17 +434,17 @@ const styles = StyleSheet.create({
   },
   grid: {
     paddingBottom: 20,
+    paddingTop: 8,
   },
   row: {
-    justifyContent: 'space-between',
-    paddingHorizontal: 4,
+    justifyContent: 'space-around',
+    paddingHorizontal: 8,
+    marginBottom: 8,
   },
   card: {
-    flex: 1,
-    margin: 4,
+    width: '47%', // Fixed width instead of flex
     borderRadius: 12,
     padding: 12,
-    maxWidth: '48%',
     minHeight: 140,
     position: 'relative',
   },
