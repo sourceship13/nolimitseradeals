@@ -87,8 +87,16 @@ const DealDetailScreen: React.FC<DealDetailProps> = (props) => {
     dealExists: !!initialDeal,
     dealId: initialDeal?.id || 'no-id'
   });
-  const { isDarkMode, user } = useAuth();
+    const { isDarkMode, user, isAuthenticated, heartedDeals, isDealHearted, refreshHeartedDeals } = useAuth();
   const colors = getColors(isDarkMode);
+
+  // Debug hearted deals from context
+  console.log('🏠 DealDetail Context Debug:', {
+    heartedDealsCount: heartedDeals?.length || 0,
+    heartedDealsLoaded: !!heartedDeals,
+    isAuthenticated: isAuthenticated,
+    currentDealId: initialDeal?.deal_id
+  });
 
   // Debug logging to help identify navigation issues
   useEffect(() => {
@@ -106,48 +114,110 @@ const DealDetailScreen: React.FC<DealDetailProps> = (props) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (deal?.id && user?.id) {
-      checkIfSaved();
+    console.log('🔄 DealDetail useEffect triggered:', {
+      hasDeal: !!deal?.deal_id,
+      dealId: deal?.deal_id,
+      isAuthenticated: isAuthenticated,
+      heartedDealsLength: heartedDeals?.length || 0,
+      heartedDealsExists: !!heartedDeals
+    });
+    
+    if (deal?.deal_id && isAuthenticated) {
+      // Check heart status directly from API for accuracy
+      checkDealHeartStatus();
     }
-  }, [deal?.id, user?.id]);
+  }, [deal?.deal_id, isAuthenticated]);
 
-  const checkIfSaved = async () => {
+  const checkDealHeartStatus = async () => {
+    if (!deal?.deal_id) return;
+    
     try {
-      const response = await ApiService.getSavedDeals();
-      const savedDeals = response.data || [];
-      const isAlreadySaved = savedDeals.some((savedDeal: any) => savedDeal.id === deal?.id);
-      setIsSaved(isAlreadySaved);
+      console.log('💖 Checking heart status for deal:', deal.deal_id);
+      const response = await ApiService.checkHeartStatus(deal.deal_id);
+      
+      if (response.success && response.data) {
+        const { isHearted, heartCount } = response.data;
+        console.log('💖 Heart status received:', { isHearted, heartCount });
+        setIsSaved(isHearted);
+      } else {
+        console.log('❌ Failed to get heart status:', response.error || response.message);
+        // Fallback to global hearted deals state
+        const isAlreadySaved = isDealHearted(deal.deal_id);
+        setIsSaved(isAlreadySaved);
+      }
     } catch (error) {
-      console.error('Error checking saved status:', error);
+      console.error('� Error checking heart status:', error);
+      // Fallback to global hearted deals state on error
+      const isAlreadySaved = isDealHearted(deal.deal_id);
+      setIsSaved(isAlreadySaved);
     }
   };
 
+
+
   const handleSave = async () => {
-    if (!deal?.id || !user?.id) {
-      Alert.alert('Error', 'You must be logged in to save deals');
+    console.log('🔍 handleSave debug - checking auth:', {
+      hasDeal: !!deal,
+      dealId: deal?.deal_id,
+      hasUser: !!user,
+      userId: user?.id,
+      userObject: user,
+      isAuthenticated: isAuthenticated
+    });
+    
+    if (!deal?.deal_id || !user?.id) {
+      Alert.alert('Error', 'You must be logged in to heart deals');
       return;
     }
     
+    const previousSavedState = isSaved;
+    console.log('💖 Heart button pressed:', {
+      dealId: deal.deal_id,
+      currentState: previousSavedState,
+      willHeart: !previousSavedState
+    });
+    
     setLoading(true);
     try {
-      if (isSaved) {
-        // Unsave the deal
-        await ApiService.makeRequest(`/api/users/deals/save/${deal.id}`, {
-          method: 'DELETE'
-        });
-        setIsSaved(false);
-        Alert.alert('Success', 'Deal removed from saved deals');
+      if (previousSavedState) {
+        // Unheart the deal
+        await ApiService.unheartDeal(deal.deal_id);
+        console.log('✅ Deal unhearted successfully');
       } else {
-        // Save the deal
-        await ApiService.makeRequest(`/api/users/deals/save/${deal.id}`, {
-          method: 'POST'
+        // Heart the deal
+        await ApiService.heartDeal(deal.deal_id);
+        console.log('✅ Deal hearted successfully');
+      }
+      
+      // Refresh global hearted deals state
+      await refreshHeartedDeals();
+      
+      // Check actual heart status from API after operation
+      const statusResponse = await ApiService.checkHeartStatus(deal.deal_id);
+      if (statusResponse.success && statusResponse.data) {
+        const { isHearted, heartCount } = statusResponse.data;
+        setIsSaved(isHearted);
+        console.log('💖 Heart operation completed:', {
+          previousState: previousSavedState,
+          newState: isHearted,
+          heartCount: heartCount,
+          success: true
         });
-        setIsSaved(true);
-        Alert.alert('Success', 'Deal saved successfully!');
+      } else {
+        // Fallback to global state if API check fails
+        const updatedSavedStatus = isDealHearted(deal.deal_id);
+        setIsSaved(updatedSavedStatus);
+        console.log('💖 Heart operation completed (fallback):', {
+          previousState: previousSavedState,
+          newState: updatedSavedStatus,
+          success: true
+        });
       }
     } catch (error: any) {
       console.error('Error saving/unsaving deal:', error);
       Alert.alert('Error', error.message || 'Something went wrong');
+      // Revert local state on error
+      setIsSaved(previousSavedState);
     } finally {
       setLoading(false);
     }
@@ -289,7 +359,7 @@ const DealDetailScreen: React.FC<DealDetailProps> = (props) => {
           <View style={styles.actionButtons}>
             <TouchableOpacity
               style={[styles.saveButton, { 
-                backgroundColor: isSaved ? colors.secondary : colors.border,
+                backgroundColor: isSaved ? '#FF69B4' : colors.border,
                 opacity: loading ? 0.7 : 1
               }]}
               onPress={handleSave}
@@ -303,7 +373,7 @@ const DealDetailScreen: React.FC<DealDetailProps> = (props) => {
               <Text style={[styles.saveButtonText, { 
                 color: isSaved ? "#fff" : colors.textSecondary 
               }]}>
-                {loading ? 'Loading...' : (isSaved ? 'Saved' : 'Save Deal')}
+                {loading ? 'Loading...' : (isSaved ? 'Hearted' : 'Heart Deal')}
               </Text>
             </TouchableOpacity>
 

@@ -139,20 +139,26 @@ class ApiService {
     return this.makeRequest(`/deals/${id}`);
   }
 
-  async saveDeal(dealId: string): Promise<ApiResponse> {
-    return this.makeRequest(`/deals/${dealId}/save`, {
+  async heartDeal(dealId: string): Promise<ApiResponse> {
+    return this.makeRequest(`/deals/${dealId}/heart`, {
       method: 'POST',
     });
   }
 
-  async unsaveDeal(dealId: string): Promise<ApiResponse> {
-    return this.makeRequest(`/deals/${dealId}/save`, {
+  async unheartDeal(dealId: string): Promise<ApiResponse> {
+    return this.makeRequest(`/deals/${dealId}/heart`, {
       method: 'DELETE',
     });
   }
 
-  async getSavedDeals(): Promise<ApiResponse<any[]>> {
-    return this.makeRequest('/deals/saved');
+  async getHeartedDeals(): Promise<ApiResponse<any[]>> {
+    return this.makeRequest('/deals/hearted');
+  }
+
+  async checkHeartStatus(dealId: string): Promise<ApiResponse<{dealId: string, isHearted: boolean, heartCount: number}>> {
+    return this.makeRequest(`/deals/${dealId}/heart`, {
+      method: 'GET',
+    });
   }
 
   // User Profile API Methods

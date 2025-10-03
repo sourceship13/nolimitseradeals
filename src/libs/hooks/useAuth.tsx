@@ -39,6 +39,12 @@ interface AuthContextType {
   getActiveSessions: () => Promise<any[]>;
   revokeSession: (sessionId: string) => Promise<void>;
   
+  // Hearted deals management
+  heartedDeals: any[];
+  heartedDealsLoading: boolean;
+  refreshHeartedDeals: () => Promise<void>;
+  isDealHearted: (dealId: string) => boolean;
+  
   // Your existing features
   isDarkMode: boolean;
   setDarkMode: (value: boolean) => void;
@@ -54,6 +60,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Authentication state
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Hearted deals state
+  const [heartedDeals, setHeartedDeals] = useState<any[]>([]);
+  const [heartedDealsLoading, setHeartedDealsLoading] = useState(false);
   
   // Your existing state
   const colorScheme = Appearance.getColorScheme();
@@ -83,6 +93,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       appStateSubscription.remove();
     };
   }, []);
+
+  // Fetch hearted deals from API
+  const fetchHeartedDeals = async () => {
+    console.log('🔄 fetchHeartedDeals: Starting function...');
+    try {
+      setHeartedDealsLoading(true);
+      console.log('💖 fetchHeartedDeals: Set loading to true, now calling API...');
+      
+      console.log('🎯 fetchHeartedDeals: Trying getHeartedDeals...');
+      const result = await ApiService.getHeartedDeals();
+      console.log('✅ fetchHeartedDeals: getHeartedDeals succeeded:', result);
+      
+      if (result.success && result.data) {
+        console.log('✅ Fetched hearted deals response:', result);
+        console.log('📋 Result data type:', typeof result.data);
+        console.log('📋 Result data is array:', Array.isArray(result.data));
+        console.log('📋 Result data content:', result.data);
+        
+        // Ensure result.data is an array
+        const heartedDealsArray = Array.isArray(result.data) ? result.data : [];
+        
+        console.log('✅ Processed hearted deals:', heartedDealsArray.length);
+        console.log('📋 Sample hearted deal structure:', heartedDealsArray[0] || 'No deals');
+        
+        if (heartedDealsArray.length > 0) {
+          console.log('🔍 All hearted deal IDs:', heartedDealsArray.map(d => d.deal_id || d.id));
+        }
+        
+        setHeartedDeals(heartedDealsArray);
+        return heartedDealsArray;
+      } else {
+        console.log('⚠️ No hearted deals found or API error:', result);
+        setHeartedDeals([]);
+        return [];
+      }
+    } catch (error) {
+      console.error('❌ Error fetching hearted deals:', error);
+      console.error('❌ Full error details:', {
+        message: (error as any)?.message,
+        stack: (error as any)?.stack
+      });
+      setHeartedDeals([]);
+      return [];
+    } finally {
+      setHeartedDealsLoading(false);
+    }
+  };
 
   // Fetch categories from API
   const fetchCategories = async () => {
@@ -152,6 +209,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Fetch categories after user is authenticated
         console.log('📂 InitializeApp: Fetching categories for authenticated user...');
         await fetchCategories();
+        
+        // Fetch hearted deals after user is authenticated
+        console.log('💖 InitializeApp: Fetching hearted deals for authenticated user...');
+        try {
+          await fetchHeartedDeals();
+        } catch (heartedDealsError) {
+          console.error('⚠️ InitializeApp: Failed to fetch hearted deals, but continuing...', heartedDealsError);
+        }
         
         // Try to refresh user data from server
         if (currentUser) {
@@ -292,6 +357,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await fetchCategories();
   };
 
+  // Refresh hearted deals manually
+  const refreshHeartedDeals = async () => {
+    if (user) {
+      await fetchHeartedDeals();
+    }
+  };
+
+  // Check if a deal is hearted
+  const isDealHearted = (dealId: string): boolean => {
+    return heartedDeals.some(deal => deal.deal_id === dealId || deal.id === dealId);
+  };
+
   // Authentication Methods
 
   const login = async (credentials: LoginCredentials) => {
@@ -312,6 +389,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Fetch categories after successful login
       console.log('📂 Login: Fetching categories for newly authenticated user...');
       await fetchCategories();
+      
+      // Fetch hearted deals after successful login
+      console.log('💖 Login: Fetching hearted deals for newly authenticated user...');
+      try {
+        await fetchHeartedDeals();
+      } catch (heartedDealsError) {
+        console.error('⚠️ Login: Failed to fetch hearted deals, but continuing login...', heartedDealsError);
+      }
       
       // Load user-specific preferences if any
       await loadUserPreferences(loggedInUser.id);
@@ -477,6 +562,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     getActiveSessions,
     revokeSession,
     
+    // Hearted deals management
+    heartedDeals,
+    heartedDealsLoading,
+    refreshHeartedDeals,
+    isDealHearted,
+    
     // Your existing features
     isDarkMode,
     setDarkMode,
@@ -484,7 +575,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCategories,
     availableCategories,
     refreshCategories,
-  }), [user, loading, isDarkMode, categories, availableCategories]);
+  }), [user, loading, isDarkMode, categories, availableCategories, heartedDeals, heartedDealsLoading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
