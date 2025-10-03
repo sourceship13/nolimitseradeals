@@ -1,17 +1,16 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ImageBackground,
+  Image,
   ScrollView,
   Dimensions,
   Platform,
   FlatList,
-  Alert,
-  Animated,
-  ActivityIndicator
+  Alert
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useAuth, getColors } from '../../libs/hooks/useAuth';
@@ -89,7 +88,8 @@ const DealDetailScreen: React.FC<DealDetailProps> = (props) => {
     dealExists: !!initialDeal,
     dealId: initialDeal?.id || 'no-id'
   });
-    const { isDarkMode, user, isAuthenticated, heartedDeals, isDealHearted, refreshHeartedDeals } = useAuth();
+
+  const { isDarkMode, user, isAuthenticated, heartedDeals, isDealHearted, refreshHeartedDeals } = useAuth();
   const colors = getColors(isDarkMode);
 
   // Debug hearted deals from context
@@ -111,137 +111,82 @@ const DealDetailScreen: React.FC<DealDetailProps> = (props) => {
   }, [route, initialDeal]);
   
   const [deal, setDeal] = useState(initialDeal || null);
-  const [isSaved, setIsSaved] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isLoadingHeartStatus, setIsLoadingHeartStatus] = useState(true);
   
-  // Animation values for fade transition
-  const loadingOpacity = useRef(new Animated.Value(1)).current;
-  const contentOpacity = useRef(new Animated.Value(0)).current;
+  // Local heart state management - independent of global context during operations
+  const dealId = deal?.deal_id || deal?.id;
+  const [localHeartState, setLocalHeartState] = useState<boolean | null>(null);
+  const [heartStateInitialized, setHeartStateInitialized] = useState(false);
+  
+  // Initialize local state from context only once when component mounts
+  const contextIsSaved = dealId ? isDealHearted(dealId) : false;
+  
+  // Use local state if available, otherwise use context
+  const isSaved = localHeartState !== null ? localHeartState : contextIsSaved;
+  
+  // Debug heart state changes
+  useEffect(() => {
+    console.log('💖 HEART STATE CHANGE:', {
+      dealId,
+      localHeartState,
+      contextIsSaved,
+      finalIsSaved: isSaved,
+      heartStateInitialized,
+      loading,
+      timestamp: new Date().toLocaleTimeString()
+    });
+  }, [isSaved, loading, localHeartState, contextIsSaved, heartStateInitialized]);
 
-  // Initialize animation values and debug deal structure
+  // Debug deal structure and heart status from pre-loaded data
   useEffect(() => {
     console.log('🔍 DEAL STRUCTURE DEBUG:', {
       hasInitialDeal: !!initialDeal,
       dealObject: initialDeal,
       deal_id: initialDeal?.deal_id,
       id: initialDeal?.id,
-      dealIdExists: !!(initialDeal?.deal_id || initialDeal?.id)
+      dealIdExists: !!(initialDeal?.deal_id || initialDeal?.id),
+      isHeartedFromContext: isSaved,
+      heartedDealsCount: heartedDeals?.length || 0,
+      localHeartState,
+      heartStateInitialized,
+      // Image debugging
+      business_images: initialDeal?.business_images,
+      images: initialDeal?.images,
+      image_url: initialDeal?.image_url,
+      imageKeys: initialDeal ? Object.keys(initialDeal).filter(key => key.toLowerCase().includes('image')) : []
     });
     
-    // Ensure animation values are properly initialized
-    loadingOpacity.setValue(1);
-    contentOpacity.setValue(0);
-    console.log('🎬 Animation values initialized: loading=1, content=0');
-  }, []);
+    // Debug hearted deals for this specific deal
+    if (dealId) {
+      const foundInHearted = heartedDeals?.find(h => h.deal_id === dealId || h.id === dealId);
+      console.log('💖 HEART STATUS DEBUG for deal', dealId, ':', {
+        foundInHeartedDeals: !!foundInHearted,
+        heartedDealIds: heartedDeals?.map(h => h.deal_id || h.id),
+        isDealHeartedResult: isDealHearted(dealId),
+        isSavedState: isSaved
+      });
+    }
+  }, [initialDeal, isSaved, heartedDeals, dealId]);
 
+  // Initialize local heart state from context only once per deal
   useEffect(() => {
-    console.log('🔄 DealDetail useEffect triggered:', {
-      hasDeal: !!deal?.deal_id,
-      dealId: deal?.deal_id,
-      isAuthenticated: isAuthenticated,
-      heartedDealsLength: heartedDeals?.length || 0,
-      heartedDealsExists: !!heartedDeals
-    });
-    
-    const dealId = deal?.deal_id || deal?.id;
-    console.log('🎯 UseEffect logic check:', { 
-      dealId, 
-      isAuthenticated, 
-      shouldCheckHeartStatus: !!(dealId && isAuthenticated) 
-    });
-    
-    if (dealId && isAuthenticated) {
-      // Check heart status directly from API for accuracy
-      checkDealHeartStatus();
-    } else {
-      // No authentication or deal, but still show loading for UX
-      console.log('📋 Skipping heart status check - no auth or deal');
-      setTimeout(() => {
-        startFadeTransition();
-      }, 600); // Brief loading even when skipping API call
+    if (dealId && !heartStateInitialized) {
+      const contextState = isDealHearted(dealId);
+      console.log('🔄 Initializing local heart state from context:', {
+        dealId,
+        contextState
+      });
+      setLocalHeartState(contextState);
+      setHeartStateInitialized(true);
     }
-    
-    // Safety fallback: ensure content shows after 3 seconds regardless
-    const fallbackTimer = setTimeout(() => {
-      console.log('⏰ Fallback timer triggered - forcing content to show');
-      startFadeTransition();
-    }, 3000);
-    
-    return () => clearTimeout(fallbackTimer);
-  }, [deal?.deal_id, isAuthenticated]);
+  }, [dealId, heartStateInitialized, isDealHearted]);
 
-  const checkDealHeartStatus = async () => {
-    const dealId = deal?.deal_id || deal?.id;
-    console.log('🔍 Deal ID check:', { deal_id: deal?.deal_id, id: deal?.id, finalDealId: dealId });
-    
-    if (!dealId) {
-      console.log('⚠️ No deal_id or id found, skipping heart status check');
-      // Still show loading for a brief moment for UX
-      await new Promise<void>(resolve => setTimeout(() => resolve(), 500));
-      startFadeTransition();
-      return;
-    }
-    
-    try {
-      console.log('💖 Checking heart status for deal:', dealId);
-      setIsLoadingHeartStatus(true);
-      
-      // Start the API call and minimum duration timer simultaneously
-      const [response] = await Promise.all([
-        ApiService.checkHeartStatus(dealId),
-        new Promise<void>(resolve => setTimeout(() => resolve(), 800)) // Minimum 800ms loading
-      ]);
-      
-      if (response.success && response.data) {
-        const { isHearted, heartCount } = response.data;
-        console.log('💖 Heart status received:', { isHearted, heartCount });
-        setIsSaved(isHearted);
-      } else {
-        console.log('❌ Failed to get heart status:', response.error || response.message);
-        // Fallback to global hearted deals state
-        const isAlreadySaved = isDealHearted(deal.deal_id);
-        setIsSaved(isAlreadySaved);
-      }
-    } catch (error) {
-      console.error('� Error checking heart status:', error);
-      // Fallback to global hearted deals state on error
-      const isAlreadySaved = isDealHearted(deal.deal_id);
-      setIsSaved(isAlreadySaved);
-    } finally {
-      // Start fade transition (it will handle setting loading to false)
-      startFadeTransition();
-    }
-  };
-
-  const startFadeTransition = () => {
-    console.log('🎬 Starting fade transition - Loading out, Content in');
-    
-    // First set loading to false, then start the animation
-    setIsLoadingHeartStatus(false);
-    
-    // Use staggered animation for smoother transition
-    Animated.sequence([
-      // Small delay to ensure state update
-      Animated.delay(50),
-      // Fade out loading and fade in content with slight overlap
-      Animated.parallel([
-        Animated.timing(loadingOpacity, {
-          toValue: 0,
-          duration: 250,
-          useNativeDriver: true,
-        }),
-        Animated.timing(contentOpacity, {
-          toValue: 1,
-          duration: 350,
-          useNativeDriver: true,
-        }),
-      ])
-    ]).start(() => {
-      console.log('✅ Fade transition completed');
-    });
-  };
+  // Reset state when deal changes (e.g., navigating to different deal)
+  useEffect(() => {
+    setHeartStateInitialized(false);
+    setLocalHeartState(null);
+  }, [dealId]);
 
   const handleSave = async () => {
     console.log('🔍 handleSave debug - checking auth:', {
@@ -250,7 +195,9 @@ const DealDetailScreen: React.FC<DealDetailProps> = (props) => {
       hasUser: !!user,
       userId: user?.id,
       userObject: user,
-      isAuthenticated: isAuthenticated
+      isAuthenticated: isAuthenticated,
+      currentHeartStatus: isSaved,
+      heartedDealsBeforeAction: heartedDeals?.length || 0
     });
     
     if (!deal?.deal_id || !user?.id) {
@@ -258,54 +205,56 @@ const DealDetailScreen: React.FC<DealDetailProps> = (props) => {
       return;
     }
     
-    const previousSavedState = isSaved;
+    // Use local state to determine current status and action
+    const currentHeartState = isSaved;
+    const newHeartState = !currentHeartState;
+    
     console.log('💖 Heart button pressed:', {
       dealId: deal.deal_id,
-      currentState: previousSavedState,
-      willHeart: !previousSavedState
+      currentHeartState,
+      newHeartState,
+      localHeartState,
+      heartedDealsBeforeAction: heartedDeals?.length || 0
     });
     
+    // Immediately update local state for instant UI feedback
+    setLocalHeartState(newHeartState);
     setLoading(true);
+    
     try {
-      if (previousSavedState) {
-        // Unheart the deal
+      if (currentHeartState) {
+        // Currently hearted - unheart it
+        console.log('💔 Unhearting deal...');
         await ApiService.unheartDeal(deal.deal_id);
         console.log('✅ Deal unhearted successfully');
       } else {
-        // Heart the deal
+        // Currently not hearted - heart it
+        console.log('💖 Hearting deal...');
         await ApiService.heartDeal(deal.deal_id);
         console.log('✅ Deal hearted successfully');
       }
       
-      // Refresh global hearted deals state
-      await refreshHeartedDeals();
+      // Refresh global hearted deals state in background (don't wait for it)
+      refreshHeartedDeals().catch(err => {
+        console.warn('⚠️ Failed to refresh hearted deals:', err);
+      });
       
-      // Check actual heart status from API after operation
-      const statusResponse = await ApiService.checkHeartStatus(deal.deal_id);
-      if (statusResponse.success && statusResponse.data) {
-        const { isHearted, heartCount } = statusResponse.data;
-        setIsSaved(isHearted);
-        console.log('💖 Heart operation completed:', {
-          previousState: previousSavedState,
-          newState: isHearted,
-          heartCount: heartCount,
-          success: true
-        });
-      } else {
-        // Fallback to global state if API check fails
-        const updatedSavedStatus = isDealHearted(deal.deal_id);
-        setIsSaved(updatedSavedStatus);
-        console.log('💖 Heart operation completed (fallback):', {
-          previousState: previousSavedState,
-          newState: updatedSavedStatus,
-          success: true
-        });
-      }
+      console.log('💖 Heart operation completed successfully:', {
+        previousState: currentHeartState,
+        newState: newHeartState,
+        localStateNow: localHeartState
+      });
+      
+      // Keep local state as is - don't sync back to context
+      // Local state is now the source of truth for this component
+      
     } catch (error: any) {
-      console.error('Error saving/unsaving deal:', error);
-      Alert.alert('Error', error.message || 'Something went wrong');
+      console.error('❌ Heart operation failed:', error);
+      
       // Revert local state on error
-      setIsSaved(previousSavedState);
+      setLocalHeartState(currentHeartState);
+      
+      Alert.alert('Error', error.message || 'Failed to update heart status. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -345,24 +294,67 @@ const DealDetailScreen: React.FC<DealDetailProps> = (props) => {
           onBack={() => navigation.goBack()}
         />
         <View style={styles.centerContent}>
-          <Text style={[styles.errorText, { color: colors.text }]}>No deal found</Text>
-          <Text style={[styles.errorText, { color: colors.textSecondary, fontSize: 14, marginTop: 8 }]}>
-            Please navigate to this screen from the deals list
+          <Text style={[styles.errorText, { color: colors.text }]}>Deal not found</Text>
+          <Text style={[styles.errorText, { color: colors.textSecondary, fontSize: 12, marginTop: 8 }]}>
+            Unable to load deal details
           </Text>
         </View>
       </View>
     );
   }
 
-  const renderImage = ({ item }: { item: any }) => (
-    <ImageBackground
-      source={{ uri: item.image_url }}
-      style={styles.dealImage}
-      resizeMode="cover"
-    >
-      <View style={styles.imageOverlay} />
-    </ImageBackground>
-  );
+  // Handle display issues
+  if (error) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <Toolbar
+          title="Deal Details"
+          onBack={() => navigation.goBack()}
+        />
+        <View style={styles.centerContent}>
+          <Text style={[styles.errorText, { color: colors.text }]}>Error: {error}</Text>
+        </View>
+      </View>
+    );
+  }
+
+  const renderImage = ({ item, index }: { item: string; index: number }) => {
+    console.log(`🖼️ Rendering image ${index}:`, {
+      url: item,
+      isValidUrl: !!item && typeof item === 'string' && item.length > 0,
+      startsWithHttp: item?.startsWith('http'),
+      fullUrl: item
+    });
+    
+    // Try both ImageBackground and fallback to regular Image for debugging
+    return (
+      <View style={styles.dealImage}>
+        {/* Primary: ImageBackground */}
+        <ImageBackground
+          source={{ uri: item }}
+          style={StyleSheet.absoluteFill}
+          resizeMode="cover"
+          onLoad={() => console.log(`✅ ImageBackground ${index} loaded successfully`)}
+          onError={(error) => {
+            console.error(`❌ ImageBackground ${index} failed to load:`, error.nativeEvent.error);
+            console.error(`❌ Failed URL:`, item);
+          }}
+          onLoadStart={() => console.log(`🔄 ImageBackground ${index} loading started`)}
+          onLoadEnd={() => console.log(`🏁 ImageBackground ${index} loading ended`)}
+        >
+          <View style={styles.imageOverlay} />
+        </ImageBackground>
+        
+        {/* Test with a known working image URL for comparison */}
+        <Image 
+          source={{ uri: 'https://via.placeholder.com/300x200/FF69B4/FFFFFF?text=TEST+IMAGE' }}
+          style={[{ position: 'absolute', top: 10, right: 10, width: 60, height: 40 }]}
+          onLoad={() => console.log(`✅ Test image loaded successfully`)}
+          onError={(error) => console.error(`❌ Even test image failed:`, error.nativeEvent.error)}
+        />
+      </View>
+    );
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -371,47 +363,118 @@ const DealDetailScreen: React.FC<DealDetailProps> = (props) => {
         onBack={() => navigation.goBack()}
       />
       
-      {/* Loading Overlay - Always present, controlled by opacity */}
-      <Animated.View 
-        style={[
-          styles.loadingOverlay, 
-          { 
-            backgroundColor: colors.background,
-            opacity: loadingOpacity 
-          }
-        ]}
-        pointerEvents={isLoadingHeartStatus ? 'auto' : 'none'}
-      >
-        <ActivityIndicator 
-          size="large" 
-          color={colors.primary} 
-          style={styles.loadingIndicator}
-        />
-        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-          Loading deal details...
-        </Text>
-      </Animated.View>
-      
-      {/* Main Content with Fade Animation */}
-      <Animated.View style={[styles.contentWrapper, { opacity: contentOpacity }]}>
-        <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         {/* Deal Images */}
         <View style={styles.imageContainer}>
-          {deal.business_images && deal.business_images.length > 0 ? (
-            <FlatList
-              data={deal.business_images}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={(item, index) => `image-${index}`}
-              renderItem={renderImage}
-            />
-          ) : (
-            <View style={[styles.dealImage, { backgroundColor: colors.primary }]}>
-              <View style={styles.imageOverlay} />
-              <Text style={styles.placeholderEmoji}>🛍️</Text>
-            </View>
-          )}
+          {(() => {
+            // Look for DEAL images (not business images) from the deals API response
+            const deal_images = deal.deal_images;           // Deal-specific images array
+            const deal_image_url = deal.deal_image_url;     // Single deal image URL
+            const image_url = deal.image_url;               // Generic image URL
+            const images = deal.images;                     // Generic images array
+            const business_images = deal.business_images;   // Business images (fallback)
+            
+            // Prioritize deal-specific images over business images
+            let finalImages = null;
+            
+            // Extract image URLs from deal_images array (objects with image_url property)
+            if (deal_images && Array.isArray(deal_images) && deal_images.length > 0) {
+              finalImages = deal_images
+                .filter(img => img && typeof img === 'object' && img.image_url)
+                .map(img => img.image_url)
+                .filter(url => url && typeof url === 'string' && url.trim().length > 0);
+            } 
+            // Single deal image URL
+            else if (deal_image_url && typeof deal_image_url === 'string' && deal_image_url.trim().length > 0) {
+              finalImages = [deal_image_url];
+            } 
+            // Generic image URL
+            else if (image_url && typeof image_url === 'string' && image_url.trim().length > 0) {
+              finalImages = [image_url];
+            } 
+            // Generic images array (could be strings or objects)
+            else if (images && Array.isArray(images) && images.length > 0) {
+              finalImages = images
+                .map(img => {
+                  // Handle both string URLs and objects with image_url property
+                  if (typeof img === 'string') return img;
+                  if (typeof img === 'object' && img.image_url) return img.image_url;
+                  return null;
+                })
+                .filter(url => url && typeof url === 'string' && url.trim().length > 0);
+            } 
+            // Business images as fallback (objects with image_url property)
+            else if (business_images && Array.isArray(business_images) && business_images.length > 0) {
+              finalImages = business_images
+                .filter(img => img && typeof img === 'object' && img.image_url)
+                .map(img => img.image_url)
+                .filter(url => url && typeof url === 'string' && url.trim().length > 0);
+            }
+            
+            console.log('🖼️ DEAL IMAGES FROM API RESPONSE:', {
+              // Current deal info
+              dealId: deal.deal_id,
+              dealTitle: deal.deal_title,
+              businessName: deal.business_name,
+              
+              // Raw image data exactly as returned from API
+              deal_images_from_api: deal_images,
+              deal_image_url_from_api: deal_image_url,
+              business_images_from_api: business_images,
+              
+              // Type and validation checks
+              deal_images_type: typeof deal_images,
+              deal_images_isArray: Array.isArray(deal_images),
+              deal_images_isNull: deal_images === null,
+              deal_image_url_type: typeof deal_image_url,
+              deal_image_url_isNull: deal_image_url === null,
+              
+              // Final processing result
+              finalImages: finalImages,
+              finalImagesCount: finalImages?.length || 0,
+              showingImages: !!(finalImages && finalImages.length > 0),
+              
+              // Source determination
+              imageSource: finalImages === deal_images ? 'deal_images' : 
+                          finalImages && finalImages[0] === deal_image_url ? 'deal_image_url' :
+                          finalImages && finalImages[0] === image_url ? 'image_url' :
+                          finalImages === images ? 'images' :
+                          finalImages === business_images ? 'business_images (fallback)' : 
+                          finalImages ? 'unknown_source' : 'no_images_found',
+              
+              // Sample image URLs (if any)
+              firstImageUrl: finalImages?.[0],
+              
+              // Complete deal object for reference
+              completeDealObject: deal
+            });
+            
+            return finalImages && finalImages.length > 0 ? (
+              <View>
+                <FlatList
+                  data={finalImages}
+                  horizontal
+                  pagingEnabled
+                  showsHorizontalScrollIndicator={false}
+                  keyExtractor={(item, index) => `image-${index}-${item?.slice?.(-10) || 'unknown'}`}
+                  renderItem={renderImage}
+                  onLayout={() => console.log('🖼️ FlatList layout completed')}
+                  ListHeaderComponent={() => {
+                    console.log('🖼️ FlatList header rendering');
+                    return null;
+                  }}
+                />
+
+              </View>
+            ) : (
+              <View style={[styles.dealImage, { backgroundColor: colors.primary }]}>
+                <View style={styles.imageOverlay} />
+                <Text style={styles.placeholderEmoji}>🛍️</Text>
+
+              </View>
+            );
+          })()
+          }
         </View>
 
         {/* Deal Content */}
@@ -497,8 +560,7 @@ const DealDetailScreen: React.FC<DealDetailProps> = (props) => {
             </TouchableOpacity>
           </View>
         </View>
-        </ScrollView>
-      </Animated.View>
+      </ScrollView>
     </View>
   );
 };
@@ -512,88 +574,65 @@ const styles = StyleSheet.create({
   },
   centerContent: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loadingOverlay: {
-    position: 'absolute',
-    top: 60, // Below toolbar
-    left: 0,
-    right: 0,
-    bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1000,
-  },
-  loadingIndicator: {
-    marginBottom: 16,
-    transform: [{ scale: 1.2 }], // Make spinner slightly larger
-  },
-  loadingText: {
-    fontSize: 17,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-    fontWeight: '500',
-  },
-  contentWrapper: {
-    flex: 1,
+    padding: 20,
   },
   errorText: {
-    fontSize: 18,
+    fontSize: 16,
     textAlign: 'center',
+    fontWeight: '500',
   },
   imageContainer: {
-    height: 300,
+    height: 250,
   },
   dealImage: {
     width: screenWidth,
-    height: 300,
+    height: 250,
     justifyContent: 'center',
     alignItems: 'center',
   },
   imageOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   placeholderEmoji: {
-    fontSize: 64,
-    color: '#fff',
+    fontSize: 48,
+    textAlign: 'center',
   },
   contentContainer: {
     flex: 1,
     padding: 20,
+    marginTop: -20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
   businessHeader: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   businessTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 5,
+    marginBottom: 4,
   },
   businessName: {
     fontSize: 24,
     fontWeight: 'bold',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-    marginRight: 8,
+    flex: 1,
   },
   verifiedIcon: {
-    marginTop: 2,
+    marginLeft: 8,
   },
   categoryText: {
     fontSize: 16,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontWeight: '500',
   },
   descriptionContainer: {
     marginBottom: 20,
   },
   dealDescription: {
-    fontSize: 18,
+    fontSize: 16,
     lineHeight: 24,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   infoContainer: {
     marginBottom: 20,
@@ -606,56 +645,51 @@ const styles = StyleSheet.create({
   infoText: {
     fontSize: 14,
     marginLeft: 8,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   shareButton: {
     marginBottom: 20,
   },
   actionButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     gap: 12,
+    marginTop: 20,
   },
   saveButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.1)',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    gap: 8,
   },
   saveButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    marginLeft: 6,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
   redeemButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    gap: 8,
   },
   redeemButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 6,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+    fontWeight: '600',
   },
 });
 
-// Wrap with error boundary for additional safety
-const DealDetailWithErrorBoundary: React.FC<DealDetailProps> = (props) => (
-  <DealDetailErrorBoundary>
-    <DealDetailScreen {...props} />
-  </DealDetailErrorBoundary>
-);
-
-export default DealDetailWithErrorBoundary;
+// Export with Error Boundary wrapper
+export default function DealDetailWithErrorBoundary(props: DealDetailProps) {
+  return (
+    <DealDetailErrorBoundary>
+      <DealDetailScreen {...props} />
+    </DealDetailErrorBoundary>
+  );
+}

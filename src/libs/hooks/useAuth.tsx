@@ -204,7 +204,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Get stored user data
         const currentUser = await AuthService.getCurrentUser();
         console.log(`👤 InitializeApp: Current user:`, currentUser ? 'Found' : 'Not found');
-        setUser(currentUser);
+        setUser(currentUser as User | null);
         
         // Fetch categories after user is authenticated
         console.log('📂 InitializeApp: Fetching categories for authenticated user...');
@@ -224,7 +224,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.log('🔄 InitializeApp: Refreshing user data from server...');
             const freshUser = await AuthService.getProfile();
             console.log('✅ InitializeApp: User data refreshed from server');
-            setUser(freshUser);
+            setUser(freshUser as User);
           } catch (error) {
             console.log('⚠️ InitializeApp: Using cached user data, server refresh failed:', error);
             // Keep using cached data if refresh fails
@@ -306,6 +306,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         refreshUser();
         // Refresh categories when app comes back to foreground (only if user is authenticated)
         fetchCategories();
+        // Refresh hearted deals when app comes back to foreground
+        console.log('💖 App foreground: Refreshing hearted deals...');
+        fetchHeartedDeals();
       } else {
         // Even without user, try to fetch categories for guest mode
         fetchCategories();
@@ -384,7 +387,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       const loggedInUser = await AuthService.login(credentials, deviceId);
-      setUser(loggedInUser);
+      setUser(loggedInUser as User);
       
       // Fetch categories after successful login
       console.log('📂 Login: Fetching categories for newly authenticated user...');
@@ -446,7 +449,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshUser = async () => {
     try {
       const freshUser = await AuthService.getProfile();
-      setUser(freshUser);
+      setUser(freshUser as User);
     } catch (error) {
       console.error('Error refreshing user:', error);
       
@@ -461,7 +464,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateProfile = async (updates: Partial<User>) => {
     try {
       const updatedUser = await AuthService.updateProfile(updates);
-      setUser(updatedUser);
+      setUser(updatedUser as User);
     } catch (error) {
       console.error('Error updating profile:', error);
       throw error;

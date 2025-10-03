@@ -3,6 +3,7 @@ import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import Contacts from 'react-native-contacts';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SendSMS from 'react-native-sms';
+import AppReturnUtils from '../libs/utils/appReturnUtils';
 
 interface Contact {
   recordID: string;
@@ -256,12 +257,8 @@ class DealSharingService {
         return false;
       }
 
-      // Platform-specific SMS implementation
-      if (Platform.OS === 'ios') {
-        return await this.sendSMSiOS(cleanedNumbers, message);
-      } else {
-        return await this.sendSMSAndroid(cleanedNumbers, message);
-      }
+      // Use AppReturnUtils for SMS with "Return to App" breadcrumb support
+      return await AppReturnUtils.sendSMSWithReturn(cleanedNumbers, message);
       
     } catch (error) {
       console.error('❌ SMS Method Error:', error);
