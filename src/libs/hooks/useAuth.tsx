@@ -44,6 +44,9 @@ interface AuthContextType {
   heartedDealsLoading: boolean;
   refreshHeartedDeals: () => Promise<void>;
   isDealHearted: (dealId: string) => boolean;
+  heartDeal: (dealId: string, dealObject?: any) => Promise<boolean>;
+  unheartDeal: (dealId: string) => Promise<boolean>;
+  toggleHeartDeal: (dealId: string, dealObject?: any) => Promise<boolean>;
   
   // Your existing features
   isDarkMode: boolean;
@@ -108,18 +111,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (result.success && result.data) {
         console.log('✅ Fetched hearted deals response:', result);
         console.log('📋 Result data type:', typeof result.data);
-        console.log('📋 Result data is array:', Array.isArray(result.data));
         console.log('📋 Result data content:', result.data);
         
-        // Ensure result.data is an array
-        const heartedDealsArray = Array.isArray(result.data) ? result.data : [];
+        // Handle new API response format: { dealIds: [...], count: number }
+        let heartedDealIds: string[] = [];
+        
+        if (result.data && typeof result.data === 'object' && !Array.isArray(result.data)) {
+          // New format: { dealIds: [...], count: number }
+          const dataObj = result.data as any;
+          if (dataObj.dealIds && Array.isArray(dataObj.dealIds)) {
+            heartedDealIds = dataObj.dealIds;
+            console.log('🎯 Using new API format - dealIds array:', heartedDealIds);
+            console.log('🎯 Deal count from API:', dataObj.count);
+          }
+        } else if (Array.isArray(result.data)) {
+          // Legacy format: array of deal objects
+          heartedDealIds = result.data.map((deal: any) => deal.deal_id || deal.id).filter(Boolean);
+          console.log('🎯 Using legacy API format - extracting IDs:', heartedDealIds);
+        }
+        
+        // Convert deal IDs to minimal deal objects for compatibility
+        const heartedDealsArray = heartedDealIds.map(dealId => ({
+          deal_id: dealId,
+          id: dealId, // Also set id for compatibility
+          isHearted: true // Flag to indicate this is a hearted deal
+        }));
         
         console.log('✅ Processed hearted deals:', heartedDealsArray.length);
-        console.log('📋 Sample hearted deal structure:', heartedDealsArray[0] || 'No deals');
-        
-        if (heartedDealsArray.length > 0) {
-          console.log('🔍 All hearted deal IDs:', heartedDealsArray.map(d => d.deal_id || d.id));
-        }
+        console.log('📋 Hearted deal IDs:', heartedDealIds);
+        console.log('� Sample hearted deal object:', heartedDealsArray[0] || 'No deals');
         
         setHeartedDeals(heartedDealsArray);
         return heartedDealsArray;
@@ -372,6 +392,105 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return heartedDeals.some(deal => deal.deal_id === dealId || deal.id === dealId);
   };
 
+  // Heart a deal (API + state update)
+  const heartDeal = async (dealId: string, dealObject?: any): Promise<boolean> => {
+    console.log('💖 heartDeal called:', { dealId, dealObject: !!dealObject });
+    
+    if (!user?.id) {
+      console.error('❌ Cannot heart deal: user not authenticated');
+      return false;
+    }
+
+    try {
+      // Optimistic update - add to global state immediately
+      const alreadyHearted = heartedDeals.some(d => d.deal_id === dealId || d.id === dealId);
+      if (!alreadyHearted) {
+        // Create minimal deal object for hearted deals state
+        const dealToAdd = {
+          deal_id: dealId,
+          id: dealId,
+          isHearted: true,
+          // Include any additional deal data if provided
+          ...(dealObject && typeof dealObject === 'object' ? dealObject : {})
+        };
+        setHeartedDeals(prev => [...prev, dealToAdd]);
+        console.log('✅ Added deal to hearted deals optimistically:', dealToAdd);
+      }
+
+      // Make API call
+      console.log('🚀 Making API call to heart deal:', dealId);
+      await ApiService.heartDeal(dealId);
+      console.log('✅ API heart call succeeded');
+      
+      // Refresh in background for consistency
+      refreshHeartedDeals().catch(err => {
+        console.warn('⚠️ Background refresh failed:', err);
+      });
+
+      return true;
+    } catch (error: any) {
+      console.error('❌ Heart deal failed:', error);
+      
+      // Revert optimistic update on error
+      setHeartedDeals(prev => prev.filter(d => d.deal_id !== dealId && d.id !== dealId));
+      console.log('🔄 Reverted optimistic update due to API failure');
+      
+      return false;
+    }
+  };
+
+  // Unheart a deal (API + state update)
+  const unheartDeal = async (dealId: string): Promise<boolean> => {
+    console.log('💔 unheartDeal called:', { dealId });
+    
+    if (!user?.id) {
+      console.error('❌ Cannot unheart deal: user not authenticated');
+      return false;
+    }
+
+    // Store original deals for potential revert
+    const originalDeals = [...heartedDeals];
+
+    try {
+      // Optimistic update - remove from global state immediately
+      setHeartedDeals(prev => prev.filter(d => d.deal_id !== dealId && d.id !== dealId));
+      console.log('✅ Removed deal from local state optimistically');
+
+      // Make API call
+      console.log('🚀 Making API call to unheart deal:', dealId);
+      await ApiService.unheartDeal(dealId);
+      console.log('✅ API unheart call succeeded');
+      
+      // Refresh in background for consistency
+      refreshHeartedDeals().catch(err => {
+        console.warn('⚠️ Background refresh failed:', err);
+      });
+
+      return true;
+    } catch (error: any) {
+      console.error('❌ Unheart deal failed:', error);
+      
+      // Revert optimistic update on error (restore original deals)
+      setHeartedDeals(originalDeals);
+      console.log('🔄 Reverted optimistic update due to API failure');
+      
+      return false;
+    }
+  };
+
+  // Toggle heart status (convenience function)
+  const toggleHeartDeal = async (dealId: string, dealObject?: any): Promise<boolean> => {
+    const isCurrentlyHearted = isDealHearted(dealId);
+    console.log('🔄 toggleHeartDeal called:', { dealId, isCurrentlyHearted });
+    
+    if (isCurrentlyHearted) {
+console.log("*********Called UNHEART",dealId, dealObject);
+      return await unheartDeal(dealId);
+    } else {
+      return await heartDeal(dealId, dealObject);
+    }
+  };
+
   // Authentication Methods
 
   const login = async (credentials: LoginCredentials) => {
@@ -570,6 +689,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     heartedDealsLoading,
     refreshHeartedDeals,
     isDealHearted,
+    heartDeal,
+    unheartDeal,
+    toggleHeartDeal,
     
     // Your existing features
     isDarkMode,

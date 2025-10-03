@@ -89,7 +89,7 @@ const DealDetailScreen: React.FC<DealDetailProps> = (props) => {
     dealId: initialDeal?.id || 'no-id'
   });
 
-  const { isDarkMode, user, isAuthenticated, heartedDeals, isDealHearted, refreshHeartedDeals } = useAuth();
+  const { isDarkMode, user, isAuthenticated, heartedDeals, isDealHearted, toggleHeartDeal } = useAuth();
   const colors = getColors(isDarkMode);
 
   // Debug hearted deals from context
@@ -114,146 +114,58 @@ const DealDetailScreen: React.FC<DealDetailProps> = (props) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Local heart state management - independent of global context during operations
+  // Simple heart state - just use global state directly
   const dealId = deal?.deal_id || deal?.id;
-  const [localHeartState, setLocalHeartState] = useState<boolean | null>(null);
-  const [heartStateInitialized, setHeartStateInitialized] = useState(false);
-  
-  // Initialize local state from context only once when component mounts
-  const contextIsSaved = dealId ? isDealHearted(dealId) : false;
-  
-  // Use local state if available, otherwise use context
-  const isSaved = localHeartState !== null ? localHeartState : contextIsSaved;
+  const isSaved = dealId ? isDealHearted(dealId) : false;
   
   // Debug heart state changes
   useEffect(() => {
     console.log('💖 HEART STATE CHANGE:', {
       dealId,
-      localHeartState,
-      contextIsSaved,
       finalIsSaved: isSaved,
-      heartStateInitialized,
       loading,
+      heartedDealsCount: heartedDeals?.length || 0,
       timestamp: new Date().toLocaleTimeString()
     });
-  }, [isSaved, loading, localHeartState, contextIsSaved, heartStateInitialized]);
+  }, [isSaved, loading, heartedDeals, dealId]);
 
-  // Debug deal structure and heart status from pre-loaded data
+  // Debug deal structure and heart status
   useEffect(() => {
     console.log('🔍 DEAL STRUCTURE DEBUG:', {
       hasInitialDeal: !!initialDeal,
-      dealObject: initialDeal,
-      deal_id: initialDeal?.deal_id,
-      id: initialDeal?.id,
-      dealIdExists: !!(initialDeal?.deal_id || initialDeal?.id),
-      isHeartedFromContext: isSaved,
+      dealId: dealId,
+      isHeartedFromGlobalState: isSaved,
       heartedDealsCount: heartedDeals?.length || 0,
-      localHeartState,
-      heartStateInitialized,
-      // Image debugging
-      business_images: initialDeal?.business_images,
-      images: initialDeal?.images,
-      image_url: initialDeal?.image_url,
-      imageKeys: initialDeal ? Object.keys(initialDeal).filter(key => key.toLowerCase().includes('image')) : []
+      heartedDealIds: heartedDeals?.map(h => h.deal_id || h.id) || []
     });
-    
-    // Debug hearted deals for this specific deal
-    if (dealId) {
-      const foundInHearted = heartedDeals?.find(h => h.deal_id === dealId || h.id === dealId);
-      console.log('💖 HEART STATUS DEBUG for deal', dealId, ':', {
-        foundInHeartedDeals: !!foundInHearted,
-        heartedDealIds: heartedDeals?.map(h => h.deal_id || h.id),
-        isDealHeartedResult: isDealHearted(dealId),
-        isSavedState: isSaved
-      });
-    }
   }, [initialDeal, isSaved, heartedDeals, dealId]);
 
-  // Initialize local heart state from context only once per deal
-  useEffect(() => {
-    if (dealId && !heartStateInitialized) {
-      const contextState = isDealHearted(dealId);
-      console.log('🔄 Initializing local heart state from context:', {
-        dealId,
-        contextState
-      });
-      setLocalHeartState(contextState);
-      setHeartStateInitialized(true);
-    }
-  }, [dealId, heartStateInitialized, isDealHearted]);
-
-  // Reset state when deal changes (e.g., navigating to different deal)
-  useEffect(() => {
-    setHeartStateInitialized(false);
-    setLocalHeartState(null);
-  }, [dealId]);
-
   const handleSave = async () => {
-    console.log('🔍 handleSave debug - checking auth:', {
-      hasDeal: !!deal,
-      dealId: deal?.deal_id,
-      hasUser: !!user,
-      userId: user?.id,
-      userObject: user,
-      isAuthenticated: isAuthenticated,
-      currentHeartStatus: isSaved,
-      heartedDealsBeforeAction: heartedDeals?.length || 0
-    });
-    
     if (!deal?.deal_id || !user?.id) {
       Alert.alert('Error', 'You must be logged in to heart deals');
       return;
     }
-    
-    // Use local state to determine current status and action
-    const currentHeartState = isSaved;
-    const newHeartState = !currentHeartState;
-    
+
     console.log('💖 Heart button pressed:', {
       dealId: deal.deal_id,
-      currentHeartState,
-      newHeartState,
-      localHeartState,
-      heartedDealsBeforeAction: heartedDeals?.length || 0
+      currentHeartStatus: isSaved,
+      heartedDealsCount: heartedDeals?.length || 0
     });
-    
-    // Immediately update local state for instant UI feedback
-    setLocalHeartState(newHeartState);
+
     setLoading(true);
-    
+
     try {
-      if (currentHeartState) {
-        // Currently hearted - unheart it
-        console.log('💔 Unhearting deal...');
-        await ApiService.unheartDeal(deal.deal_id);
-        console.log('✅ Deal unhearted successfully');
+      // Use the global toggleHeartDeal function - handles everything!
+      const success = await toggleHeartDeal(deal.deal_id, deal);
+      
+      if (success) {
+        console.log('✅ Heart toggle completed successfully');
       } else {
-        // Currently not hearted - heart it
-        console.log('💖 Hearting deal...');
-        await ApiService.heartDeal(deal.deal_id);
-        console.log('✅ Deal hearted successfully');
+        console.log('⚠️ Heart toggle failed');
+        Alert.alert('Error', 'Failed to update heart status. Please try again.');
       }
-      
-      // Refresh global hearted deals state in background (don't wait for it)
-      refreshHeartedDeals().catch(err => {
-        console.warn('⚠️ Failed to refresh hearted deals:', err);
-      });
-      
-      console.log('💖 Heart operation completed successfully:', {
-        previousState: currentHeartState,
-        newState: newHeartState,
-        localStateNow: localHeartState
-      });
-      
-      // Keep local state as is - don't sync back to context
-      // Local state is now the source of truth for this component
-      
     } catch (error: any) {
       console.error('❌ Heart operation failed:', error);
-      
-      // Revert local state on error
-      setLocalHeartState(currentHeartState);
-      
       Alert.alert('Error', error.message || 'Failed to update heart status. Please try again.');
     } finally {
       setLoading(false);
