@@ -23,17 +23,39 @@ const ExploreScreen = ({ navigation }: any) => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  console.log('🔍 Explore Debug - total deals:', deals.length);
+  console.log('🔍 Explore Debug - deals after category filter:', deals.length, '→', Object.keys(categories).length === 0 ? deals.length : deals.filter(deal => {
+    const dealCategory = (deal.category_name || '').toLowerCase();
+    const matchingCategory = availableCategories.find(cat => cat.name.toLowerCase() === dealCategory);
+    return matchingCategory && categories[matchingCategory.slug] !== false;
+  }).length);
+  console.log('🔍 Explore Debug - selectedCategory:', selectedCategory);
+
   // Deals are now fetched globally via useAuth hook
 
-  // Filter deals by selectedCategory if set
+  // Filter deals by category settings (enabled/disabled switches from Settings)
+  const categoryFilteredDeals = Object.keys(categories).length === 0
+    ? deals // If no category preferences set, show all deals
+    : deals.filter(deal => {
+        // Find which category this deal belongs to
+        const dealCategory = (deal.category_name || '').toLowerCase();
+        const matchingCategory = availableCategories.find(cat => 
+          cat.name.toLowerCase() === dealCategory
+        );
+        
+        // Only show deals from enabled categories
+        return matchingCategory && categories[matchingCategory.slug] !== false;
+      });
+
+  // Then filter by selectedCategory if manually selected
   const filteredDeals = selectedCategory
-    ? deals.filter(deal => {
+    ? categoryFilteredDeals.filter(deal => {
         // Match against category_name since that's what's in your API response
         const dealCategory = (deal.category_name || '').toLowerCase();
         const selectedCat = availableCategories.find(cat => cat.slug === selectedCategory);
         return selectedCat && dealCategory === selectedCat.name.toLowerCase();
       })
-    : deals;
+    : categoryFilteredDeals;
 
   // Sort deals: Premium first, then featured deals (priority_score > 0), then regular deals
   const sortedDeals = [...filteredDeals].sort((a, b) => {
