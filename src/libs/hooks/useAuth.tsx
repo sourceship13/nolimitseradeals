@@ -48,6 +48,11 @@ interface AuthContextType {
   unheartDeal: (dealId: string) => Promise<boolean>;
   toggleHeartDeal: (dealId: string, dealObject?: any) => Promise<boolean>;
   
+  // All deals management
+  deals: any[];
+  dealsLoading: boolean;
+  refreshDeals: () => Promise<void>;
+  
   // Your existing features
   isDarkMode: boolean;
   setDarkMode: (value: boolean) => void;
@@ -67,6 +72,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Hearted deals state
   const [heartedDeals, setHeartedDeals] = useState<any[]>([]);
   const [heartedDealsLoading, setHeartedDealsLoading] = useState(false);
+  
+  // All deals state
+  const [deals, setDeals] = useState<any[]>([]);
+  const [dealsLoading, setDealsLoading] = useState(false);
   
   // Your existing state
   const colorScheme = Appearance.getColorScheme();
@@ -96,6 +105,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       appStateSubscription.remove();
     };
   }, []);
+
+  // Fetch all deals from API
+  const fetchDeals = async () => {
+    console.log('🔄 fetchDeals: Starting function...');
+    try {
+      setDealsLoading(true);
+      console.log('🛍️ fetchDeals: Set loading to true, now calling API...');
+      
+      const result = await ApiService.getDeals();
+      console.log('✅ fetchDeals: getDeals succeeded:', result);
+      
+      if (result.success && result.data) {
+        // Handle both direct array and object with data property
+        const dealsData = result.data || result;
+        const finalDeals = Array.isArray(dealsData) ? dealsData : [];
+        
+        console.log('✅ Processed deals:', finalDeals.length);
+        console.log('📋 Sample deal structure:', finalDeals[0] || 'No deals');
+        
+        setDeals(finalDeals);
+        return finalDeals;
+      } else {
+        console.log('⚠️ No deals found or API error:', result);
+        setDeals([]);
+        return [];
+      }
+    } catch (error) {
+      console.error('❌ Error fetching deals:', error);
+      setDeals([]);
+      return [];
+    } finally {
+      setDealsLoading(false);
+    }
+  };
 
   // Fetch hearted deals from API
   const fetchHeartedDeals = async () => {
@@ -230,6 +273,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('📂 InitializeApp: Fetching categories for authenticated user...');
         await fetchCategories();
         
+        // Fetch all deals (available for all users)
+        console.log('🛍️ InitializeApp: Fetching all deals...');
+        try {
+          await fetchDeals();
+        } catch (dealsError) {
+          console.error('⚠️ InitializeApp: Failed to fetch deals, but continuing...', dealsError);
+        }
+        
         // Fetch hearted deals after user is authenticated
         console.log('💖 InitializeApp: Fetching hearted deals for authenticated user...');
         try {
@@ -253,6 +304,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         console.log('❌ InitializeApp: User is not authenticated');
         setUser(null);
+        
+        // Even for non-authenticated users, fetch deals and categories
+        console.log('🛍️ InitializeApp: Fetching deals for guest user...');
+        try {
+          await fetchDeals();
+        } catch (dealsError) {
+          console.error('⚠️ InitializeApp: Failed to fetch deals for guest, but continuing...', dealsError);
+        }
+        
+        console.log('📂 InitializeApp: Fetching categories for guest user...');
+        try {
+          await fetchCategories();
+        } catch (categoriesError) {
+          console.error('⚠️ InitializeApp: Failed to fetch categories for guest, but continuing...', categoriesError);
+        }
       }
     } catch (error) {
       console.error('💥 InitializeApp: Error initializing app:', error);
@@ -321,6 +387,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       AuthService.proactiveTokenRefresh();
       
       // App has come to the foreground
+      // Always refresh deals when app comes to foreground (for all users)
+      console.log('🛍️ App foreground: Refreshing deals...');
+      fetchDeals();
+      
       if (user) {
         // Refresh user data when app comes back to foreground
         refreshUser();
@@ -378,6 +448,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Refresh categories manually
   const refreshCategories = async () => {
     await fetchCategories();
+  };
+
+  // Refresh deals manually
+  const refreshDeals = async () => {
+    await fetchDeals();
   };
 
   // Refresh hearted deals manually
@@ -693,6 +768,11 @@ console.log("*********Called UNHEART",dealId, dealObject);
     unheartDeal,
     toggleHeartDeal,
     
+    // All deals management
+    deals,
+    dealsLoading,
+    refreshDeals,
+    
     // Your existing features
     isDarkMode,
     setDarkMode,
@@ -700,7 +780,7 @@ console.log("*********Called UNHEART",dealId, dealObject);
     setCategories,
     availableCategories,
     refreshCategories,
-  }), [user, loading, isDarkMode, categories, availableCategories, heartedDeals, heartedDealsLoading]);
+  }), [user, loading, isDarkMode, categories, availableCategories, heartedDeals, heartedDealsLoading, deals, dealsLoading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
