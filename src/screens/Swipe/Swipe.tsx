@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, FlatList, ImageBackground, Dimensions, Platform } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useAuth, getColors } from '../../libs/hooks/useAuth';
 import Toolbar from '../../components/Toolbar';
-import ApiService from '../../services/api.service';
 
 
 
@@ -20,31 +19,12 @@ const PLACEHOLDER_DEAL = {
 
 const SwipeScreen = ({ navigation }: any) => {
 
-  const { isDarkMode } = useAuth();
+  const { isDarkMode, deals, dealsLoading } = useAuth();
   const colors = getColors(isDarkMode);
-  const [deals, setDeals] = useState<any[]>([]);
   const [currentDealIndex, setCurrentDealIndex] = useState(0);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchDeals = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await ApiService.getDeals();
-        const dealsData = result.data || result;
-        setDeals(Array.isArray(dealsData) ? dealsData : []);
-        console.log('Fetched deals:', dealsData);
-        setCurrentDealIndex(0);
-      } catch (err: any) {
-        setError(err.message || 'Unknown error');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDeals();
-  }, []);
+  // Deals are now fetched globally via useAuth hook
 
   const currentDeal = deals.length > 0 ? deals[currentDealIndex] : PLACEHOLDER_DEAL;
 
@@ -96,7 +76,7 @@ const SwipeScreen = ({ navigation }: any) => {
 
       {/* 3. Full-screen content area */}
       <View style={styles.contentContainer}>
-        {loading ? (
+        {dealsLoading ? (
           <View style={styles.centerContent}>
             <Text style={{ color: colors.text, textAlign: 'center', fontSize: 18 }}>Loading deals...</Text>
           </View>

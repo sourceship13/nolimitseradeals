@@ -1,13 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useAuth } from '../../libs/hooks/useAuth';
 import { getColors } from '../../libs/colors';
 import Toolbar from '../../components/Toolbar';
-import ApiService from '../../services/api.service';
 import ApiConfig from '../../libs/utils/api.utils';
 
 const ExploreScreen = ({ navigation }: any) => {
-  const { isDarkMode, categories, availableCategories } = useAuth();
+  const { isDarkMode, categories, availableCategories, deals, dealsLoading, refreshDeals } = useAuth();
   const colors = getColors(isDarkMode);
   
   // Filter available categories to show only the ones the user has enabled
@@ -22,67 +21,9 @@ const ExploreScreen = ({ navigation }: any) => {
   console.log('🔍 Explore Debug - activeCategories:', activeCategories.length, activeCategories.map(c => c.slug));
   
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [deals, setDeals] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Fetch deals
-    fetchDeals();
-  }, []);
-
-  const fetchDeals = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await ApiService.getDeals();
-        
-        // Handle both direct array and object with data property
-        const dealsData = result.data || result;
-        const finalDeals = Array.isArray(dealsData) ? dealsData : [];
-        
-        // COMPREHENSIVE DATA DEBUGGING
-        console.log('=== DEALS DATA DEBUGGING ===');
-        console.log('📊 Raw API Response:', result);
-        console.log('📊 Processed deals array length:', finalDeals.length);
-        console.log('📊 First 3 deals structure:');
-        finalDeals.slice(0, 3).forEach((deal, index) => {
-          console.log(`  Deal ${index + 1}:`, {
-            id: deal.id,
-            business_name: deal.business_name,
-            description: deal.description?.substring(0, 50) + '...',
-            category_name: deal.category_name,
-            is_premium: deal.is_premium,
-            priority_score: deal.priority_score
-          });
-        });
-        
-        // Check for duplicates
-        const duplicates = finalDeals.filter((deal, index, array) => 
-          array.findIndex(d => d.id === deal.id) !== index
-        );
-        if (duplicates.length > 0) {
-          console.log('⚠️ DUPLICATE DEALS FOUND:', duplicates.length);
-          duplicates.forEach((dup, index) => {
-            console.log(`  Duplicate ${index + 1}:`, { id: dup.id, business_name: dup.business_name });
-          });
-        }
-        
-        // Check for missing IDs
-        const noIds = finalDeals.filter(deal => !deal.id);
-        if (noIds.length > 0) {
-          console.log('⚠️ DEALS WITHOUT IDs:', noIds.length);
-        }
-        
-        setDeals(finalDeals);
-        console.log('=== END DEALS DATA DEBUGGING ===');
-      } catch (err: any) {
-        setError(err.message || 'Unknown error');
-        console.error('Error fetching deals:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Deals are now fetched globally via useAuth hook
 
   // Filter deals by selectedCategory if set
   const filteredDeals = selectedCategory
@@ -326,7 +267,7 @@ const ExploreScreen = ({ navigation }: any) => {
 
       {/* Deals List */}
       <View style={styles.container}>
-        {loading ? (
+        {dealsLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
             <Text style={{ color: colors.text, marginTop: 12 }}>Loading deals...</Text>
@@ -338,7 +279,7 @@ const ExploreScreen = ({ navigation }: any) => {
               style={[styles.retryButton, { backgroundColor: colors.primary }]}
               onPress={() => {
                 setError(null);
-                fetchDeals();
+                refreshDeals();
               }}
             >
               <Text style={{ color: colors.background }}>Retry</Text>
