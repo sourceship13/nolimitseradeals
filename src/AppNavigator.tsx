@@ -1,6 +1,9 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import SignInScreen from './screens/SignIn/SignIn';
 import SignUpScreen from './screens/SignUp/SignUp';
 import SwipeScreen from './screens/Swipe/Swipe';
@@ -14,10 +17,97 @@ import DebugScreen from './screens/Debug/Debug';
 import DemoShareScreen from './screens/DemoShareScreen';
 import PermissionTestScreen from './screens/PermissionTestScreen';
 import NetworkDebugScreen from './screens/NetworkDebugScreen';
-import { useAuth } from './libs/hooks/useAuth';
+import { useAuth, getColors } from './libs/hooks/useAuth';
 import { ActivityIndicator, View } from 'react-native';
 
 const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
+
+// Bottom Tab Navigator for main app screens
+const MainTabNavigator = () => {
+  const { isDarkMode } = useAuth();
+  const colors = getColors(isDarkMode);
+
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+          let IconComponent = MaterialIcons;
+
+          if (route.name === 'SwipeTab') {
+            iconName = 'swipe';
+          } else if (route.name === 'ExploreTab') {
+            iconName = 'explore';
+          } else if (route.name === 'SavedTab') {
+            iconName = 'favorite';
+          } else if (route.name === 'ProfileTab') {
+            IconComponent = Ionicons;
+            iconName = 'person';
+          }
+
+          return <IconComponent name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#FFFFFF', // Nike white for active tabs
+        tabBarInactiveTintColor: '#9CA3AF', // Light gray for inactive tabs  
+        tabBarStyle: {
+          backgroundColor: '#1F2937', // Nike dark gray/black
+          borderTopColor: 'transparent',
+          borderTopWidth: 0,
+          borderRadius: 20,
+          marginHorizontal: 16,
+          marginBottom: 20,
+          paddingBottom: 8,
+          paddingTop: 8,
+          height: 70,
+          position: 'absolute',
+          shadowColor: '#000000',
+          shadowOffset: {
+            width: 0,
+            height: 6,
+          },
+          shadowOpacity: 0.25,
+          shadowRadius: 12,
+          elevation: 12,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600', // Slightly bolder like Nike
+          color: '#FFFFFF',
+        },
+        tabBarBackground: () => (
+          <View style={{
+            backgroundColor: colors.background,
+            flex: 1,
+            paddingBottom: 34, // Safe area for home indicator
+          }} />
+        ),
+      })}
+    >
+      <Tab.Screen 
+        name="SwipeTab" 
+        component={SwipeScreen}
+        options={{ tabBarLabel: 'Discover' }}
+      />
+      <Tab.Screen 
+        name="ExploreTab" 
+        component={ExploreScreen}
+        options={{ tabBarLabel: 'Explore' }}
+      />
+      <Tab.Screen 
+        name="SavedTab" 
+        component={SavedDealsScreen}
+        options={{ tabBarLabel: 'Saved' }}
+      />
+      <Tab.Screen 
+        name="ProfileTab" 
+        component={ProfileScreen}
+        options={{ tabBarLabel: 'Profile' }}
+      />
+    </Tab.Navigator>
+  );
+};
 
 const AppNavigator = () => {
   const { isAuthenticated, loading } = useAuth();
@@ -34,7 +124,7 @@ const AppNavigator = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName={isAuthenticated ? "Swipe" : "SignIn"}
+        initialRouteName={isAuthenticated ? "MainTabs" : "SignIn"}
         screenOptions={{
           headerShown: false,
           gestureEnabled: true,
@@ -51,14 +141,30 @@ const AppNavigator = () => {
             <Stack.Screen name="NetworkDebug" component={NetworkDebugScreen} />
           </>
         ) : (
-          // Authenticated user screens
+          // Authenticated user screens with bottom tabs
           <>
-            <Stack.Screen name="Swipe" component={SwipeScreen} />
-            <Stack.Screen name="Explore" component={ExploreScreen} />
-            <Stack.Screen name="DealDetail" component={DealDetailScreen} />
-            <Stack.Screen name="Profile" component={ProfileScreen} />
-            <Stack.Screen name="SavedDeals" component={SavedDealsScreen} />
-            <Stack.Screen name="Settings" component={SettingsScreen} />
+            {/* Main Tab Navigator */}
+            <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+            
+            {/* Modal/Detail screens that should overlay the tabs */}
+            <Stack.Screen 
+              name="DealDetail" 
+              component={DealDetailScreen}
+              options={{ 
+                presentation: 'modal',
+                gestureEnabled: true,
+              }}
+            />
+            <Stack.Screen 
+              name="Settings" 
+              component={SettingsScreen}
+              options={{ 
+                presentation: 'modal',
+                gestureEnabled: true,
+              }}
+            />
+            
+            {/* Debug screens */}
             <Stack.Screen name="Debug" component={DebugScreen} />
             <Stack.Screen name="DemoShare" component={DemoShareScreen} />
             <Stack.Screen name="PermissionTest" component={PermissionTestScreen} />

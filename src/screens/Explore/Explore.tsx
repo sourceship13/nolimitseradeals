@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
 import { useAuth } from '../../libs/hooks/useAuth';
 import { getColors } from '../../libs/colors';
-import Toolbar from '../../components/Toolbar';
 import ApiConfig from '../../libs/utils/api.utils';
 
 const ExploreScreen = ({ navigation }: any) => {
@@ -266,15 +265,17 @@ const ExploreScreen = ({ navigation }: any) => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <Toolbar
-        title="Explore"
-        onBack={() => navigation.goBack()}
-        showSettings={true}
-        onSettings={() => navigation.navigate('Settings')}
-        showRedemptions={true}
-        onRedemptions={() => navigation.navigate('SavedDeals')}
-      />
+    <View style={{ flex: 1, backgroundColor: colors.background, paddingBottom: 100 }}>
+      {/* Header with Settings Button */}
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Explore</Text>
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('Settings')}
+          style={styles.settingsButton}
+        >
+          <Text style={{ color: colors.primary, fontSize: 16 }}>⚙️</Text>
+        </TouchableOpacity>
+      </View>
       
       {/* Category Filter Bar */}
       <View style={[styles.topBar, { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border }]}> 
@@ -635,6 +636,22 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    paddingTop: 50, // Account for status bar
+    borderBottomWidth: 1,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  settingsButton: {
+    padding: 8,
   },
 })
 

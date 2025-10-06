@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, FlatList, ImageBackground, Dimensions, Platform } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useAuth, getColors } from '../../libs/hooks/useAuth';
-import Toolbar from '../../components/Toolbar';
 
 
 
@@ -49,14 +48,16 @@ const SwipeScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.screenContainer}>
-      {/* 1. Toolbar at top */}
-      <Toolbar
-        title="DEALZ"
-        showSettings={true}
-        onSettings={() => navigation.navigate('Settings')}
-        showRedemptions={true}
-        onRedemptions={() => navigation.navigate('SavedDeals')}
-      />
+      {/* 1. Header */}
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>DEALZ</Text>
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('Settings')}
+          style={styles.settingsButton}
+        >
+          <Text style={{ color: colors.primary, fontSize: 16 }}>⚙️</Text>
+        </TouchableOpacity>
+      </View>
       
       {/* 2. TopBar with Recent Deals and Explore button */}
       <View style={styles.topBar}>
@@ -173,6 +174,7 @@ const styles = StyleSheet.create({
   screenContainer: {
     flex: 1,
     backgroundColor: '#000',
+    paddingBottom: 100,
   },
   topBar: {
     width: '100%',
@@ -323,6 +325,22 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 4,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    paddingTop: 50, // Account for status bar
+    borderBottomWidth: 1,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  settingsButton: {
+    padding: 8,
   },
 });
 
