@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
 import { useAuth } from '../../libs/hooks/useAuth';
 import { getColors } from '../../libs/colors';
 import Toolbar from '../../components/Toolbar';
@@ -155,9 +155,21 @@ const ExploreScreen = ({ navigation }: any) => {
             <Text style={[styles.featuredText, { color: colors.background }]}>Featured</Text>
           </View>
         ) : null}
-        <Text style={styles.itemImage}>
-          {item.image_url ? '🖼️' : getCategoryEmoji(item.category_name)}
-        </Text>
+        <View style={styles.imageContainer}>
+          {getDealImageUrl(item) ? (
+            <Image 
+              source={{ uri: getDealImageUrl(item)! }}
+              style={styles.dealImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.emojiContainer}>
+              <Text style={styles.itemImage}>
+                {getCategoryEmoji(item.category_name)}
+              </Text>
+            </View>
+          )}
+        </View>
         <Text style={[styles.itemBusiness, { color: colors.text }]} numberOfLines={1}>
           {item.business_name || item.business || 'Unknown Business'}
         </Text>
@@ -178,6 +190,63 @@ const ExploreScreen = ({ navigation }: any) => {
         </View>
       </TouchableOpacity>
     );
+  };
+
+  // Get the best available deal image URL (DEAL-SPECIFIC images only, matching DealDetail logic)
+  const getDealImageUrl = (deal: any): string | null => {
+    // Extract image URLs using same logic as DealDetail screen
+    const deal_images = deal.deal_images;           // Deal-specific images array
+    const deal_image_url = deal.deal_image_url;     // Single deal image URL
+    const image_url = deal.image_url;               // Generic image URL  
+    const images = deal.images;                     // Generic images array
+    // Note: Excluding business_images to ensure we only show deal images
+    
+    let finalImages = null;
+    
+    // 1. Extract image URLs from deal_images array (objects with image_url property)
+    if (deal_images && Array.isArray(deal_images) && deal_images.length > 0) {
+      finalImages = deal_images
+        .filter(img => img && typeof img === 'object' && img.image_url)
+        .map(img => img.image_url)
+        .filter(url => url && typeof url === 'string' && url.trim().length > 0);
+      
+      if (finalImages.length > 0) {
+        console.log(`✅ Using deal_images[0]: ${finalImages[0]}`);
+        return finalImages[0];
+      }
+    }
+    
+    // 2. Single deal image URL
+    if (deal_image_url && typeof deal_image_url === 'string' && deal_image_url.trim().length > 0) {
+      console.log(`✅ Using deal_image_url: ${deal_image_url}`);
+      return deal_image_url;
+    }
+    
+    // 3. Generic image URL (might be deal-specific)
+    if (image_url && typeof image_url === 'string' && image_url.trim().length > 0) {
+      console.log(`✅ Using image_url: ${image_url}`);
+      return image_url;
+    }
+    
+    // 4. Generic images array (could be strings or objects)
+    if (images && Array.isArray(images) && images.length > 0) {
+      finalImages = images
+        .map(img => {
+          // Handle both string URLs and objects with image_url property
+          if (typeof img === 'string') return img;
+          if (typeof img === 'object' && img.image_url) return img.image_url;
+          return null;
+        })
+        .filter(url => url && typeof url === 'string' && url.trim().length > 0);
+        
+      if (finalImages.length > 0) {
+        console.log(`✅ Using images[0]: ${finalImages[0]}`);
+        return finalImages[0];
+      }
+    }
+    
+    console.log(`❌ No deal-specific images found for deal ${deal.id}, showing emoji fallback`);
+    return null;
   };
 
   const getCategoryEmoji = (categoryName: string) => {
@@ -553,6 +622,25 @@ const styles = StyleSheet.create({
   },
   sharesRequired: {
     fontSize: 9,
+  },
+  imageContainer: {
+    width: '100%',
+    height: 80,
+    marginBottom: 8,
+    borderRadius: 8,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dealImage: {
+    width: '100%',
+    height: '100%',
+  },
+  emojiContainer: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 })
 
