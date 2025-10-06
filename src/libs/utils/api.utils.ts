@@ -31,7 +31,7 @@ const isPhysicalDevice = (): boolean => {
       return !isEmulator;
     }
     
-    // iOS: Since metro bundler loaded from network IP (192.168.26.17:8081)
+    // iOS: Since metro bundler loaded from network IP (192.168.26.8:8081)
     // this indicates we're on a physical device, not simulator
     // For now, let's default to physical device for iOS in dev mode
     const isLikelyPhysical = true; // Physical devices need network IP for metro
@@ -41,7 +41,7 @@ const isPhysicalDevice = (): boolean => {
       devMode: __DEV__,
       assumption: 'physical device (metro from network IP)',
       isPhysical: isLikelyPhysical,
-      note: 'Metro bundler from 192.168.26.17 indicates physical device'
+      note: 'Metro bundler from 192.168.26.8 indicates physical device'
     });
     
     return isLikelyPhysical;
@@ -100,7 +100,7 @@ class ApiConfig {
       ios: 'http://localhost:8080',
       android: 'http://10.0.2.2:8080',
       // For physical devices, use your Mac's network IP
-      physical: 'http://192.168.26.17:8080', // Auto-detected Mac IP
+      physical: 'http://192.168.26.8:8080', // Auto-detected Mac IP
     },
     staging: 'https://f3x2ipn2yf.us-east-1.awsapprunner.com',
     production: 'https://f3x2ipn2yf.us-east-1.awsapprunner.com',
@@ -111,6 +111,8 @@ class ApiConfig {
   
   private constructor() {
     this.currentEnv = getEnvironment();
+    console.log(`📍 ApiConfig initialized with environment: ${this.currentEnv}`);
+    console.log(`📍 Physical device URL configured: ${this.urls.local.physical}`);
   }
   
   static getInstance(): ApiConfig {

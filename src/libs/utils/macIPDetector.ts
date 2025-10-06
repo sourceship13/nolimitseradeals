@@ -31,7 +31,7 @@ class MacIPDetector {
     for (const pattern of ipPatterns) {
       // Test a few IPs in each range (usually router assigns 2-254)
       const testIPs = [
-        `${pattern}.17`,  // Your current IP
+        `${pattern}.8`,   // Your current IP
         `${pattern}.1`,   // Router
         `${pattern}.2`,   // Common first device
         `${pattern}.10`,  // Common static IP
@@ -119,7 +119,7 @@ class MacIPDetector {
    */
   static getPhysicalDeviceURL(port: number = 8080): string {
     // Use the detected or configured IP
-    const ip = this.cachedIP || '192.168.26.17'; // Fallback to your current IP
+    const ip = this.cachedIP || '192.168.26.8'; // Fallback to your current IP
     return `http://${ip}:${port}`;
   }
 
@@ -143,7 +143,7 @@ class MacIPDetector {
    */
   static getNetworkSuggestions(): string[] {
     return [
-      '192.168.26.17', // Your current IP
+      '192.168.26.8', // Your current IP
       '192.168.1.X',   // Common home network
       '192.168.0.X',   // Alternative common
       '10.0.0.X',      // Corporate networks
