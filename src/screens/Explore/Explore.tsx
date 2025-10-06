@@ -93,14 +93,7 @@ const ExploreScreen = ({ navigation }: any) => {
             backgroundColor: isDarkMode 
               ? 'rgba(255, 255, 255, 0.06)' 
               : 'rgba(255, 255, 255, 0.15)',
-            borderColor: isPremium
-              ? '#FF8C00' // Orange border for premium deals
-              : isFeatured 
-                ? colors.primary 
-                : isDarkMode 
-                  ? 'rgba(255, 255, 255, 0.2)' 
-                  : 'rgba(0, 0, 0, 0.05)',
-            borderWidth: isPremium ? 3 : (isFeatured ? 2 : 1),
+            borderWidth: 0,
           }
         ]}
         onPress={() => navigation.navigate('DealDetail', { deal: item })}
@@ -112,10 +105,7 @@ const ExploreScreen = ({ navigation }: any) => {
         {isDarkMode && (
           <>
             <View style={[
-              styles.innerGlow,
-              {
-                borderColor: 'rgba(255, 255, 255, 0.12)',
-              }
+              styles.innerGlow
             ]} />
             <View style={[
               styles.shimmerEffect,
@@ -137,7 +127,7 @@ const ExploreScreen = ({ navigation }: any) => {
                 : '#FF7700', 
             }
           ]}>
-            <Text style={[styles.premiumText, { color: '#FFFFFF', fontSize:24 }]}>PREMIUM</Text>
+            <Text style={[styles.premiumText, { color: '#FFFFFF', fontSize:12 }]}>PREMIUM</Text>
           </View>
         ) : isFeatured ? (
           <View style={[
@@ -170,6 +160,7 @@ const ExploreScreen = ({ navigation }: any) => {
             </View>
           )}
         </View>
+        <View style={{ height: 80, marginBottom: 4 }} />
         <Text style={[styles.itemBusiness, { color: colors.text }]} numberOfLines={1}>
           {item.business_name || item.business || 'Unknown Business'}
         </Text>
@@ -531,7 +522,7 @@ const styles = StyleSheet.create({
     right: 1,
     bottom: 1,
     borderRadius: 11,
-    borderWidth: 1,
+    borderWidth: 0,
     zIndex: 0,
   },
   shimmerEffect: {
@@ -569,8 +560,8 @@ const styles = StyleSheet.create({
   },
   premiumBadge: {
     position: 'absolute',
-    top: -8,
-    right: 8,
+    top: 0,
+    right: 0,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
@@ -599,13 +590,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: 'bold',
     marginBottom: 4,
-    textAlign: 'center',
+    textAlign: 'left',
     zIndex: 1,
   },
   itemDescription: {
     fontSize: 11,
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: 'left',
     lineHeight: 14,
     zIndex: 1,
   },
@@ -624,10 +615,13 @@ const styles = StyleSheet.create({
     fontSize: 9,
   },
   imageContainer: {
-    width: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     height: 80,
-    marginBottom: 8,
-    borderRadius: 8,
+    borderTopLeftRadius: 12, // Match card border radius
+    borderTopRightRadius: 12, // Match card border radius
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
