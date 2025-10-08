@@ -125,6 +125,7 @@ const ExploreScreen = ({ navigation }: any) => {
               borderColor: isDarkMode
                 ? 'rgba(255, 255, 255, 0.3)'
                 : '#FF7700', 
+              
             }
           ]}>
             <Text style={[styles.premiumText, { color: '#FFFFFF', fontSize:12 }]}>PREMIUM</Text>
@@ -160,7 +161,7 @@ const ExploreScreen = ({ navigation }: any) => {
             </View>
           )}
         </View>
-        <View style={{ height: 80, marginBottom: 4 }} />
+        <View style={{ height: 96, marginBottom: 4 }} />
         <Text style={[styles.itemBusiness, { color: colors.text }]} numberOfLines={1}>
           {item.business_name || item.business || 'Unknown Business'}
         </Text>
@@ -475,8 +476,9 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '47%', // Fixed width instead of flex
-    borderRadius: 12,
-    padding: 12,
+    paddingTop: 12,
+    paddingHorizontal: 8,
+    paddingBottom: 6, // Reduced from 12 to 6 to bring deal details closer to bottom
     minHeight: 140,
     position: 'relative',
   },
@@ -547,8 +549,8 @@ const styles = StyleSheet.create({
   },
   featuredBadge: {
     position: 'absolute',
-    top: -8,
-    right: 8,
+    top: 0,
+    right: 0,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
@@ -561,7 +563,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 3,
-    marginVertical: 4,
+    margin: 2,
   },
   featuredText: StyleSheet.flatten([
     iOSUIKit.caption2,
@@ -581,7 +583,9 @@ const styles = StyleSheet.create({
     shadowOffset: {
       width: 0,
       height: 2,
+
     },
+    margin:2,
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 4,
@@ -642,9 +646,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 80,
-    borderTopLeftRadius: 12, // Match card border radius
-    borderTopRightRadius: 12, // Match card border radius
+    height: 96, // Increased by 20% from 80 to 96
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
