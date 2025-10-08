@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Switch, TouchableOpacity, Alert, ScrollView } f
 import { useAuth } from '../../libs/hooks/useAuth';
 import { getColors } from '../../libs/colors';
 import Toolbar from '../../components/Toolbar';
+import { iOSUIKit } from 'react-native-typography';
 
 const SettingsScreen = ({ navigation }: any) => {
   const { isDarkMode, setDarkMode, categories, setCategories, logout, refreshCategories, availableCategories } = useAuth();
@@ -68,17 +69,17 @@ const SettingsScreen = ({ navigation }: any) => {
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Theme</Text>
           <View style={styles.row}>
-            <Text style={{ color: colors.text }}>Dark Mode</Text>
+            <Text style={[iOSUIKit.body, { color: colors.text }]}>Dark Mode</Text>
             <Switch value={isDarkMode} onValueChange={setDarkMode} />
           </View>
         </View>
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Location Settings</Text>
           <View style={styles.row}>
-            <Text style={{ color: colors.text }}>Use my location</Text>
+            <Text style={[iOSUIKit.body, { color: colors.text }]}>Use my location</Text>
             <Switch value={locationEnabled} onValueChange={setLocationEnabled} />
           </View>
-          <Text style={{ color: colors.textSecondary, marginTop: 8 }}>Search radius: {radius}</Text>
+          <Text style={[iOSUIKit.footnote, { color: colors.textSecondary, marginTop: 8 }]}>Search radius: {radius}</Text>
         </View>
         <View style={styles.section}>
           <View style={styles.row}>
@@ -87,19 +88,19 @@ const SettingsScreen = ({ navigation }: any) => {
               onPress={refreshCategories}
               style={{ padding: 4 }}
             >
-              <Text style={{ color: colors.primary, fontSize: 14 }}>🔄 Refresh</Text>
+              <Text style={[iOSUIKit.subhead, { color: colors.primary }]}>🔄 Refresh</Text>
             </TouchableOpacity>
           </View>
           
           {Object.keys(categories).length === 0 && availableCategories.length === 0 ? (
-            <Text style={{ color: colors.textSecondary, fontStyle: 'italic' }}>
+            <Text style={[iOSUIKit.footnote, { color: colors.textSecondary, fontStyle: 'italic' }]}>
               Loading categories... Tap refresh if this persists.
             </Text>
           ) : availableCategories.length > 0 ? (
             // Use availableCategories for display names
             availableCategories.map(category => (
               <View style={styles.row} key={category.slug}>
-                <Text style={{ color: colors.text }}>{category.name}</Text>
+                <Text style={[iOSUIKit.body, { color: colors.text }]}>{category.name}</Text>
                 <Switch 
                   value={categories[category.slug] ?? true} 
                   onValueChange={v => setCategories({ ...categories, [category.slug]: v })} 
@@ -110,7 +111,7 @@ const SettingsScreen = ({ navigation }: any) => {
             // Fallback to categories object keys
             Object.keys(categories).map(key => (
               <View style={styles.row} key={key}>
-                <Text style={{ color: colors.text }}>{key.charAt(0).toUpperCase() + key.slice(1)}</Text>
+                <Text style={[iOSUIKit.body, { color: colors.text }]}>{key.charAt(0).toUpperCase() + key.slice(1)}</Text>
                 <Switch value={categories[key as keyof typeof categories]} onValueChange={v => setCategories({ ...categories, [key]: v })} />
               </View>
             ))
@@ -119,15 +120,15 @@ const SettingsScreen = ({ navigation }: any) => {
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Notifications</Text>
           <View style={styles.row}>
-            <Text style={{ color: colors.text }}>New deals nearby</Text>
+            <Text style={[iOSUIKit.body, { color: colors.text }]}>New deals nearby</Text>
             <Switch value={notifications.deals} onValueChange={v => setNotifications({ ...notifications, deals: v })} />
           </View>
           <View style={styles.row}>
-            <Text style={{ color: colors.text }}>Deal expiry reminders</Text>
+            <Text style={[iOSUIKit.body, { color: colors.text }]}>Deal expiry reminders</Text>
             <Switch value={notifications.expiry} onValueChange={v => setNotifications({ ...notifications, expiry: v })} />
           </View>
           <View style={styles.row}>
-            <Text style={{ color: colors.text }}>Friend referrals</Text>
+            <Text style={[iOSUIKit.body, { color: colors.text }]}>Friend referrals</Text>
             <Switch value={notifications.referrals} onValueChange={v => setNotifications({ ...notifications, referrals: v })} />
           </View>
         </View>
@@ -136,28 +137,28 @@ const SettingsScreen = ({ navigation }: any) => {
           style={[styles.button, { backgroundColor: colors.error, marginBottom: 8 }]} 
           onPress={() => navigation.navigate('NetworkDebug')}
         >
-          <Text style={{ color: '#fff', fontWeight: 'bold' }}>🔧 Network Debug</Text>
+          <Text style={[iOSUIKit.callout, { color: '#fff', fontWeight: 'bold' }]}>🔧 Network Debug</Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
           style={[styles.button, { backgroundColor: colors.primary, marginBottom: 8 }]} 
           onPress={() => navigation.navigate('PermissionTest')}
         >
-          <Text style={{ color: '#fff', fontWeight: 'bold' }}>Test Permissions</Text>
+          <Text style={[iOSUIKit.callout, { color: '#fff', fontWeight: 'bold' }]}>Test Permissions</Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
           style={[styles.button, { backgroundColor: colors.primary, marginBottom: 16 }]} 
           onPress={() => navigation.navigate('DemoShare')}
         >
-          <Text style={{ color: '#fff', fontWeight: 'bold' }}>Test Deal Sharing</Text>
+          <Text style={[iOSUIKit.callout, { color: '#fff', fontWeight: 'bold' }]}>Test Deal Sharing</Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
           style={[styles.button, { backgroundColor: colors.error }]} 
           onPress={handleLogout}
         >
-          <Text style={{ color: '#fff', fontWeight: 'bold' }}>Sign Out</Text>
+          <Text style={[iOSUIKit.callout, { color: '#fff', fontWeight: 'bold' }]}>Sign Out</Text>
         </TouchableOpacity>        {/* Debug Section */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Developer Options</Text>
@@ -165,7 +166,7 @@ const SettingsScreen = ({ navigation }: any) => {
             style={[styles.button, { backgroundColor: colors.error, marginBottom: 16 }]} 
             onPress={() => navigation.navigate('Debug')}
           >
-            <Text style={{ color: colors.background, fontWeight: 'bold' }}>🔧 Debug Console</Text>
+            <Text style={[iOSUIKit.callout, { color: colors.background, fontWeight: 'bold' }]}>🔧 Debug Console</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -184,11 +185,12 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 24,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
+  sectionTitle: StyleSheet.flatten([
+    iOSUIKit.title3Emphasized,
+    {
+      marginBottom: 8,
+    }
+  ]),
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',

@@ -14,6 +14,7 @@ import {
 import { useAuth, getColors } from '../libs/hooks/useAuth';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useDealSharing } from '../libs/hooks/useDealSharing';
+import { iOSUIKit } from 'react-native-typography';
 
 interface DealShareButtonProps {
   deal: any;
@@ -325,10 +326,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     gap: 8,
   },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  buttonText: iOSUIKit.calloutObject,
   modalContainer: {
     flex: 1,
   },
@@ -344,15 +342,13 @@ const styles = StyleSheet.create({
     padding: 8,
     marginLeft: -8,
   },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  clearButton: {
-    fontSize: 16,
-    fontWeight: '600',
-    padding: 8,
-  },
+  modalTitle: iOSUIKit.title3EmphasizedObject,
+  clearButton: StyleSheet.flatten([
+    iOSUIKit.callout,
+    {
+      padding: 8,
+    },
+  ]),
   dealBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -374,15 +370,18 @@ const styles = StyleSheet.create({
   dealBadgeContent: {
     flex: 1,
   },
-  dealBadgeTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 2,
-  },
-  dealBadgeDescription: {
-    fontSize: 14,
-    lineHeight: 18,
-  },
+  dealBadgeTitle: StyleSheet.flatten([
+    iOSUIKit.callout,
+    {
+      marginBottom: 2,
+    },
+  ]),
+  dealBadgeDescription: StyleSheet.flatten([
+    iOSUIKit.subhead,
+    {
+      lineHeight: 18,
+    },
+  ]),
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -392,20 +391,19 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
   },
-  searchInput: {
-    flex: 1,
-    marginLeft: 8,
-    fontSize: 16,
-    paddingVertical: Platform.OS === 'ios' ? 8 : 4,
-  },
+  searchInput: StyleSheet.flatten([
+    iOSUIKit.callout,
+    {
+      flex: 1,
+      marginLeft: 8,
+      paddingVertical: Platform.OS === 'ios' ? 8 : 4,
+    },
+  ]),
   selectedCountContainer: {
     paddingHorizontal: 16,
     marginBottom: 8,
   },
-  selectedCountText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
+  selectedCountText: iOSUIKit.subheadObject,
   contactsList: {
     flex: 1,
     paddingHorizontal: 16,
@@ -432,21 +430,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 12,
   },
-  avatarText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  avatarText: iOSUIKit.calloutObject,
   contactDetails: {
     flex: 1,
   },
-  contactName: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  contactPhone: {
-    fontSize: 14,
-  },
+  contactName: StyleSheet.flatten([
+    iOSUIKit.callout,
+    {
+      marginBottom: 2,
+    },
+  ]),
+  contactPhone: iOSUIKit.subheadObject,
   checkbox: {
     width: 24,
     height: 24,
@@ -460,22 +454,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 64,
   },
-  emptyText: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginTop: 16,
-    marginBottom: 24,
-    paddingHorizontal: 32,
-  },
+  emptyText: StyleSheet.flatten([
+    iOSUIKit.body,
+    {
+      textAlign: 'center',
+      marginTop: 16,
+      marginBottom: 24,
+      paddingHorizontal: 32,
+    },
+  ]),
   retryButton: {
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 6,
   },
-  retryButtonText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
+  retryButtonText: iOSUIKit.subheadObject,
   modalFooter: {
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -486,10 +479,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
   },
-  shareModalButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  shareModalButtonText: iOSUIKit.calloutObject,
 });
 
 export default DealShareButton;

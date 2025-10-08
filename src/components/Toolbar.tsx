@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useAuth } from '../libs/hooks/useAuth';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { iOSUIKit } from 'react-native-typography';
 
 
 interface ToolbarProps {
@@ -132,11 +133,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 0,
   },
-  title: {
-    textAlign: 'center',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
+  title: StyleSheet.flatten([
+    iOSUIKit.title3Emphasized,
+    {
+      textAlign: 'center',
+    },
+  ]),
 });
 
 export default Toolbar;

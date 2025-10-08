@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native
 import { useAuth } from '../../libs/hooks/useAuth';
 import { getColors } from '../../libs/colors';
 import Toolbar from '../../components/Toolbar';
+import { iOSUIKit } from 'react-native-typography';
 
 const savedDeals = [
   { id: 1, business: "Ara's Pizza", item: "Free Margherita Pizza", status: "saved", image: "🍕" },
@@ -33,7 +34,7 @@ const SavedDealsScreen = ({ navigation }: any) => {
               <Text style={[styles.dealBusiness, { color: colors.disabled }]}>{item.business}</Text>
               {item.status === 'saved' ? (
                 <TouchableOpacity style={[styles.button, { backgroundColor: colors.text }]}> 
-                  <Text style={{ color: colors.background, fontWeight: 'bold' }}>Redeem Now</Text>
+                  <Text style={[iOSUIKit.subhead, { color: colors.background, fontWeight: 'bold' }]}>Redeem Now</Text>
                 </TouchableOpacity>
               ) : (
                 <Text style={[styles.redeemed, { color: colors.secondary }]}>Redeemed</Text>
@@ -52,12 +53,13 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    alignSelf: 'center',
-  },
+  title: StyleSheet.flatten([
+    iOSUIKit.largeTitleEmphasized,
+    {
+      marginBottom: 16,
+      alignSelf: 'center',
+    }
+  ]),
   list: {
     alignItems: 'center',
   },
@@ -72,15 +74,19 @@ const styles = StyleSheet.create({
     fontSize: 36,
     marginBottom: 8,
   },
-  dealTitle: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  dealBusiness: {
-    fontSize: 12,
-    marginBottom: 8,
-  },
+  dealTitle: StyleSheet.flatten([
+    iOSUIKit.callout,
+    {
+      fontWeight: 'bold',
+      marginBottom: 4,
+    }
+  ]),
+  dealBusiness: StyleSheet.flatten([
+    iOSUIKit.caption2,
+    {
+      marginBottom: 8,
+    }
+  ]),
   button: {
     borderRadius: 12,
     padding: 12,
@@ -88,10 +94,13 @@ const styles = StyleSheet.create({
     marginTop: 8,
     width: 120,
   },
-  redeemed: {
-    fontWeight: 'bold',
-    marginTop: 8,
-  },
+  redeemed: StyleSheet.flatten([
+    iOSUIKit.subhead,
+    {
+      fontWeight: 'bold',
+      marginTop: 8,
+    }
+  ]),
 });
 
 export default SavedDealsScreen;

@@ -12,6 +12,7 @@ import { getColors } from '../libs/colors';
 import Toolbar from '../components/Toolbar';
 import ApiService from '../services/api.service';
 import authService from '../services/auth.service'; // Add this import
+import { iOSUIKit } from 'react-native-typography';
 
 console.log('authService:', authService);
 console.log('authService.verifyCode:', authService?.verifyCode);
@@ -274,27 +275,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 40,
-  },
-  hiddenInput: {
-    width: '100%',
-    maxWidth: 280,
-    height: 50,
-    borderRadius: 8,
-    borderWidth: 1,
-    fontSize: 16,
-    paddingHorizontal: 12,
-    marginBottom: 20,
-  },
+  title: StyleSheet.flatten([
+    iOSUIKit.title3Emphasized,
+    {
+      marginBottom: 8,
+      textAlign: 'center',
+    }
+  ]),
+  subtitle: StyleSheet.flatten([
+    iOSUIKit.body,
+    {
+      textAlign: 'center',
+      marginBottom: 40,
+    }
+  ]),
+  hiddenInput: StyleSheet.flatten([
+    iOSUIKit.callout,
+    {
+      width: '100%',
+      maxWidth: 280,
+      height: 50,
+      borderRadius: 8,
+      borderWidth: 1,
+      paddingHorizontal: 12,
+      marginBottom: 20,
+    }
+  ]),
   codeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -310,14 +316,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  codeInput: {
-    width: 40,
-    height: 50,
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    backgroundColor: 'transparent',
-  },
+  codeInput: StyleSheet.flatten([
+    iOSUIKit.title3Emphasized,
+    {
+      width: 40,
+      height: 50,
+      fontSize: 24, // Keep larger size for code input visibility
+      textAlign: 'center',
+      backgroundColor: 'transparent',
+    }
+  ]),
   verifyButton: {
     width: '100%',
     maxWidth: 280,
@@ -326,17 +334,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  buttonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
+  buttonText: StyleSheet.flatten([
+    iOSUIKit.body,
+    {
+      fontWeight: 'bold',
+    }
+  ]),
   resendButton: {
     padding: 12,
   },
-  resendText: {
-    fontSize: 16,
-    textDecorationLine: 'underline',
-  },
+  resendText: StyleSheet.flatten([
+    iOSUIKit.callout,
+    {
+      textDecorationLine: 'underline',
+    }
+  ]),
 });
 
 export default VerificationScreen;

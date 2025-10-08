@@ -56,7 +56,7 @@ const SwipeScreen = ({ navigation }: any) => {
           onPress={() => navigation.navigate('Settings')}
           style={styles.settingsButton}
         >
-          <Text style={{ color: colors.primary, fontSize: 20 }}>⚙️</Text>
+          <Text style={[iOSUIKit.title3, { color: colors.primary }]}>⚙️</Text>
         </TouchableOpacity>
       </View>
 
@@ -64,11 +64,11 @@ const SwipeScreen = ({ navigation }: any) => {
       <View style={styles.contentContainer}>
         {dealsLoading ? (
           <View style={styles.centerContent}>
-            <Text style={{ color: colors.text, textAlign: 'center', fontSize: 18 }}>Loading deals...</Text>
+            <Text style={[iOSUIKit.body, { color: colors.text, textAlign: 'center' }]}>Loading deals...</Text>
           </View>
         ) : error ? (
           <View style={styles.centerContent}>
-            <Text style={{ color: colors.error, textAlign: 'center', fontSize: 18 }}>{error}</Text>
+            <Text style={[iOSUIKit.body, { color: colors.error, textAlign: 'center' }]}>{error}</Text>
           </View>
         ) : (
           <>
@@ -127,22 +127,22 @@ const SwipeScreen = ({ navigation }: any) => {
             <View style={styles.actionContainer}>
               {/* Previous deal button */}
               <TouchableOpacity style={[styles.navBtn, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]} onPress={handlePreviousDeal}>
-                <Text style={{ color: colors.dealArrows, fontSize: 20 }}>←</Text>
+                <Text style={[iOSUIKit.title3, { color: colors.dealArrows }]}>←</Text>
               </TouchableOpacity>
               
               {/* Dislike button */}
               <TouchableOpacity style={[styles.actionBtn, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]} onPress={() => handleSwipe('left')}>
-                <Text style={{ color: colors.error, fontSize: 24 }}>✗</Text>
+                <Text style={[iOSUIKit.title3Emphasized, { color: colors.error }]}>✗</Text>
               </TouchableOpacity>
               
               {/* Like button */}
               <TouchableOpacity style={[styles.actionBtn, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]} onPress={() => handleSwipe('right')}>
-                <Text style={{ color: colors.primary, fontSize: 24 }}>♥</Text>
+                <Text style={[iOSUIKit.title3Emphasized, { color: colors.primary }]}>♥</Text>
               </TouchableOpacity>
               
               {/* Next deal button */}
               <TouchableOpacity style={[styles.navBtn, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]} onPress={handleNextDeal}>
-                <Text style={{ color: colors.dealArrows, fontSize: 20 }}>→</Text>
+                <Text style={[iOSUIKit.title3, { color: colors.dealArrows }]}>→</Text>
               </TouchableOpacity>
             </View>
           </>
@@ -170,21 +170,23 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: 'rgba(0,0,0,0.04)',
   },
-  topBarTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-  },
+  topBarTitle: StyleSheet.flatten([
+    iOSUIKit.body,
+    {
+      fontWeight: 'bold',
+    }
+  ]),
   exploreBtn: {
     paddingHorizontal: 16,
     paddingVertical: 6,
     borderRadius: 16,
   },
-  exploreBtnText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-  },
+  exploreBtnText: StyleSheet.flatten([
+    iOSUIKit.callout,
+    {
+      fontWeight: 'bold',
+    }
+  ]),
   contentContainer: {
     flex: 1,
   },
@@ -243,36 +245,40 @@ const styles = StyleSheet.create({
     fontSize: 64,
     marginBottom: 12,
   },
-  dealBusiness: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginTop:8,
-    marginRight:8,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-  },
-  dealOffer: {
-    fontSize: 16,
-    color: '#fff',
-    textAlign: 'center',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-    marginVertical:4,
-  },
-  dealLocation: {
-    fontSize: 14,
-    color: '#fff',
-    marginBottom: 2,
-    textAlign: 'center',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-    marginVertical:2,
-  },
-  dealExpires: {
-    fontSize: 12,
-    color: '#fff',
-    marginBottom: 8,
-    textAlign: 'center',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
-  },
+  dealBusiness: StyleSheet.flatten([
+    iOSUIKit.title3Emphasized,
+    {
+      color: '#fff',
+      marginTop: 8,
+      marginRight: 8,
+      fontSize: 20, // Maintain size for overlay readability
+    }
+  ]),
+  dealOffer: StyleSheet.flatten([
+    iOSUIKit.callout,
+    {
+      color: '#fff',
+      textAlign: 'center',
+      marginVertical: 4,
+    }
+  ]),
+  dealLocation: StyleSheet.flatten([
+    iOSUIKit.subhead,
+    {
+      color: '#fff',
+      marginBottom: 2,
+      textAlign: 'center',
+      marginVertical: 2,
+    }
+  ]),
+  dealExpires: StyleSheet.flatten([
+    iOSUIKit.caption2,
+    {
+      color: '#fff',
+      marginBottom: 8,
+      textAlign: 'center',
+    }
+  ]),
   actionContainer: {
     height: screenHeight * 0.1, // 1/10 of screen height
     flexDirection: 'row',

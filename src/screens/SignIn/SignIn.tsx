@@ -5,6 +5,7 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAuth } from '../../libs/hooks/useAuth';
 import { getColors } from '../../libs/colors';
+import { iOSUIKit } from 'react-native-typography';
 
 const SignInScreen = ({ navigation }: any) => {
   const { isDarkMode, login } = useAuth();
@@ -85,11 +86,11 @@ const SignInScreen = ({ navigation }: any) => {
         {loading ? (
           <ActivityIndicator size="small" color={colors.background} />
         ) : (
-          <Text style={{ color: colors.background, fontWeight: 'bold' }}>Sign In</Text>
+          <Text style={[iOSUIKit.callout, { color: colors.background, fontWeight: 'bold' }]}>Sign In</Text>
         )}
       </TouchableOpacity>
       <TouchableOpacity style={[styles.buttonOutline, { borderColor: colors.text }]} onPress={() => navigation.navigate('SignUp')}>
-        <Text style={{ color: colors.text, fontWeight: 'bold' }}>Create Account</Text>
+        <Text style={[iOSUIKit.callout, { color: colors.text, fontWeight: 'bold' }]}>Create Account</Text>
       </TouchableOpacity>
       
       {/* Network Debug Button for Development */}
@@ -98,7 +99,7 @@ const SignInScreen = ({ navigation }: any) => {
           style={[styles.debugButton, { backgroundColor: colors.error }]} 
           onPress={() => navigation.navigate('NetworkDebug')}
         >
-          <Text style={{ color: '#fff', fontSize: 12, fontWeight: 'bold' }}>🔧 Network Debug</Text>
+          <Text style={[iOSUIKit.caption2, { color: '#fff', fontWeight: 'bold' }]}>🔧 Network Debug</Text>
         </TouchableOpacity>
       )}
 
@@ -144,22 +145,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 24,
   },
-  title: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 18,
-    marginBottom: 32,
-  },
-  input: {
-    width: '100%',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    fontSize: 16,
-  },
+  title: StyleSheet.flatten([
+    iOSUIKit.largeTitleEmphasized,
+    {
+      marginBottom: 8,
+    }
+  ]),
+  subtitle: StyleSheet.flatten([
+    iOSUIKit.body,
+    {
+      marginBottom: 32,
+    }
+  ]),
+  input: StyleSheet.flatten([
+    iOSUIKit.callout,
+    {
+      width: '100%',
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 16,
+    }
+  ]),
   button: {
     width: '100%',
     borderRadius: 12,
@@ -190,10 +196,12 @@ const styles = StyleSheet.create({
   socialIcon: {
     marginRight: 12,
   },
-  socialText: {
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
+  socialText: StyleSheet.flatten([
+    iOSUIKit.callout,
+    {
+      fontWeight: 'bold',
+    }
+  ]),
   debugButton: {
     marginTop: 20,
     padding: 8,

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, 
 import { useAuth } from '../../libs/hooks/useAuth';
 import { getColors } from '../../libs/colors';
 import ApiConfig from '../../libs/utils/api.utils';
+import { iOSUIKit } from 'react-native-typography';
 
 const ExploreScreen = ({ navigation }: any) => {
   const { isDarkMode, categories, availableCategories, deals, dealsLoading, refreshDeals } = useAuth();
@@ -273,7 +274,7 @@ const ExploreScreen = ({ navigation }: any) => {
           onPress={() => navigation.navigate('Settings')}
           style={styles.settingsButton}
         >
-          <Text style={{ color: colors.primary, fontSize: 16 }}>⚙️</Text>
+          <Text style={[iOSUIKit.callout, { color: colors.primary }]}>⚙️</Text>
         </TouchableOpacity>
       </View>
       
@@ -321,21 +322,26 @@ const ExploreScreen = ({ navigation }: any) => {
                   activeOpacity={0.7}
                 >
                   <Text
-                    style={{
-                      color: isSelected ? colors.background : colors.text,
-                      fontWeight: 'bold',
-                      fontSize: 12,
-                    }}
+                    style={[
+                      iOSUIKit.caption2,
+                      {
+                        color: isSelected ? colors.background : colors.text,
+                        fontWeight: 'bold',
+                      }
+                    ]}
                   >
                     {cat.name}
                   </Text>
                   {(cat as any).active_deal_count ? (
                     <Text
-                      style={{
-                        color: isSelected ? colors.background : colors.textPlaceholder,
-                        fontSize: 10,
-                        marginLeft: 4,
-                      }}
+                      style={[
+                        iOSUIKit.caption2,
+                        {
+                          color: isSelected ? colors.background : colors.textPlaceholder,
+                          fontSize: 10,
+                          marginLeft: 4,
+                        }
+                      ]}
                     >
                       ({(cat as any).active_deal_count})
                     </Text>
@@ -353,7 +359,7 @@ const ExploreScreen = ({ navigation }: any) => {
         {dealsLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={{ color: colors.text, marginTop: 12 }}>Loading deals...</Text>
+            <Text style={[iOSUIKit.body, { color: colors.text, marginTop: 12 }]}>Loading deals...</Text>
           </View>
         ) : error ? (
           <View style={styles.errorContainer}>
@@ -371,10 +377,10 @@ const ExploreScreen = ({ navigation }: any) => {
         ) : sortedDeals.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={{ fontSize: 48, marginBottom: 12 }}>🔍</Text>
-            <Text style={{ color: colors.text, fontSize: 16, fontWeight: 'bold' }}>
+            <Text style={[iOSUIKit.body, { color: colors.text }]}>
               {selectedCategory ? `No deals in this category` : 'No deals available'}
             </Text>
-            <Text style={{ color: colors.textPlaceholder, marginTop: 8, textAlign: 'center' }}>
+            <Text style={[iOSUIKit.subhead, { color: colors.textPlaceholder, marginTop: 8, textAlign: 'center' }]}>
               {selectedCategory ? 'Try selecting a different category' : 'Check back later for new deals!'}
             </Text>
           </View>
@@ -451,11 +457,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
   },
-  resultsCount: {
-    fontSize: 12,
-    marginBottom: 8,
-    paddingHorizontal: 4,
-  },
+  resultsCount: StyleSheet.flatten([
+    iOSUIKit.caption2,
+    {
+      marginBottom: 8,
+      paddingHorizontal: 4,
+    }
+  ]),
   grid: {
     paddingBottom: 20,
     paddingTop: 8,
@@ -555,10 +563,12 @@ const styles = StyleSheet.create({
     elevation: 3,
     marginVertical: 4,
   },
-  featuredText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
+  featuredText: StyleSheet.flatten([
+    iOSUIKit.caption2,
+    {
+      fontWeight: 'bold',
+    }
+  ]),
   premiumBadge: {
     position: 'absolute',
     top: 0,
@@ -576,31 +586,37 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 4,
   },
-  premiumText: {
-    fontSize: 9,
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
-  },
+  premiumText: StyleSheet.flatten([
+    iOSUIKit.caption2,
+    {
+      fontWeight: 'bold',
+      letterSpacing: 0.5,
+      fontSize: 9, // Keep smaller for premium badge
+    }
+  ]),
   itemImage: {
     fontSize: 28,
     marginBottom: 8,
     textAlign: 'center',
     zIndex: 1,
   },
-  itemBusiness: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    marginBottom: 4,
-    textAlign: 'left',
-    zIndex: 1,
-  },
-  itemDescription: {
-    fontSize: 11,
-    marginBottom: 8,
-    textAlign: 'left',
-    lineHeight: 14,
-    zIndex: 1,
-  },
+  itemBusiness: StyleSheet.flatten([
+    iOSUIKit.footnoteEmphasized,
+    {
+      marginBottom: 4,
+      textAlign: 'left',
+      zIndex: 1,
+    }
+  ]),
+  itemDescription: StyleSheet.flatten([
+    iOSUIKit.caption2,
+    {
+      marginBottom: 8,
+      textAlign: 'left',
+      lineHeight: 14,
+      zIndex: 1,
+    }
+  ]),
   dealDetails: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -608,13 +624,19 @@ const styles = StyleSheet.create({
     marginTop: 'auto',
     zIndex: 1,
   },
-  dealType: {
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  sharesRequired: {
-    fontSize: 9,
-  },
+  dealType: StyleSheet.flatten([
+    iOSUIKit.caption2,
+    {
+      fontWeight: '600',
+      fontSize: 10, // Keep smaller for deal type
+    }
+  ]),
+  sharesRequired: StyleSheet.flatten([
+    iOSUIKit.caption2,
+    {
+      fontSize: 9, // Keep smaller for shares info
+    }
+  ]),
   imageContainer: {
     position: 'absolute',
     top: 0,
@@ -646,10 +668,12 @@ const styles = StyleSheet.create({
     paddingTop: 50, // Account for status bar
     borderBottomWidth: 1,
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
+  headerTitle: StyleSheet.flatten([
+    iOSUIKit.largeTitleEmphasized,
+    {
+      fontSize: 24, // Override default size for header
+    }
+  ]),
   settingsButton: {
     padding: 8,
   },

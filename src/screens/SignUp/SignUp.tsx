@@ -16,12 +16,13 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { useAuth } from '../../libs/hooks/useAuth';
 import { getColors } from '../../libs/colors';
 import AuthService from '../../services/auth.service';
+import { iOSUIKit } from 'react-native-typography';
 
 const fieldKeys = ["firstName", "lastName", "email", "phone", "password"] as const;
 const fieldLabels = ["First Name", "Last Name", "Email", "Phone Number", "Password"];
 
 const SignUpScreen = ({ navigation }: any) => {
-  const { isDarkMode, setUser } = useAuth(); // Add setUser if it exists in your useAuth
+  const { isDarkMode } = useAuth();
   const colors = getColors(isDarkMode);
   
   const [fields, setFields] = useState({
@@ -91,10 +92,7 @@ const SignUpScreen = ({ navigation }: any) => {
 
       console.log('Registration successful:', result);
 
-      // Update auth context if you have setUser
-      if (setUser && result.user) {
-        setUser(result.user);
-      }
+      // Registration successful - user will be handled by auth context
 
       // Show success and navigate
       Alert.alert(
@@ -306,30 +304,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 24,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
+  title: StyleSheet.flatten([
+    iOSUIKit.largeTitleEmphasized,
+    {
+      marginBottom: 16,
+    }
+  ]),
   inputWrapper: {
     width: '100%',
     marginBottom: 16,
   },
-  input: {
-    width: '100%',
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-  },
+  input: StyleSheet.flatten([
+    iOSUIKit.callout,
+    {
+      width: '100%',
+      borderRadius: 12,
+      padding: 16,
+    }
+  ]),
   inputError: {
     borderWidth: 1,
     borderColor: '#ff3b30',
   },
-  errorText: {
-    fontSize: 12,
-    marginTop: 4,
-    marginLeft: 8,
-  },
+  errorText: StyleSheet.flatten([
+    iOSUIKit.caption2,
+    {
+      marginTop: 4,
+      marginLeft: 8,
+    }
+  ]),
   button: {
     width: '100%',
     borderRadius: 12,
@@ -340,11 +343,13 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     opacity: 0.6,
   },
-  linkText: {
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
+  linkText: StyleSheet.flatten([
+    iOSUIKit.subhead,
+    {
+      textAlign: 'center',
+      marginBottom: 20,
+    }
+  ]),
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -355,10 +360,12 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 1,
   },
-  dividerText: {
-    marginHorizontal: 10,
-    fontSize: 14,
-  },
+  dividerText: StyleSheet.flatten([
+    iOSUIKit.subhead,
+    {
+      marginHorizontal: 10,
+    }
+  ]),
   socialContainer: {
     width: '100%',
   },
@@ -374,10 +381,12 @@ const styles = StyleSheet.create({
   socialIcon: {
     marginRight: 12,
   },
-  socialText: {
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
+  socialText: StyleSheet.flatten([
+    iOSUIKit.callout,
+    {
+      fontWeight: 'bold',
+    }
+  ]),
 });
 
 export default SignUpScreen;

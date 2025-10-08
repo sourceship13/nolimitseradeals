@@ -17,6 +17,7 @@ import { useAuth, getColors } from '../../libs/hooks/useAuth';
 import Toolbar from '../../components/Toolbar';
 import ApiService from '../../services/api.service';
 import DealShareButton from '../../components/DealShareButton';
+import { iOSUIKit } from 'react-native-typography';
 
 // Type definitions for better type safety
 interface DealDetailProps {
@@ -50,8 +51,8 @@ class DealDetailErrorBoundary extends React.Component<
     if (this.state.hasError) {
       return (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-          <Text style={{ fontSize: 18, marginBottom: 10 }}>Something went wrong</Text>
-          <Text style={{ fontSize: 14, color: '#666', textAlign: 'center' }}>
+          <Text style={[iOSUIKit.body, { marginBottom: 10 }]}>Something went wrong</Text>
+          <Text style={[iOSUIKit.subhead, { color: '#666', textAlign: 'center' }]}>
             {this.state.error?.message || 'Unknown error occurred'}
           </Text>
         </View>
@@ -490,11 +491,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
-  errorText: {
-    fontSize: 16,
-    textAlign: 'center',
-    fontWeight: '500',
-  },
+  errorText: StyleSheet.flatten([
+    iOSUIKit.callout,
+    {
+      textAlign: 'center',
+      fontWeight: '500',
+    }
+  ]),
   imageContainer: {
     height: 250,
   },
@@ -527,25 +530,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 4,
   },
-  businessName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    flex: 1,
-  },
+  businessName: StyleSheet.flatten([
+    iOSUIKit.title3Emphasized,
+    {
+      flex: 1,
+    }
+  ]),
   verifiedIcon: {
     marginLeft: 8,
   },
-  categoryText: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
+  categoryText: StyleSheet.flatten([
+    iOSUIKit.callout,
+    {
+      fontWeight: '500',
+    }
+  ]),
   descriptionContainer: {
     marginBottom: 20,
   },
-  dealDescription: {
-    fontSize: 16,
-    lineHeight: 24,
-  },
+  dealDescription: StyleSheet.flatten([
+    iOSUIKit.body,
+    {
+      lineHeight: 24,
+    }
+  ]),
   infoContainer: {
     marginBottom: 20,
   },
@@ -554,10 +562,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  infoText: {
-    fontSize: 14,
-    marginLeft: 8,
-  },
+  infoText: StyleSheet.flatten([
+    iOSUIKit.subhead,
+    {
+      marginLeft: 8,
+    }
+  ]),
   shareButton: {
     marginBottom: 20,
   },
@@ -576,10 +586,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 8,
   },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  saveButtonText: StyleSheet.flatten([
+    iOSUIKit.callout,
+    {
+      fontWeight: '600',
+    }
+  ]),
   redeemButton: {
     flex: 1,
     flexDirection: 'row',
@@ -590,11 +602,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 8,
   },
-  redeemButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  redeemButtonText: StyleSheet.flatten([
+    iOSUIKit.callout,
+    {
+      color: '#fff',
+      fontWeight: '600',
+    }
+  ]),
 });
 
 // Export with Error Boundary wrapper

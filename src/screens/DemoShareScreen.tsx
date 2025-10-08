@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import DealShareButton from '../components/DealShareButton';
+import { iOSUIKit } from 'react-native-typography';
 
 // Demo component to test sharing functionality
 const DemoShareScreen = () => {
@@ -50,18 +51,21 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#f5f5f5',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 32,
-    textAlign: 'center',
-  },
+  title: StyleSheet.flatten([
+    iOSUIKit.largeTitleEmphasized,
+    {
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+  ]),
+  subtitle: StyleSheet.flatten([
+    iOSUIKit.body,
+    {
+      color: '#666',
+      marginBottom: 32,
+      textAlign: 'center',
+    },
+  ]),
   dealCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -76,11 +80,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  dealTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
+  dealTitle: StyleSheet.flatten([
+    iOSUIKit.title3Emphasized,
+    {
+      marginBottom: 8,
+    },
+  ]),
   dealDescription: {
     fontSize: 16,
     marginBottom: 8,

@@ -10,6 +10,7 @@ import { useAuth, getColors } from '../../libs/hooks/useAuth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AuthService from '../../services/auth.service';
 import ApiService from '../../services/api.service';
+import { iOSUIKit } from 'react-native-typography';
 
 const DebugScreen = ({ navigation }: any) => {
   const { isDarkMode } = useAuth();
@@ -164,12 +165,13 @@ const DebugScreen = ({ navigation }: any) => {
       backgroundColor: colors.background,
       padding: 20,
     },
-    title: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: colors.text,
-      marginBottom: 20,
-    },
+    title: StyleSheet.flatten([
+      iOSUIKit.largeTitleEmphasized,
+      {
+        color: colors.text,
+        marginBottom: 20,
+      },
+    ]),
     button: {
       backgroundColor: colors.primary,
       padding: 15,
