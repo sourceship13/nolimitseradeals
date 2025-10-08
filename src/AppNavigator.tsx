@@ -19,6 +19,7 @@ import PermissionTestScreen from './screens/PermissionTestScreen';
 import NetworkDebugScreen from './screens/NetworkDebugScreen';
 import { useAuth, getColors } from './libs/hooks/useAuth';
 import { ActivityIndicator, View } from 'react-native';
+import { iOSUIKit } from 'react-native-typography';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -71,14 +72,21 @@ const MainTabNavigator = () => {
           shadowRadius: 12,
           elevation: 12,
         },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600', // Slightly bolder like Nike
-          color: '#FFFFFF',
+        tabBarLabelStyle: [
+          iOSUIKit.largeTitleEmphasized,
+          {
+            fontSize: 12, // Override the large title size for tab bar
+            color: '#FFFFFF', // Ensure white color for Nike theme
+            marginTop: -14, // Reduce space between icon and label
+          }
+        ],
+        tabBarIconStyle: {
+          marginBottom: 2, // Reduce bottom margin of icons
         },
         tabBarBackground: () => (
           <View style={{
-            backgroundColor: colors.background,
+            backgroundColor: 'red',
+            borderRadius: 20,
             flex: 1,
             paddingBottom: 34, // Safe area for home indicator
           }} />

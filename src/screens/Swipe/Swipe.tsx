@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, FlatList, ImageBackground, Dimensions, Platform } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useAuth, getColors } from '../../libs/hooks/useAuth';
+import { iOSUIKit } from 'react-native-typography';
 
 
 
@@ -55,25 +56,9 @@ const SwipeScreen = ({ navigation }: any) => {
           onPress={() => navigation.navigate('Settings')}
           style={styles.settingsButton}
         >
-          <Text style={{ color: colors.primary, fontSize: 16 }}>⚙️</Text>
+          <Text style={{ color: colors.primary, fontSize: 20 }}>⚙️</Text>
         </TouchableOpacity>
       </View>
-      
-      {/* 2. TopBar with Recent Deals and Explore button */}
-      <View style={styles.topBar}>
-        <Text style={[styles.topBarTitle, { color: colors.text }]}>Recent Deals</Text>
-        <TouchableOpacity 
-          style={[
-            styles.exploreBtn, 
-            { backgroundColor: isDarkMode ? 'rgba(128, 128, 128, 0.3)' : 'rgba(0,0,0,0.08)' }
-          ]} 
-          onPress={() => navigation.navigate('Explore')}
-        >
-          <Text style={[styles.exploreBtnText, { color: colors.text }]}>Explore</Text>
-        </TouchableOpacity>
-      </View>
-      
-
 
       {/* 3. Full-screen content area */}
       <View style={styles.contentContainer}>
@@ -331,14 +316,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 0,
     paddingTop: 50, // Account for status bar
     borderBottomWidth: 1,
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
+  headerTitle: StyleSheet.flatten([
+    iOSUIKit.largeTitleEmphasized,
+    {
+      fontSize: 24, // Override the default large title size to fit header
+    }
+  ]),
   settingsButton: {
     padding: 8,
   },
