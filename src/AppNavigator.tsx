@@ -83,13 +83,6 @@ const MainTabNavigator = () => {
         tabBarIconStyle: {
           marginBottom: 2, // Reduce bottom margin of icons
         },
-        tabBarBackground: () => (
-          <View style={{
-            borderRadius: 20,
-            flex: 1,
-            paddingBottom: 34, // Safe area for home indicator
-          }} />
-        ),
       })}
     >
       <Tab.Screen 

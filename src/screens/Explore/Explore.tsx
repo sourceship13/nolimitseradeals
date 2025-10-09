@@ -161,8 +161,7 @@ const ExploreScreen = ({ navigation }: any) => {
             </View>
           )}
         </View>
-        <View style={{ height: 96, marginBottom: 4 }} />
-        <Text style={[styles.itemBusiness, { color: colors.text }]} numberOfLines={1}>
+        <Text style={[styles.itemBusiness, { color: colors.text, marginTop: 120 }]} numberOfLines={1}>
           {item.business_name || item.business || 'Unknown Business'}
         </Text>
         <Text style={[styles.itemDescription, { color: colors.textSecondary }]} numberOfLines={2}>
@@ -646,7 +645,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 96, // Increased by 20% from 80 to 96
+    height: 120, // Increased to take up the area of the removed spacer (96 + 24)
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
