@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, FlatList, ImageBackground, Dimensions, Platform } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -29,8 +29,17 @@ const SwipeScreen = ({ navigation }: any) => {
   const translateX = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;
   const rotate = useRef(new Animated.Value(0)).current;
+  // Create opacity animated values that start at 0 (transparent)
   const likeOpacity = useRef(new Animated.Value(0)).current;
   const dislikeOpacity = useRef(new Animated.Value(0)).current;
+
+  // Debug: Ensure opacity starts at 0 and log it
+  useEffect(() => {
+    console.log('🔍 SwipeScreen mounted - setting opacity to 0');
+    likeOpacity.setValue(0);
+    dislikeOpacity.setValue(0);
+    console.log('🔍 Opacity values set to 0');
+  }, []);
 
   // Deals are now fetched globally via useAuth hook
 
@@ -49,7 +58,7 @@ const SwipeScreen = ({ navigation }: any) => {
   const onGestureEvent = Animated.event(
     [{ nativeEvent: { translationX: translateX, translationY: translateY } }],
     { 
-      useNativeDriver: true,
+      useNativeDriver: false, // Don't use native driver for opacity changes
       listener: (event: any) => {
         const { translationX } = event.nativeEvent;
         console.log('🎯 Swipe translationX:', translationX);
@@ -59,16 +68,16 @@ const SwipeScreen = ({ navigation }: any) => {
         rotate.setValue(rotateValue);
         
         // Show like/dislike indicators based on swipe direction
-        if (translationX > 80) {
-          // Swiping right - show heart (starts at 80px)
-          const opacity = Math.min(1, (translationX - 80) / 70);
-          console.log('❤️ Like indicator opacity:', opacity);
+        if (translationX > 20) {
+          // Swiping right - show heart (starts at 20px for easier testing)
+          const opacity = Math.min(1, Math.max(0, translationX / 100));
+          console.log('❤️ Like indicator - translationX:', translationX, 'opacity:', opacity);
           likeOpacity.setValue(opacity);
           dislikeOpacity.setValue(0);
-        } else if (translationX < -80) {
-          // Swiping left - show X (starts at -80px)
-          const opacity = Math.min(1, (-translationX - 80) / 70);
-          console.log('❌ Dislike indicator opacity:', opacity);
+        } else if (translationX < -20) {
+          // Swiping left - show X (starts at -20px for easier testing)
+          const opacity = Math.min(1, Math.max(0, Math.abs(translationX) / 100));
+          console.log('❌ Dislike indicator - translationX:', translationX, 'opacity:', opacity);
           dislikeOpacity.setValue(opacity);
           likeOpacity.setValue(0);
         } else {
@@ -159,16 +168,6 @@ const SwipeScreen = ({ navigation }: any) => {
             }
           ]}
         >
-          {/* Background Icons - Behind the swiping card */}
-          <View style={styles.backgroundIconsContainer}>
-            <Animated.View style={[styles.backgroundIcon, styles.backgroundLikeIcon, { opacity: likeOpacity }]}>
-              <MaterialIcons name="favorite" size={120} color="#4CAF50" />
-            </Animated.View>
-            
-            <Animated.View style={[styles.backgroundIcon, styles.backgroundDislikeIcon, { opacity: dislikeOpacity }]}>
-              <MaterialIcons name="close" size={120} color="#F44336" />
-            </Animated.View>
-          </View>
 
           {dealsLoading ? (
             <View style={styles.centerContent}>
@@ -199,12 +198,34 @@ const SwipeScreen = ({ navigation }: any) => {
                         resizeMode="cover"
                       >
                         <View style={styles.imageOverlay} />
+                        
+                        {/* Swipe feedback icons on top of image */}
+                        <View style={styles.imageIconsOverlay} pointerEvents="none">
+                          <Animated.View style={[styles.imageLikeIcon, { opacity: likeOpacity }]}>
+                            <MaterialIcons name="favorite" size={80} color="#FF4458" />
+                          </Animated.View>
+                          
+                          <Animated.View style={[styles.imageDislikeIcon, { opacity: dislikeOpacity }]}>
+                            <MaterialIcons name="close" size={80} color="#FFF" />
+                          </Animated.View>
+                        </View>
                       </ImageBackground>
                     )}
                   />
                 ) : (
                   <View style={[styles.fullScreenImage, { backgroundColor: currentDeal.backgroundColor || colors.primary }]}>
                     <View style={styles.imageOverlay} />
+                    
+                    {/* Swipe feedback icons on top of image */}
+                    <View style={styles.imageIconsOverlay} pointerEvents="none">
+                      <Animated.View style={[styles.imageLikeIcon, { opacity: likeOpacity }]}>
+                        <MaterialIcons name="favorite" size={80} color="#FF4458" />
+                      </Animated.View>
+                      
+                      <Animated.View style={[styles.imageDislikeIcon, { opacity: dislikeOpacity }]}>
+                        <MaterialIcons name="close" size={80} color="#FFF" />
+                      </Animated.View>
+                    </View>
                   </View>
                 )}
                 
@@ -298,7 +319,7 @@ const styles = StyleSheet.create({
   ]),
   contentContainer: {
     flex: 1,
-    zIndex: 1, // Above background icons
+    zIndex: 2, // Above background icons
   },
   centerContent: {
     flex: 1,
@@ -480,25 +501,113 @@ const styles = StyleSheet.create({
   },
   backgroundIconsContainer: {
     position: 'absolute',
-    top: 0,
+    top: 100,
     left: 0,
     right: 0,
-    bottom: 0,
-    zIndex: 0, // Behind everything
+    bottom: 100,
+    zIndex: 1000, // Very high z-index
     pointerEvents: 'none', // Allow touches to pass through
   },
   backgroundIcon: {
     position: 'absolute',
     justifyContent: 'center',
     alignItems: 'center',
-    top: '50%',
-    marginTop: -60, // Half of icon size for centering
+    top: '40%',
+    marginTop: -60,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    elevation: 10, // Android elevation for better visibility
   },
   backgroundLikeIcon: {
     right: 50,
+    backgroundColor: 'rgba(76, 175, 80, 0.8)', // More visible green background
   },
   backgroundDislikeIcon: {
     left: 50,
+    backgroundColor: 'rgba(244, 67, 54, 0.8)', // More visible red background
+  },
+  // New overlay approach
+  iconsOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 9999, // Highest possible z-index
+    elevation: 20, // High Android elevation
+    pointerEvents: 'none', // Allow touches to pass through
+  },
+  overlayLikeIcon: {
+    position: 'absolute',
+    right: 80,
+    top: '50%',
+    marginTop: -60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255, 68, 88, 0.2)', // Semi-transparent background for visibility
+    elevation: 15,
+  },
+  overlayDislikeIcon: {
+    position: 'absolute',
+    left: 80,
+    top: '50%',
+    marginTop: -60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(136, 136, 136, 0.2)', // Semi-transparent background for visibility
+    elevation: 15,
+  },
+  // Image-based icons (on top of deal image)
+  imageIconsOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    pointerEvents: 'none',
+  },
+  imageLikeIcon: {
+    position: 'absolute',
+    right: 40,
+    top: '50%',
+    marginTop: -50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)', // Clean white background
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  imageDislikeIcon: {
+    position: 'absolute',
+    left: 40,
+    top: '50%',
+    marginTop: -50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)', // Clean white background
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
   },
 });
 
