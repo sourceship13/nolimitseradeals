@@ -202,11 +202,11 @@ const SwipeScreen = ({ navigation }: any) => {
                         {/* Swipe feedback icons on top of image */}
                         <View style={styles.imageIconsOverlay} pointerEvents="none">
                           <Animated.View style={[styles.imageLikeIcon, { opacity: likeOpacity }]}>
-                            <MaterialIcons name="favorite" size={80} color="#FF4458" />
+                            <Text style={styles.likeIconText}>♥</Text>
                           </Animated.View>
                           
                           <Animated.View style={[styles.imageDislikeIcon, { opacity: dislikeOpacity }]}>
-                            <MaterialIcons name="close" size={80} color="#FFF" />
+                            <Text style={styles.dislikeIconText}>✕</Text>
                           </Animated.View>
                         </View>
                       </ImageBackground>
@@ -219,11 +219,11 @@ const SwipeScreen = ({ navigation }: any) => {
                     {/* Swipe feedback icons on top of image */}
                     <View style={styles.imageIconsOverlay} pointerEvents="none">
                       <Animated.View style={[styles.imageLikeIcon, { opacity: likeOpacity }]}>
-                        <MaterialIcons name="favorite" size={80} color="#FF4458" />
+                        <Text style={styles.likeIconText}>♥</Text>
                       </Animated.View>
                       
                       <Animated.View style={[styles.imageDislikeIcon, { opacity: dislikeOpacity }]}>
-                        <MaterialIcons name="close" size={80} color="#FFF" />
+                        <Text style={styles.dislikeIconText}>✕</Text>
                       </Animated.View>
                     </View>
                   </View>
@@ -608,6 +608,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 10,
+  },
+  likeIconText: {
+    fontSize: 60,
+    color: '#FF4458',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  },
+  dislikeIconText: {
+    fontSize: 60,
+    color: '#FFF',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
   },
 });
 
