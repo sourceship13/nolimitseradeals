@@ -53,7 +53,7 @@ const MainTabNavigator = () => {
         tabBarActiveTintColor: '#FFFFFF', // Nike white for active tabs
         tabBarInactiveTintColor: '#9CA3AF', // Light gray for inactive tabs  
         tabBarStyle: {
-          backgroundColor: '#1F2937', // Nike dark gray/black
+          backgroundColor: 'rgba(31, 41, 55, 0.25)', // Nike dark gray/black with 90% opacity
           borderTopColor: 'transparent',
           borderTopWidth: 0,
           borderRadius: 20,
@@ -85,7 +85,6 @@ const MainTabNavigator = () => {
         },
         tabBarBackground: () => (
           <View style={{
-            backgroundColor: 'red',
             borderRadius: 20,
             flex: 1,
             paddingBottom: 34, // Safe area for home indicator
