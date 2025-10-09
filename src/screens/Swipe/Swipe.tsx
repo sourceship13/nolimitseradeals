@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, FlatList, ImageBackground, Dimensions, Platform } from 'react-native';
+import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useAuth, getColors } from '../../libs/hooks/useAuth';
 import { iOSUIKit } from 'react-native-typography';
@@ -24,9 +25,85 @@ const SwipeScreen = ({ navigation }: any) => {
   const [currentDealIndex, setCurrentDealIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
+  // Animated values for swipe gestures
+  const translateX = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(0)).current;
+  const rotate = useRef(new Animated.Value(0)).current;
+  const likeOpacity = useRef(new Animated.Value(0)).current;
+  const dislikeOpacity = useRef(new Animated.Value(0)).current;
+
   // Deals are now fetched globally via useAuth hook
 
   const currentDeal = deals.length > 0 ? deals[currentDealIndex] : PLACEHOLDER_DEAL;
+
+  const resetAnimations = () => {
+    Animated.parallel([
+      Animated.spring(translateX, { toValue: 0, useNativeDriver: true }),
+      Animated.spring(translateY, { toValue: 0, useNativeDriver: true }),
+      Animated.spring(rotate, { toValue: 0, useNativeDriver: true }),
+      Animated.timing(likeOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+      Animated.timing(dislikeOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+    ]).start();
+  };
+
+  const onGestureEvent = Animated.event(
+    [{ nativeEvent: { translationX: translateX, translationY: translateY } }],
+    { 
+      useNativeDriver: true,
+      listener: (event: any) => {
+        const { translationX } = event.nativeEvent;
+        console.log('🎯 Swipe translationX:', translationX);
+        
+        // Calculate rotation based on horizontal movement
+        const rotateValue = translationX / 10;
+        rotate.setValue(rotateValue);
+        
+        // Show like/dislike indicators based on swipe direction
+        if (translationX > 80) {
+          // Swiping right - show heart (starts at 80px)
+          const opacity = Math.min(1, (translationX - 80) / 70);
+          console.log('❤️ Like indicator opacity:', opacity);
+          likeOpacity.setValue(opacity);
+          dislikeOpacity.setValue(0);
+        } else if (translationX < -80) {
+          // Swiping left - show X (starts at -80px)
+          const opacity = Math.min(1, (-translationX - 80) / 70);
+          console.log('❌ Dislike indicator opacity:', opacity);
+          dislikeOpacity.setValue(opacity);
+          likeOpacity.setValue(0);
+        } else {
+          // Reset indicators when not swiping far enough
+          likeOpacity.setValue(0);
+          dislikeOpacity.setValue(0);
+        }
+      }
+    }
+  );
+
+  const onHandlerStateChange = (event: any) => {
+    const { nativeEvent } = event;
+    console.log('🎯 Handler state:', nativeEvent.state, 'translationX:', nativeEvent.translationX);
+    
+    if (nativeEvent.state === State.END) {
+      const { translationX } = nativeEvent;
+      
+      if (translationX > 150) {
+        // Swipe right - like
+        console.log('❤️ Swiped RIGHT - Like!');
+        handleSwipe('right');
+        resetAnimations();
+      } else if (translationX < -150) {
+        // Swipe left - dislike
+        console.log('❌ Swiped LEFT - Dislike!');
+        handleSwipe('left');
+        resetAnimations();
+      } else {
+        // Snap back to center
+        console.log('🔄 Snap back to center');
+        resetAnimations();
+      }
+    }
+  };
 
   const handleSwipe = (direction: 'left' | 'right') => {
     if (direction === 'right') {
@@ -61,70 +138,102 @@ const SwipeScreen = ({ navigation }: any) => {
       </View>
 
       {/* 3. Full-screen content area */}
-      <View style={styles.contentContainer}>
-        {dealsLoading ? (
-          <View style={styles.centerContent}>
-            <Text style={[iOSUIKit.body, { color: colors.text, textAlign: 'center' }]}>Loading deals...</Text>
+      <PanGestureHandler
+        onGestureEvent={onGestureEvent}
+        onHandlerStateChange={onHandlerStateChange}
+      >
+        <Animated.View 
+          style={[
+            styles.contentContainer,
+            {
+              transform: [
+                { translateX: translateX },
+                { translateY: translateY },
+                { rotate: rotate.interpolate({
+                    inputRange: [-200, 200],
+                    outputRange: ['-30deg', '30deg'],
+                    extrapolate: 'clamp'
+                  })
+                }
+              ]
+            }
+          ]}
+        >
+          {/* Background Icons - Behind the swiping card */}
+          <View style={styles.backgroundIconsContainer}>
+            <Animated.View style={[styles.backgroundIcon, styles.backgroundLikeIcon, { opacity: likeOpacity }]}>
+              <MaterialIcons name="favorite" size={120} color="#4CAF50" />
+            </Animated.View>
+            
+            <Animated.View style={[styles.backgroundIcon, styles.backgroundDislikeIcon, { opacity: dislikeOpacity }]}>
+              <MaterialIcons name="close" size={120} color="#F44336" />
+            </Animated.View>
           </View>
-        ) : error ? (
-          <View style={styles.centerContent}>
-            <Text style={[iOSUIKit.body, { color: colors.error, textAlign: 'center' }]}>{error}</Text>
-          </View>
-        ) : (
-          <>
-            {/* Full-screen image background */}
-            <View style={styles.imageContainer}>
-              {currentDeal.business_images && currentDeal.business_images.length > 0 ? (
-                <FlatList
-                  data={currentDeal.business_images}
-                  horizontal
-                  pagingEnabled
-                  showsHorizontalScrollIndicator={false}
-                  keyExtractor={(item, index) => `image-${index}`}
-                  style={styles.imageCarousel}
-                  renderItem={({ item }) => (
-                    <ImageBackground
-                      source={{ uri: item.image_url }}
-                      style={styles.fullScreenImage}
-                      resizeMode="cover"
-                    >
-                      <View style={styles.imageOverlay} />
-                    </ImageBackground>
-                  )}
-                />
-              ) : (
-                <View style={[styles.fullScreenImage, { backgroundColor: currentDeal.backgroundColor || colors.primary }]}>
-                  <View style={styles.imageOverlay} />
-                </View>
-              )}
-              
-              {/* Card content overlay on image */}
-              <View style={styles.cardOverlay}>
-                <View style={{ ...styles.cardContent, justifyContent: 'center' }}>
-                  {/* <Text style={styles.dealImage}>{currentDeal.image ? currentDeal.image : '🛍️'}</Text> */}
-                  <View style={styles.businessRow}>
-                    <Text style={styles.dealBusiness}>{currentDeal.business || currentDeal.business_name || ''}</Text>
-                    {
-                      currentDeal.is_premium_business ? (
-                        <MaterialIcons 
-                      name={'verified'}
-                      size={18}
-                      color="#0095f6"
-                      style={styles.businessIcon}
-                    />)
-                    : null
-                    }
-                    
+
+          {dealsLoading ? (
+            <View style={styles.centerContent}>
+              <Text style={[iOSUIKit.body, { color: colors.text, textAlign: 'center' }]}>Loading deals...</Text>
+            </View>
+          ) : error ? (
+            <View style={styles.centerContent}>
+              <Text style={[iOSUIKit.body, { color: colors.error, textAlign: 'center' }]}>{error}</Text>
+            </View>
+          ) : (
+            <>
+              {/* Full-screen image background */}
+              <View style={styles.imageContainer} pointerEvents="box-none">
+                {currentDeal.business_images && currentDeal.business_images.length > 0 ? (
+                  <FlatList
+                    data={currentDeal.business_images}
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    keyExtractor={(item, index) => `image-${index}`}
+                    style={styles.imageCarousel}
+                    scrollEnabled={false}
+                    pointerEvents="none"
+                    renderItem={({ item }) => (
+                      <ImageBackground
+                        source={{ uri: item.image_url }}
+                        style={styles.fullScreenImage}
+                        resizeMode="cover"
+                      >
+                        <View style={styles.imageOverlay} />
+                      </ImageBackground>
+                    )}
+                  />
+                ) : (
+                  <View style={[styles.fullScreenImage, { backgroundColor: currentDeal.backgroundColor || colors.primary }]}>
+                    <View style={styles.imageOverlay} />
                   </View>
-                  <Text style={styles.dealOffer}>{currentDeal.description || currentDeal.descrption || ''}</Text>
-                  <Text style={styles.dealLocation}>{currentDeal.category_name || ''}</Text>
-                  <Text style={styles.dealExpires}>{currentDeal.expires || currentDeal.expiry || ''}</Text>
+                )}
+                
+                {/* Card content overlay on image */}
+                <View style={styles.cardOverlay} pointerEvents="none">
+                  <View style={{ ...styles.cardContent, justifyContent: 'center' }} pointerEvents="none">
+                    <View style={styles.businessRow}>
+                      <Text style={styles.dealBusiness}>{currentDeal.business || currentDeal.business_name || ''}</Text>
+                      {
+                        currentDeal.is_premium_business ? (
+                          <MaterialIcons 
+                        name={'verified'}
+                        size={18}
+                        color="#0095f6"
+                        style={styles.businessIcon}
+                      />)
+                      : null
+                      }
+                      
+                    </View>
+                    <Text style={styles.dealOffer}>{currentDeal.description || currentDeal.descrption || ''}</Text>
+                    <Text style={styles.dealLocation}>{currentDeal.category_name || ''}</Text>
+                    <Text style={styles.dealExpires}>{currentDeal.expires || currentDeal.expiry || ''}</Text>
+                  </View>
                 </View>
               </View>
-            </View>
-            
-            {/* 4. Action buttons at bottom - 1/10 of screen height */}
-            <View style={styles.actionContainer}>
+              
+              {/* 4. Action buttons at bottom - 1/10 of screen height */}
+              <View style={styles.actionContainer} pointerEvents="box-none">
               {/* Previous deal button */}
               <TouchableOpacity style={[styles.navBtn, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]} onPress={handlePreviousDeal}>
                 <Text style={[iOSUIKit.title3, { color: isDarkMode ? colors.dealArrows : '#000' }]}>←</Text>
@@ -145,9 +254,10 @@ const SwipeScreen = ({ navigation }: any) => {
                 <Text style={[iOSUIKit.title3, { color: isDarkMode ? colors.dealArrows : '#000' }]}>→</Text>
               </TouchableOpacity>
             </View>
-          </>
-        )}
-      </View>
+            </>
+          )}
+        </Animated.View>
+      </PanGestureHandler>
     </View>
   );
 };
@@ -188,15 +298,19 @@ const styles = StyleSheet.create({
   ]),
   contentContainer: {
     flex: 1,
+    zIndex: 1, // Above background icons
   },
   centerContent: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: '100%',
+    width: '100%',
   },
   imageContainer: {
     flex: 1,
     position: 'relative',
+    overflow: 'visible', // Ensure indicators are not clipped
   },
   imageCarousel: {
     flex: 1,
@@ -333,6 +447,58 @@ const styles = StyleSheet.create({
   ]),
   settingsButton: {
     padding: 8,
+  },
+  swipeIndicator: {
+    position: 'absolute',
+    zIndex: 9999, // Maximum z-index to ensure it's on top
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 60,
+    width: 120,
+    height: 120,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.6,
+    shadowRadius: 15,
+    elevation: 20,
+    borderWidth: 4,
+  },
+  likeIndicator: {
+    top: 120, // Position from top of screen
+    right: 30, // Position from right edge
+    borderColor: '#FFFFFF',
+    backgroundColor: 'rgba(76, 175, 80, 0.95)', // Bright green background
+  },
+  dislikeIndicator: {
+    top: 120, // Position from top of screen
+    left: 30, // Position from left edge
+    borderColor: '#FFFFFF',
+    backgroundColor: 'rgba(244, 67, 54, 0.95)', // Bright red background
+  },
+  backgroundIconsContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0, // Behind everything
+    pointerEvents: 'none', // Allow touches to pass through
+  },
+  backgroundIcon: {
+    position: 'absolute',
+    justifyContent: 'center',
+    alignItems: 'center',
+    top: '50%',
+    marginTop: -60, // Half of icon size for centering
+  },
+  backgroundLikeIcon: {
+    right: 50,
+  },
+  backgroundDislikeIcon: {
+    left: 50,
   },
 });
 

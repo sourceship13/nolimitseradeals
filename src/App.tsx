@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import AppNavigator from './AppNavigator';
 import { StatusBar, StyleSheet, Linking } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider, useAuth } from './libs/hooks/useAuth';
 import AppReturnUtils from './libs/utils/appReturnUtils';
 
@@ -47,7 +48,9 @@ function AppWithStatusBar() {
   return (
     <>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppNavigator />
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <AppNavigator />
+      </GestureHandlerRootView>
     </>
   );
 }
