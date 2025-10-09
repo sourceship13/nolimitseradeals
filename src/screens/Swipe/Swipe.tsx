@@ -48,7 +48,7 @@ const SwipeScreen = ({ navigation }: any) => {
   };
 
   return (
-    <View style={styles.screenContainer}>
+    <View style={[styles.screenContainer, { backgroundColor: colors.background }]}>
       {/* 1. Header */}
       <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <Text style={[styles.headerTitle, { color: colors.text }]}>DEALZ</Text>
@@ -127,7 +127,7 @@ const SwipeScreen = ({ navigation }: any) => {
             <View style={styles.actionContainer}>
               {/* Previous deal button */}
               <TouchableOpacity style={[styles.navBtn, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]} onPress={handlePreviousDeal}>
-                <Text style={[iOSUIKit.title3, { color: colors.dealArrows }]}>←</Text>
+                <Text style={[iOSUIKit.title3, { color: isDarkMode ? colors.dealArrows : '#000' }]}>←</Text>
               </TouchableOpacity>
               
               {/* Dislike button */}
@@ -142,7 +142,7 @@ const SwipeScreen = ({ navigation }: any) => {
               
               {/* Next deal button */}
               <TouchableOpacity style={[styles.navBtn, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]} onPress={handleNextDeal}>
-                <Text style={[iOSUIKit.title3, { color: colors.dealArrows }]}>→</Text>
+                <Text style={[iOSUIKit.title3, { color: isDarkMode ? colors.dealArrows : '#000' }]}>→</Text>
               </TouchableOpacity>
             </View>
           </>
@@ -158,7 +158,6 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const styles = StyleSheet.create({
   screenContainer: {
     flex: 1,
-    backgroundColor: '#000',
     paddingBottom: 100,
   },
   topBar: {
