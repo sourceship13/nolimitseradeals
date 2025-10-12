@@ -55,10 +55,14 @@ const isPhysicalDevice = (): boolean => {
 // Override for testing - can be set via NetworkDebug screen
 let FORCE_PHYSICAL_DEVICE: boolean | null = null;
 
-// Override for development - set to 'local' to use Mac IP for physical devices
-const FORCE_LOCAL_DEVELOPMENT = true; // Set to true for local Mac development
+// Override for development - set to true to use local development server
+const FORCE_LOCAL_DEVELOPMENT = false; // Set to false to ALWAYS use staging server (recommended)
 
-// Auto-detect environment based on device type and build
+  // FORCE STAGING: Override everything to use staging (set to true to force staging regardless of device)
+const FORCE_STAGING_ALWAYS = true; // Set to true to FORCE staging server for all requests
+
+// IMPORTANT: Verify all URLs point to staging
+const STAGING_URL = 'https://f3x2ipn2yf.us-east-1.awsapprunner.com';// Auto-detect environment based on device type and build
 const getEnvironment = (): Environment => {
   const actuallyPhysical = FORCE_PHYSICAL_DEVICE !== null ? FORCE_PHYSICAL_DEVICE : isPhysicalDevice();
   
@@ -67,8 +71,15 @@ const getEnvironment = (): Environment => {
     detectedPhysical: isPhysicalDevice(),
     finalPhysical: actuallyPhysical,
     devMode: __DEV__,
-    forceLocalDev: FORCE_LOCAL_DEVELOPMENT
+    forceLocalDev: FORCE_LOCAL_DEVELOPMENT,
+    forceStagingAlways: FORCE_STAGING_ALWAYS
   });
+  
+  // HIGHEST PRIORITY: Force staging override (bypasses all other logic)
+  if (FORCE_STAGING_ALWAYS) {
+    console.log('   → Selected: STAGING (FORCED OVERRIDE - ignoring all device detection)');
+    return 'staging';
+  }
   
   // Override for local development: Use local environment even for physical devices
   if (__DEV__ && FORCE_LOCAL_DEVELOPMENT) {
@@ -82,10 +93,10 @@ const getEnvironment = (): Environment => {
     return 'staging';
   }
   
-  // Use local only for simulator in development
+  // Use staging for simulators when local development is disabled
   if (__DEV__) {
-    console.log('   → Selected: LOCAL (Simulator Dev)');
-    return 'local'; // Use local server in development on simulator
+    console.log('   → Selected: STAGING (Simulator Dev - Local Development Disabled)');
+    return 'staging'; // Use staging server since FORCE_LOCAL_DEVELOPMENT is false
   }
   
   console.log('   → Selected: STAGING (Release Build)');
@@ -97,13 +108,13 @@ class ApiConfig {
   
   private readonly urls = {
     local: {
-      ios: 'http://localhost:8080',
-      android: 'http://10.0.2.2:8080',
+      ios: STAGING_URL, // FORCED to staging
+      android: STAGING_URL, // FORCED to staging
       // For physical devices, use your Mac's network IP
-      physical: 'http://192.168.26.8:8080', // Auto-detected Mac IP
+      physical: STAGING_URL, // FORCED to staging - was 192.168.26.8:8080
     },
-    staging: 'https://f3x2ipn2yf.us-east-1.awsapprunner.com',
-    production: 'https://f3x2ipn2yf.us-east-1.awsapprunner.com',
+    staging: STAGING_URL,
+    production: STAGING_URL,
   };
   
   // Store the environment
@@ -215,11 +226,72 @@ export const switchEnvironment = (env: Environment) => {
 
 // Export helper to force physical device detection (for testing)
 export const forcePhysicalDevice = (isPhysical: boolean | null) => {
+  // Only allow this if FORCE_STAGING_ALWAYS is false
+  if (FORCE_STAGING_ALWAYS) {
+    console.log('🚫 Cannot override device detection - FORCE_STAGING_ALWAYS is enabled');
+    return;
+  }
+  
   FORCE_PHYSICAL_DEVICE = isPhysical;
   console.log('🔧 FORCE PHYSICAL DEVICE:', isPhysical);
   // Refresh the configuration
   const newEnv = getEnvironment();
   apiConfig.setEnvironment(newEnv);
+};
+
+// Export helper to verify current configuration
+export const getCurrentConfig = () => {
+  console.log('=================================');
+  console.log('🔍 CURRENT API CONFIGURATION');
+  console.log('=================================');
+  console.log('📍 Environment:', apiConfig.environment);
+  console.log('🌐 Base URL:', apiConfig.baseURL);
+  console.log('🚀 API URL:', apiConfig.apiURL);
+  console.log('🔧 FORCE_STAGING_ALWAYS:', FORCE_STAGING_ALWAYS);
+  console.log('🔧 FORCE_LOCAL_DEVELOPMENT:', FORCE_LOCAL_DEVELOPMENT);
+  console.log('🔧 FORCE_PHYSICAL_DEVICE:', FORCE_PHYSICAL_DEVICE);
+  console.log('📱 Is Physical Device:', isPhysicalDevice());
+  console.log('📋 ALL URLs now point to:', STAGING_URL);
+  console.log('⚠️  Local development DISABLED - all requests go to staging server');
+  console.log('=================================');
+  return {
+    environment: apiConfig.environment,
+    baseURL: apiConfig.baseURL,
+    apiURL: apiConfig.apiURL,
+    isStaging: apiConfig.environment === 'staging'
+  };
+};
+
+// Export helper to force complete configuration refresh
+export const forceRefreshConfig = () => {
+  console.log('🔄 FORCING COMPLETE API CONFIGURATION REFRESH...');
+  
+  // Reset all overrides
+  FORCE_PHYSICAL_DEVICE = null;
+  
+  // Force re-evaluation of environment
+  const newEnv = getEnvironment();
+  console.log('🔄 New environment selected:', newEnv);
+  
+  // Update the singleton instance
+  apiConfig.setEnvironment(newEnv);
+  
+  // Verify all URLs are correct
+  console.log('✅ VERIFICATION: All URLs should now point to:', STAGING_URL);
+  console.log('✅ Current base URL:', apiConfig.baseURL);
+  console.log('✅ Current API URL:', apiConfig.apiURL);
+  
+  // Double check no local IPs are being used
+  if (apiConfig.baseURL.includes('192.168') || apiConfig.baseURL.includes('localhost')) {
+    console.error('🚨 ERROR: Still using local IP! Base URL:', apiConfig.baseURL);
+  } else {
+    console.log('✅ SUCCESS: No local IPs detected in base URL');
+  }
+  
+  // Log the results
+  getCurrentConfig();
+  
+  return apiConfig;
 };
 
 // Export helper to get current detection status

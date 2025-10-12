@@ -11,7 +11,10 @@ interface ApiResponse<T = any> {
 }
 
 class ApiService {
-  private baseURL = ApiConfig.apiURL;
+  // Dynamic getter to always use current API URL configuration
+  private get baseURL() {
+    return ApiConfig.apiURL;
+  }
 
   // Public endpoints (no authentication required)
   private publicEndpoints = [
@@ -42,6 +45,14 @@ class ApiService {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
+    
+    // CRITICAL: Check for local IP usage
+    if (url.includes('192.168') || url.includes('localhost') || url.includes(':8080')) {
+      console.error('🚨 CRITICAL ERROR: API request using local IP!');
+      console.error('🚨 URL:', url);
+      console.error('🚨 Base URL:', this.baseURL);
+      console.error('🚨 This should NOT happen - all requests should go to staging server!');
+    }
     
     // Enhanced debug logging for physical device troubleshooting
     console.log('=================================');
@@ -84,12 +95,15 @@ class ApiService {
         // Use regular fetch for public endpoints
         const headers = {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
           ...options.headers,
         };
         
         response = await fetch(url, {
+          method: 'GET',
           ...options,
           headers,
+          mode: 'cors',
         });
       }
 
@@ -152,7 +166,35 @@ class ApiService {
   }
 
   async getHeartedDeals(): Promise<ApiResponse<any[]>> {
-    return this.makeRequest('/deals/hearted');
+    // Try multiple possible endpoints for hearted deals
+    const endpointsToTry = [
+      '/user/hearted',      // Most likely endpoint for user's hearted deals
+      '/user/favorites',    // Alternative naming
+      '/user/saved',        // Another common naming
+      '/deals/hearted',     // Original endpoint (might not exist)
+      '/user/deals/hearted', // Nested endpoint
+      '/favorites',         // Simple endpoint
+      '/saved-deals'        // Another possibility
+    ];
+
+    let lastError: any = null;
+
+    for (const endpoint of endpointsToTry) {
+      try {
+        console.log(`🧪 Trying ${endpoint} endpoint...`);
+        const result = await this.makeRequest(endpoint);
+        console.log(`✅ Success with ${endpoint}:`, result);
+        return result;
+      } catch (error) {
+        console.log(`❌ ${endpoint} failed:`, error);
+        lastError = error;
+        continue;
+      }
+    }
+
+    // If all endpoints failed, return the last error
+    console.log('❌ All hearted deals endpoints failed');
+    throw lastError;
   }
 
   async checkHeartStatus(dealId: string): Promise<ApiResponse<{dealId: string, isHearted: boolean, heartCount: number}>> {
