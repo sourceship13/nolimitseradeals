@@ -257,14 +257,6 @@ const DealDetailScreen: React.FC<DealDetailProps> = (props) => {
         >
           <View style={styles.imageOverlay} />
         </ImageBackground>
-        
-        {/* Test with a known working image URL for comparison */}
-        <Image 
-          source={{ uri: 'https://via.placeholder.com/300x200/FF69B4/FFFFFF?text=TEST+IMAGE' }}
-          style={[{ position: 'absolute', top: 10, right: 10, width: 60, height: 40 }]}
-          onLoad={() => console.log(`✅ Test image loaded successfully`)}
-          onError={(error) => console.error(`❌ Even test image failed:`, error.nativeEvent.error)}
-        />
       </View>
     );
   };
