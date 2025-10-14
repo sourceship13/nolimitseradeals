@@ -16,6 +16,8 @@
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		BD8948CE15B0035E50BA535C /* libPods-nolimitseradeals.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-nolimitseradeals.a */; };
 		C1773A8681DE4379AE1808B0 /* Inter.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D9A518DD2D884B60BB31573F /* Inter.ttf */; };
+		DEAE9F642E9E27570041BB64 /* info-staging.plist in Resources */ = {isa = PBXBuildFile; fileRef = DEAE9F632E9E27570041BB64 /* info-staging.plist */; };
+		DEAE9F652E9E27570041BB64 /* info-staging.plist in Resources */ = {isa = PBXBuildFile; fileRef = DEAE9F632E9E27570041BB64 /* info-staging.plist */; };
 		DEE363062E98730100B65285 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		DEE3630A2E98730100B65285 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		DEE3630B2E98730100B65285 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
@@ -39,8 +41,8 @@
 		852F07B9EF534F6F848361DC /* Inter-Italic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Inter-Italic.ttf"; path = "../assets/fonts/Inter-Italic.ttf"; sourceTree = "<group>"; };
 		A0EC94E99E669F8BD68BE6A5 /* libPods-nolimitseradealsProd.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-nolimitseradealsProd.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9A518DD2D884B60BB31573F /* Inter.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Inter.ttf; path = ../assets/fonts/Inter.ttf; sourceTree = "<group>"; };
+		DEAE9F632E9E27570041BB64 /* info-staging.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "info-staging.plist"; sourceTree = "<group>"; };
 		DEE363152E98730100B65285 /* nolimitseradealsProd.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = nolimitseradealsProd.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		DEE363162E98730200B65285 /* nolimitseradeals copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "nolimitseradeals copy-Info.plist"; path = "/Users/alpha/Documents/tor/sera/client_meta/no.limit.sera/code/nolimitseradeals/ios/nolimitseradeals copy-Info.plist"; sourceTree = "<absolute>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -77,6 +79,7 @@
 		13B07FAE1A68108700A75B9A /* nolimitseradeals */ = {
 			isa = PBXGroup;
 			children = (
+				DEAE9F632E9E27570041BB64 /* info-staging.plist */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				761780EC2CA45674006654EE /* AppDelegate.swift */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
@@ -112,7 +115,6 @@
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
 				08FE1665D95F45F98DD08C96 /* Resources */,
-				DEE363162E98730200B65285 /* nolimitseradeals copy-Info.plist */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -221,6 +223,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DEAE9F652E9E27570041BB64 /* info-staging.plist in Resources */,
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				448304046096A5F613FCD547 /* PrivacyInfo.xcprivacy in Resources */,
@@ -233,6 +236,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DEAE9F642E9E27570041BB64 /* info-staging.plist in Resources */,
 				DEE3630A2E98730100B65285 /* LaunchScreen.storyboard in Resources */,
 				DEE3630B2E98730100B65285 /* Images.xcassets in Resources */,
 				DEE3630C2E98730100B65285 /* PrivacyInfo.xcprivacy in Resources */,
@@ -435,14 +439,14 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = CM52HNMXXW;
 				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = nolimitseradeals/Info.plist;
+				INFOPLIST_FILE = "nolimitseradeals/info-staging.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 0.0.6;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -465,14 +469,14 @@
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = CM52HNMXXW;
-				INFOPLIST_FILE = nolimitseradeals/Info.plist;
+				INFOPLIST_FILE = "nolimitseradeals/info-staging.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 0.0.6;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -639,14 +643,14 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = CM52HNMXXW;
 				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = "nolimitseradeals copy-Info.plist";
+				INFOPLIST_FILE = nolimitseradeals/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 0.0.6;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -674,14 +678,14 @@
 					"COCOAPODS=1",
 					"PRODUCTION=1",
 				);
-				INFOPLIST_FILE = "nolimitseradeals copy-Info.plist";
+				INFOPLIST_FILE = nolimitseradeals/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 0.0.6;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
