@@ -27,7 +27,6 @@ const SavedDealsScreen = ({ navigation }: any) => {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Toolbar
         title="My Deals"
-        onBack={() => navigation.goBack()}
         showSettings={true}
         onSettings={() => navigation.navigate('Settings')}
       />
