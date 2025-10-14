@@ -108,10 +108,9 @@ class ApiConfig {
   
   private readonly urls = {
     local: {
-      ios: STAGING_URL, // FORCED to staging
-      android: STAGING_URL, // FORCED to staging
-      // For physical devices, use your Mac's network IP
-      physical: STAGING_URL, // FORCED to staging - was 192.168.26.8:8080
+      ios: 'http://192.168.26.8:8080', // Mac's local IP and port for iOS device
+      android: 'http://10.0.2.2:8080', // Android emulator localhost
+      physical: 'http://192.168.26.8:8080', // Mac's local IP for physical device
     },
     staging: STAGING_URL,
     production: STAGING_URL,
