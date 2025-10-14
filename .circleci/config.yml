@@ -1,98 +1,130 @@
-build_ios:
-  macos:
-    xcode: "16.4.0"          # use an image that exists in CircleCI; adjust if needed
-  resource_class: macos.m1.medium
-  working_directory: ~/repo
-  steps:
-    - checkout
+version: 2.1
 
-    - run:
-        name: Preflight (accept Xcode license & show env)
-        command: |
-          sudo xcodebuild -license accept
-          xcodebuild -version
-          sw_vers
-          env | sort
+orbs:
+  node: circleci/node@5
 
-    - run:
-        name: Install tools
-        command: |
-          brew update
-          brew install xcpretty || true
-          sudo gem install cocoapods -N
-          npm --version
-          pod --version
+executors:
+  android-executor:
+    docker:
+      - image: cimg/android:2024.09-node
+    working_directory: ~/repo
+    environment:
+      LANG: en_US.UTF-8
+      NODE_ENV: development
 
-    - run:
-        name: Install iOS deps
-        command: |
-          cd ios
-          pod install
+  rn-executor:
+    docker:
+      - image: cimg/node:18.20
+    working_directory: ~/repo
+    environment:
+      LANG: en_US.UTF-8
+      NODE_ENV: development
 
-    - run:
-        name: Autoincrement build number
-        command: |
-          cd ios
-          agvtool new-version -all $(($CIRCLE_BUILD_NUM + 1))
+commands:
+  restore_npm_cache:
+    steps:
+      - node/install-packages:
+          pkg-manager: npm
+          cache-version: v1
+          override-ci-command: npm ci
 
-    - run:
-        name: Build archive
-        command: |
-          set -euo pipefail
-          cd ios
-          xcodebuild \
-            -workspace nolimitseradeals.xcworkspace \
-            -scheme nolimitseradeals \
-            -configuration Release \
-            -sdk iphoneos \
-            -archivePath $PWD/build/nolimitseradeals.xcarchive \
-            clean archive \
-          | xcpretty && exit ${PIPESTATUS[0]}
+jobs:
+  install_dependencies:
+    executor: rn-executor
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-npm-{{ arch }}-{{ .Branch }}-{{ checksum "package-lock.json" }}
+            - v1-npm-{{ arch }}-{{ .Branch }}
+            - v1-npm-
+      - run:
+          name: Install Node.js dependencies
+          command: npm ci
+      - save_cache:
+          key: v1-npm-{{ arch }}-{{ .Branch }}-{{ checksum "package-lock.json" }}
+          paths:
+            - node_modules
+      - persist_to_workspace:
+          root: .
+          paths:
+            - node_modules
 
-    - run:
-        name: Export IPA (app-store)
-        command: |
-          set -euo pipefail
-          cd ios
-          cat > ExportOptions.plist <<'PLIST'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
-           "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key><string>app-store</string>
-            <key>uploadSymbols</key><true/>
-            <key>compileBitcode</key><false/>
-            <key>destination</key><string>export</string>
-            <key>signingStyle</key><string>automatic</string>
-            <key>stripSwiftSymbols</key><true/>
-          </dict>
-          </plist>
-          PLIST
-          xcodebuild -exportArchive \
-            -archivePath $PWD/build/nolimitseradeals.xcarchive \
-            -exportOptionsPlist ExportOptions.plist \
-            -exportPath $PWD/build \
-          | xcpretty && exit ${PIPESTATUS[0]}
+  build_android:
+    executor: android-executor
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Accept Android SDK licenses
+          command: yes | sdkmanager --licenses || true
+      - run:
+          name: Build Android APK (release)
+          command: |
+            cd android
+            ./gradlew --no-daemon clean assembleRelease
+      - store_artifacts:
+          path: android/app/build/outputs/apk/release/app-release.apk
+          destination: android_apk
+      - store_artifacts:
+          path: android/app/build/outputs/mapping/release
+          destination: android_mapping
+      - persist_to_workspace:
+          root: .
+          paths:
+            - android/app/build/outputs
 
-    - store_artifacts:
-        path: ios/build
-        destination: ios_build
-
-    # >>> Replace altool with iTMSTransporter (much clearer errors)
-    - run:
-        name: Upload to App Store Connect (Transporter verbose)
-        command: |
-          set -euo pipefail
-          cd ios
-          IPA_PATH="$PWD/build/nolimitseradeals.ipa"
-          if [ ! -f "$IPA_PATH" ]; then
-            echo "IPA not found at $IPA_PATH"; exit 1
-          fi
-          # Env vars required: APPLE_ID, APP_SPECIFIC_PASSWORD, ASC_PROVIDER (team short name)
-          xcrun iTMSTransporter -m upload \
-            -u "$APPLE_ID" \
-            -p "$APP_SPECIFIC_PASSWORD" \
-            -assetFile "$IPA_PATH" \
-            -provider "$ASC_PROVIDER" \
-            -v eXtreme
+  build_ios:
+    macos:
+      xcode: "16.4.0"
+    resource_class: macos.m1.medium
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Preflight (accept Xcode license & show versions)
+          command: |
+            sudo xcodebuild -license accept
+            xcodebuild -version
+            sw_vers
+      - run:
+          name: Install tools
+          command: |
+            brew update
+            brew install xcpretty || true
+            sudo gem install cocoapods -N
+            pod --version
+            npm --version
+      - run:
+          name: Install CocoaPods
+          command: |
+            cd ios
+            pod install
+      - run:
+          name: Autoincrement iOS build number
+          command: |
+            cd ios
+            agvtool new-version -all $(($CIRCLE_BUILD_NUM + 1))
+      - run:
+          name: Build iOS archive (Release)
+          command: |
+            set -euo pipefail
+            cd ios
+            xcodebuild \
+              -workspace nolimitseradeals.xcworkspace \
+              -scheme nolimitseradeals \
+              -configuration Release \
+              -sdk iphoneos \
+              -archivePath $PWD/build/nolimitseradeals.xcarchive \
+              clean archive \
+            | xcpretty && exit ${PIPESTATUS[0]}
+      - run:
+          name: Create ExportOptions.plist (app-store)
+          command: |
+            cd ios
+            cat > ExportOptions.plist <<'PLIST'
+            <?xml version="1.0" encoding="UTF-8"?>
+            <!DOCTYPE plist PUBLIC "-//
