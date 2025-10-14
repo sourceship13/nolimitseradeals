@@ -174,14 +174,7 @@ const DealDetailScreen: React.FC<DealDetailProps> = (props) => {
   };
 
   const handleRedeem = () => {
-    Alert.alert(
-      'Redeem Deal',
-      `Are you sure you want to redeem this deal at ${deal?.business_name || deal?.business}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Redeem', onPress: () => Alert.alert('Success', 'Deal redeemed! Show this to the merchant.') }
-      ]
-    );
+    navigation.navigate('Redemption', { deal });
   };
 
   // Handle missing navigation or deal

@@ -20,6 +20,7 @@ import NetworkDebugScreen from './screens/NetworkDebugScreen';
 import { useAuth, getColors } from './libs/hooks/useAuth';
 import { ActivityIndicator, View } from 'react-native';
 import { iOSUIKit } from 'react-native-typography';
+import RedemptionScreen from './screens/Redemption/RedemptionScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -169,6 +170,7 @@ const AppNavigator = () => {
             <Stack.Screen name="DemoShare" component={DemoShareScreen} />
             <Stack.Screen name="PermissionTest" component={PermissionTestScreen} />
             <Stack.Screen name="NetworkDebug" component={NetworkDebugScreen} />
+            <Stack.Screen name="Redemption" component={RedemptionScreen} />
           </>
         )}
       </Stack.Navigator>
