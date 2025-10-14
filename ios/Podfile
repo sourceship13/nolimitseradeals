@@ -4,8 +4,9 @@ def node_require(script)
     "require.resolve(
       '#{script}',
       {paths: [process.argv[1]]},
-    )", __dir__]).strip
+  )", __dir__]).strip
 end
+
 
 node_require('react-native/scripts/react_native_pods.rb')
 node_require('react-native-permissions/scripts/setup.rb')
@@ -24,7 +25,7 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
-target 'nolimitseradeals' do
+def shared_pods
   config = use_native_modules!
 
   # react-native-permissions v5.x uses auto-linking
@@ -35,13 +36,72 @@ target 'nolimitseradeals' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  post_install do |installer|
-    # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
-    react_native_post_install(
-      installer,
-      config[:reactNativePath],
-      :mac_catalyst_enabled => false,
-      # :ccache_enabled => true
-    )
-  end
+  return config
+end
+
+target 'nolimitseradeals' do
+  config = shared_pods
+end
+
+target 'nolimitseradealsProd' do
+  config = shared_pods
+end
+
+post_install do |installer|
+  # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
+  react_native_post_install(
+    installer,
+    "../node_modules/react-native",
+    :mac_catalyst_enabled => false,
+    # :ccache_enabled => true
+  )
+  
+  # # Minimal fixes for Xcode Beta compatibility - avoid C++ standard conflicts
+  # installer.pods_project.targets.each do |target|
+  #   target.build_configurations.each do |config|
+  #     # Only set deployment target and error suppression
+  #     config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+      
+  #     # Ensure build settings are properly initialized as arrays
+  #     config.build_settings['OTHER_CPLUSPLUSFLAGS'] ||= ['$(inherited)']
+  #     config.build_settings['OTHER_CFLAGS'] ||= ['$(inherited)']
+  #     config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
+      
+  #     # Convert to arrays if they're strings
+  #     ['OTHER_CPLUSPLUSFLAGS', 'OTHER_CFLAGS', 'GCC_PREPROCESSOR_DEFINITIONS'].each do |setting|
+  #       if config.build_settings[setting].is_a?(String)
+  #         config.build_settings[setting] = [config.build_settings[setting]]
+  #       end
+  #     end
+      
+  #     # Add error suppression flags if they don't exist
+  #     cpp_flags = config.build_settings['OTHER_CPLUSPLUSFLAGS']
+  #     unless cpp_flags.join(' ').include?('incompatible-pointer-types')
+  #       cpp_flags << '-Wno-error=incompatible-pointer-types'
+  #     end
+  #     unless cpp_flags.join(' ').include?('macro-redefined')
+  #       cpp_flags << '-Wno-error=macro-redefined'
+  #     end
+      
+  #     c_flags = config.build_settings['OTHER_CFLAGS']
+  #     unless c_flags.join(' ').include?('macro-redefined')
+  #       c_flags << '-Wno-error=macro-redefined'
+  #     end
+      
+  #     # Handle NDEBUG for Release builds
+  #     if config.name == 'Release'
+  #       # Remove any NDEBUG from OTHER_*FLAGS
+  #       ['OTHER_CFLAGS', 'OTHER_CPLUSPLUSFLAGS'].each do |setting|
+  #         config.build_settings[setting] = config.build_settings[setting].reject do |flag|
+  #           flag.to_s.include?('NDEBUG')
+  #         end
+  #       end
+        
+  #       # Ensure NDEBUG is properly set in preprocessor definitions
+  #       gcc_defs = config.build_settings['GCC_PREPROCESSOR_DEFINITIONS']
+  #       unless gcc_defs.join(' ').include?('NDEBUG')
+  #         gcc_defs << 'NDEBUG=1'
+  #       end
+  #     end
+  #   end
 end
