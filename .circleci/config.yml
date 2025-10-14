@@ -1,101 +1,142 @@
-  build_android:
-    executor: rn-executor
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - run:
-          name: Install Node.js dependencies
-          command: npm install
-      - run:
-          name: Build Android APK
-          command: |
-            cd android
-            ./gradlew assembleRelease
-      - store_artifacts:
-          path: android/app/build/outputs/apk/release/app-release.apk
-          destination: android_apk
 version: 2.1
 
 executors:
-  rn-executor:
+  android-executor:
     docker:
-      - image: circleci/node:18.20-browsers
+      # Android SDK + Node image (pick a recent tag that works for you)
+      - image: cimg/android:2024.09-node
     working_directory: ~/repo
     environment:
-      BUNDLE_PATH: vendor/bundle
-      NODE_ENV: development
       LANG: en_US.UTF-8
+      NODE_ENV: development
+
+  rn-executor:
+    docker:
+      # If you want a plain Node executor for install-only steps:
+      - image: cimg/node:18.20
+    working_directory: ~/repo
+    environment:
+      LANG: en_US.UTF-8
+      NODE_ENV: development
+
+orbs:
+  node: circleci/node@5
+
+commands:
+  restore_npm_cache:
+    steps:
+      - node/install-packages:
+          pkg-manager: npm
+          cache-version: v1
+          override-ci-command: npm ci
 
 jobs:
   install_dependencies:
     executor: rn-executor
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            - v1-npm-{{ arch }}-{{ .Branch }}-{{ checksum "package-lock.json" }}
+            - v1-npm-{{ arch }}-{{ .Branch }}
+            - v1-npm-
       - run:
           name: Install Node.js dependencies
-          command: npm install
+          command: npm ci
+      - save_cache:
+          key: v1-npm-{{ arch }}-{{ .Branch }}-{{ checksum "package-lock.json" }}
+          paths:
+            - node_modules
+      - persist_to_workspace:
+          root: .
+          paths:
+            - node_modules
+
+  build_android:
+    executor: android-executor
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
       - run:
-          name: Install Ruby gems
-          command: bundle install --path vendor/bundle
+          name: Android SDK licenses
+          command: yes | sdkmanager --licenses || true
+      - run:
+          name: Build Android APK (release)
+          command: |
+            cd android
+            ./gradlew assembleRelease
+      - store_artifacts:
+          path: android/app/build/outputs/apk/release/app-release.apk
+          destination: android_apk
+      - store_artifacts:
+          path: android/app/build/outputs/mapping/release
+          destination: android_mapping
+      - persist_to_workspace:
+          root: .
+          paths:
+            - android/app/build/outputs
+
+  build_ios:
+    macos:
+      xcode: "16.4.0"   # set to the exact Xcode you need
+    resource_class: macos.m1.medium
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install Homebrew dependencies
+          command: |
+            brew update
+            brew install node@18 || true
+            npm --version
       - run:
           name: Install CocoaPods
           command: |
             sudo gem install cocoapods
             cd ios && pod install
-      - persist_to_workspace:
-          root: .
-          paths:
-            - node_modules
-            - ios/Pods
-            - vendor/bundle
-
-  build_ios:
-    macos:
-      xcode: "16.4.0"
-    working_directory: ~/repo
-  steps:
-    - checkout
-    - attach_workspace:
-      at: .
-    - run:
-      name: Install Node.js dependencies
-      command: npm install
-    - run:
-      name: Install CocoaPods
-      command: cd ios && pod install
-    - run:
-      name: Autoincrement iOS build number
-      command: |
-      cd ios
-      agvtool new-version -all $(($CIRCLE_BUILD_NUM + 1))
-    - run:
-      name: Build iOS app
-      command: |
-      cd ios
-      xcodebuild -workspace nolimitseradeals.xcworkspace -scheme nolimitseradeals -configuration Release -sdk iphoneos -archivePath $PWD/build/nolimitseradeals.xcarchive archive
-    - run:
-      name: Export IPA
-      command: |
-      cd ios
-      xcodebuild -exportArchive -archivePath $PWD/build/nolimitseradeals.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath $PWD/build
-    - store_artifacts:
-      path: ios/build
-      destination: ios_build
-    - run:
-      name: Deploy to TestFlight
-      command: |
-      cd ios
-      xcrun altool --upload-app -f build/nolimitseradeals.ipa -t ios -u "$APPLE_ID" -p "$APP_SPECIFIC_PASSWORD"
+      - run:
+          name: Autoincrement iOS build number
+          command: |
+            cd ios
+            agvtool new-version -all $(($CIRCLE_BUILD_NUM + 1))
+      - run:
+          name: Build iOS archive
+          command: |
+            cd ios
+            xcodebuild \
+              -workspace nolimitseradeals.xcworkspace \
+              -scheme nolimitseradeals \
+              -configuration Release \
+              -sdk iphoneos \
+              -archivePath $PWD/build/nolimitseradeals.xcarchive \
+              clean archive | xcpretty
+      - run:
+          name: Export IPA
+          command: |
+            cd ios
+            xcodebuild -exportArchive \
+              -archivePath $PWD/build/nolimitseradeals.xcarchive \
+              -exportOptionsPlist ExportOptions.plist \
+              -exportPath $PWD/build | xcpretty
+      - store_artifacts:
+          path: ios/build
+          destination: ios_build
+      - run:
+          name: Upload to TestFlight (App-Specific Password)
+          command: |
+            cd ios
+            xcrun altool --upload-app -f build/nolimitseradeals.ipa -t ios -u "$APPLE_ID" -p "$APP_SPECIFIC_PASSWORD" || true
 
 workflows:
-  version: 2
   build_and_deploy:
     jobs:
       - install_dependencies
-      - build_ios:
+      - build_android:
           requires:
             - install_dependencies
-      - build_android:
+      - build_ios:
           requires:
             - install_dependencies
