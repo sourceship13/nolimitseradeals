@@ -56,10 +56,10 @@ const isPhysicalDevice = (): boolean => {
 let FORCE_PHYSICAL_DEVICE: boolean | null = null;
 
 // Override for development - set to true to use local development server
-const FORCE_LOCAL_DEVELOPMENT = false; // Set to false to ALWAYS use staging server (recommended)
+const FORCE_LOCAL_DEVELOPMENT = true; // Set to false to ALWAYS use staging server (recommended)
 
   // FORCE STAGING: Override everything to use staging (set to true to force staging regardless of device)
-const FORCE_STAGING_ALWAYS = true; // Set to true to FORCE staging server for all requests
+const FORCE_STAGING_ALWAYS = false; // Set to true to FORCE staging server for all requests
 
 // IMPORTANT: Verify all URLs point to staging
 const STAGING_URL = 'https://f3x2ipn2yf.us-east-1.awsapprunner.com';// Auto-detect environment based on device type and build

@@ -181,53 +181,75 @@ const SwipeScreen = ({ navigation }: any) => {
             <>
               {/* Full-screen image background */}
               <View style={styles.imageContainer} pointerEvents="box-none">
-                {currentDeal.business_images && currentDeal.business_images.length > 0 ? (
-                  <FlatList
-                    data={currentDeal.business_images}
-                    horizontal
-                    pagingEnabled
-                    showsHorizontalScrollIndicator={false}
-                    keyExtractor={(item, index) => `image-${index}`}
-                    style={styles.imageCarousel}
-                    scrollEnabled={false}
-                    pointerEvents="none"
-                    renderItem={({ item }) => (
-                      <ImageBackground
-                        source={{ uri: item.image_url }}
-                        style={styles.fullScreenImage}
-                        resizeMode="cover"
-                      >
+                {(() => {
+                  // Prioritize deal images over business images
+                  const deal_images = currentDeal.deal_images;
+                  const deal_image_url = currentDeal.deal_image_url;
+                  const image_url = currentDeal.image_url;
+                  const images = currentDeal.images;
+                  // Extract image URLs from deal_images array (objects with image_url property)
+                  let finalImages = null;
+                  if (deal_images && Array.isArray(deal_images) && deal_images.length > 0) {
+                    finalImages = deal_images
+                      .filter(img => img && typeof img === 'object' && img.image_url)
+                      .map(img => img.image_url)
+                      .filter(url => url && typeof url === 'string' && url.trim().length > 0);
+                  } else if (images && Array.isArray(images) && images.length > 0) {
+                    finalImages = images
+                      .filter(url => url && typeof url === 'string' && url.trim().length > 0);
+                  } else if (deal_image_url && typeof deal_image_url === 'string') {
+                    finalImages = [deal_image_url];
+                  } else if (image_url && typeof image_url === 'string') {
+                    finalImages = [image_url];
+                  }
+                  if (finalImages && finalImages.length > 0) {
+                    return (
+                      <FlatList
+                        data={finalImages}
+                        horizontal
+                        pagingEnabled
+                        showsHorizontalScrollIndicator={false}
+                        keyExtractor={(item, index) => `image-${index}`}
+                        style={styles.imageCarousel}
+                        scrollEnabled={false}
+                        pointerEvents="none"
+                        renderItem={({ item }) => (
+                          <ImageBackground
+                            source={{ uri: item }}
+                            style={styles.fullScreenImage}
+                            resizeMode="cover"
+                          >
+                            <View style={styles.imageOverlay} />
+                            {/* Swipe feedback icons on top of image */}
+                            <View style={styles.imageIconsOverlay} pointerEvents="none">
+                              <Animated.View style={[styles.imageLikeIcon, { opacity: likeOpacity }]}> 
+                                <Text style={styles.likeIconText}>♥</Text>
+                              </Animated.View>
+                              <Animated.View style={[styles.imageDislikeIcon, { opacity: dislikeOpacity }]}> 
+                                <Text style={styles.dislikeIconText}>✕</Text>
+                              </Animated.View>
+                            </View>
+                          </ImageBackground>
+                        )}
+                      />
+                    );
+                  } else {
+                    return (
+                      <View style={[styles.fullScreenImage, { backgroundColor: currentDeal.backgroundColor || colors.primary }]}> 
                         <View style={styles.imageOverlay} />
-                        
                         {/* Swipe feedback icons on top of image */}
                         <View style={styles.imageIconsOverlay} pointerEvents="none">
-                          <Animated.View style={[styles.imageLikeIcon, { opacity: likeOpacity }]}>
+                          <Animated.View style={[styles.imageLikeIcon, { opacity: likeOpacity }]}> 
                             <Text style={styles.likeIconText}>♥</Text>
                           </Animated.View>
-                          
-                          <Animated.View style={[styles.imageDislikeIcon, { opacity: dislikeOpacity }]}>
+                          <Animated.View style={[styles.imageDislikeIcon, { opacity: dislikeOpacity }]}> 
                             <Text style={styles.dislikeIconText}>✕</Text>
                           </Animated.View>
                         </View>
-                      </ImageBackground>
-                    )}
-                  />
-                ) : (
-                  <View style={[styles.fullScreenImage, { backgroundColor: currentDeal.backgroundColor || colors.primary }]}>
-                    <View style={styles.imageOverlay} />
-                    
-                    {/* Swipe feedback icons on top of image */}
-                    <View style={styles.imageIconsOverlay} pointerEvents="none">
-                      <Animated.View style={[styles.imageLikeIcon, { opacity: likeOpacity }]}>
-                        <Text style={styles.likeIconText}>♥</Text>
-                      </Animated.View>
-                      
-                      <Animated.View style={[styles.imageDislikeIcon, { opacity: dislikeOpacity }]}>
-                        <Text style={styles.dislikeIconText}>✕</Text>
-                      </Animated.View>
-                    </View>
-                  </View>
-                )}
+                      </View>
+                    );
+                  }
+                })()}
                 
                 {/* Card content overlay on image */}
                 <View style={styles.cardOverlay} pointerEvents="none">
