@@ -127,4 +127,55 @@ jobs:
             cd ios
             cat > ExportOptions.plist <<'PLIST'
             <?xml version="1.0" encoding="UTF-8"?>
-            <!DOCTYPE plist PUBLIC "-//
+            <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+            <plist version="1.0">
+            <dict>
+              <key>method</key><string>app-store</string>
+              <key>uploadSymbols</key><true/>
+              <key>compileBitcode</key><false/>
+              <key>destination</key><string>export</string>
+              <key>signingStyle</key><string>automatic</string>
+              <key>stripSwiftSymbols</key><true/>
+            </dict>
+            </plist>
+            PLIST
+      - run:
+          name: Export IPA
+          command: |
+            set -euo pipefail
+            cd ios
+            xcodebuild -exportArchive \
+              -archivePath $PWD/build/nolimitseradeals.xcarchive \
+              -exportOptionsPlist ExportOptions.plist \
+              -exportPath $PWD/build \
+            | xcpretty && exit ${PIPESTATUS[0]}
+      - store_artifacts:
+          path: ios/build
+          destination: ios_build
+      - run:
+          name: Upload to App Store Connect (Transporter verbose)
+          command: |
+            set -euo pipefail
+            cd ios
+            IPA_PATH="$PWD/build/nolimitseradeals.ipa"
+            if [ ! -f "$IPA_PATH" ]; then
+              echo "❌ IPA not found at $IPA_PATH"; exit 1
+            fi
+            # Requires env vars: APPLE_ID, APP_SPECIFIC_PASSWORD, ASC_PROVIDER
+            xcrun iTMSTransporter -m upload \
+              -u "$APPLE_ID" \
+              -p "$APP_SPECIFIC_PASSWORD" \
+              -assetFile "$IPA_PATH" \
+              -provider "$ASC_PROVIDER" \
+              -v eXtreme
+
+workflows:
+  build_and_deploy:
+    jobs:
+      - install_dependencies
+      - build_android:
+          requires:
+            - install_dependencies
+      - build_ios:
+          requires:
+            - install_dependencies
