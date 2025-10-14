@@ -94,6 +94,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
+    paddingBottom: 80, // Add enough padding to sit above bottom nav bar
   },
   title: StyleSheet.flatten([
     iOSUIKit.largeTitleEmphasized,

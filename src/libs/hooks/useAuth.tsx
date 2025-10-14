@@ -497,10 +497,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await ApiService.heartDeal(dealId);
       console.log('✅ API heart call succeeded');
       
-      // Refresh in background for consistency
-      refreshHeartedDeals().catch(err => {
-        console.warn('⚠️ Background refresh failed:', err);
-      });
+      // Refresh both hearted deals and all deals in background for consistency
+      Promise.all([
+        refreshHeartedDeals().catch(err => {
+          console.warn('⚠️ Background refresh failed:', err);
+        }),
+        refreshDeals().catch(err => {
+          console.warn('⚠️ Deals refresh failed:', err);
+        })
+      ]);
 
       return true;
     } catch (error: any) {
@@ -536,10 +541,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await ApiService.unheartDeal(dealId);
       console.log('✅ API unheart call succeeded');
       
-      // Refresh in background for consistency
-      refreshHeartedDeals().catch(err => {
-        console.warn('⚠️ Background refresh failed:', err);
-      });
+      // Refresh both hearted deals and all deals in background for consistency
+      Promise.all([
+        refreshHeartedDeals().catch(err => {
+          console.warn('⚠️ Background refresh failed:', err);
+        }),
+        refreshDeals().catch(err => {
+          console.warn('⚠️ Deals refresh failed:', err);
+        })
+      ]);
 
       return true;
     } catch (error: any) {
