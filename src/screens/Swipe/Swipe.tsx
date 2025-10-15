@@ -136,7 +136,7 @@ const SwipeScreen = ({ navigation }: any) => {
   return (
     <View style={[styles.screenContainer, { backgroundColor: colors.background }]}>
       {/* 1. Header */}
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}> 
         <Text style={[styles.headerTitle, { color: colors.text }]}>DEALZ</Text>
         <TouchableOpacity 
           onPress={() => navigation.navigate('Settings')}
@@ -146,13 +146,33 @@ const SwipeScreen = ({ navigation }: any) => {
         </TouchableOpacity>
       </View>
 
+      {/* 2. Action buttons row - now above the image */}
+      <View style={styles.actionContainer} pointerEvents="box-none">
+        {/* Previous deal button */}
+        <TouchableOpacity style={[styles.navBtn, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]} onPress={handlePreviousDeal}>
+          <Text style={[iOSUIKit.title3, { color: isDarkMode ? colors.dealArrows : '#000' }]}>←</Text>
+        </TouchableOpacity>
+        {/* Dislike button */}
+        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]} onPress={() => handleSwipe('left')}>
+          <Text style={[iOSUIKit.title3Emphasized, { color: colors.error }]}>✗</Text>
+        </TouchableOpacity>
+        {/* Like button */}
+        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]} onPress={() => handleSwipe('right')}>
+          <Text style={[iOSUIKit.title3Emphasized, { color: colors.primary }]}>♥</Text>
+        </TouchableOpacity>
+        {/* Next deal button */}
+        <TouchableOpacity style={[styles.navBtn, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]} onPress={handleNextDeal}>
+          <Text style={[iOSUIKit.title3, { color: isDarkMode ? colors.dealArrows : '#000' }]}>→</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* 3. Full-screen content area */}
       <PanGestureHandler
         onGestureEvent={onGestureEvent}
         onHandlerStateChange={onHandlerStateChange}
       >
         <Animated.View 
-          style={[
+          style={[ 
             styles.contentContainer,
             {
               transform: [
@@ -168,7 +188,6 @@ const SwipeScreen = ({ navigation }: any) => {
             }
           ]}
         >
-
           {dealsLoading ? (
             <View style={styles.centerContent}>
               <Text style={[iOSUIKit.body, { color: colors.text, textAlign: 'center' }]}>Loading deals...</Text>
@@ -274,29 +293,6 @@ const SwipeScreen = ({ navigation }: any) => {
                   </View>
                 </View>
               </View>
-              
-              {/* 4. Action buttons at bottom - 1/10 of screen height */}
-              <View style={styles.actionContainer} pointerEvents="box-none">
-              {/* Previous deal button */}
-              <TouchableOpacity style={[styles.navBtn, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]} onPress={handlePreviousDeal}>
-                <Text style={[iOSUIKit.title3, { color: isDarkMode ? colors.dealArrows : '#000' }]}>←</Text>
-              </TouchableOpacity>
-              
-              {/* Dislike button */}
-              <TouchableOpacity style={[styles.actionBtn, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]} onPress={() => handleSwipe('left')}>
-                <Text style={[iOSUIKit.title3Emphasized, { color: colors.error }]}>✗</Text>
-              </TouchableOpacity>
-              
-              {/* Like button */}
-              <TouchableOpacity style={[styles.actionBtn, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]} onPress={() => handleSwipe('right')}>
-                <Text style={[iOSUIKit.title3Emphasized, { color: colors.primary }]}>♥</Text>
-              </TouchableOpacity>
-              
-              {/* Next deal button */}
-              <TouchableOpacity style={[styles.navBtn, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]} onPress={handleNextDeal}>
-                <Text style={[iOSUIKit.title3, { color: isDarkMode ? colors.dealArrows : '#000' }]}>→</Text>
-              </TouchableOpacity>
-            </View>
             </>
           )}
         </Animated.View>
@@ -444,19 +440,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   actionBtn: {
-    borderRadius: 32,
-    padding: 20,
+    borderRadius: 25,
+    padding: 15,
     alignItems: 'center',
-    marginHorizontal: 15,
-    minWidth: 64,
+    marginHorizontal: 10,
+    minWidth: 50,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   navBtn: {
     borderRadius: 25,
