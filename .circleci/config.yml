@@ -98,6 +98,12 @@ jobs:
             - v1-pods-
       
       - run:
+          name: Install Fastlane
+          command: |
+            sudo gem install fastlane -NV
+            fastlane --version
+      
+      - run:
           name: Install CocoaPods
           command: |
             cd ios
@@ -110,19 +116,26 @@ jobs:
             - ~/.cocoapods
       
       - run:
-          name: Setup code signing
+          name: Setup code signing with Fastlane Match
           command: |
-            # This requires MATCH_PASSWORD, MATCH_GIT_URL environment variables
-            # Or you can use manual signing with certificates/profiles
-            echo "Setting up code signing..."
-            # Add your signing setup here
+            cd ios
+            
+            # Create a temporary keychain
+            security create-keychain -p "" temp.keychain
+            security default-keychain -s temp.keychain
+            security unlock-keychain -p "" temp.keychain
+            security set-keychain-settings -t 3600 -u temp.keychain
+            
+            # Run fastlane match to download and install certificates
+            fastlane match appstore --readonly
       
       - run:
           name: Build iOS archive (Release)
           command: |
             cd ios
             
-            # Build archive
+            # Build archive with detailed output
+            set -o pipefail
             xcodebuild \
               -workspace nolimitseradeals.xcworkspace \
               -scheme nolimitseradeals \
@@ -130,8 +143,16 @@ jobs:
               -sdk iphoneos \
               -archivePath build/nolimitseradeals.xcarchive \
               -allowProvisioningUpdates \
-              CODE_SIGN_STYLE=Automatic \
-              clean archive
+              CODE_SIGN_STYLE=Manual \
+              DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+              clean archive 2>&1 | tee xcodebuild.log
+            
+            # If build failed, show the error
+            if [ ${PIPESTATUS[0]} -ne 0 ]; then
+              echo "🔍 Build failed. Searching for errors..."
+              grep -A 5 "error:" xcodebuild.log || echo "No specific error found"
+              exit 1
+            fi
       
       - run:
           name: Export IPA
@@ -145,10 +166,16 @@ jobs:
             <plist version="1.0">
             <dict>
               <key>method</key><string>app-store</string>
+              <key>teamID</key><string>$APPLE_TEAM_ID</string>
               <key>uploadSymbols</key><true/>
               <key>compileBitcode</key><false/>
-              <key>signingStyle</key><string>automatic</string>
+              <key>signingStyle</key><string>manual</string>
               <key>stripSwiftSymbols</key><true/>
+              <key>provisioningProfiles</key>
+              <dict>
+                <key>org.sera.dev.nolimitsera</key>
+                <string>match AppStore org.sera.dev.nolimitsera</string>
+              </dict>
             </dict>
             </plist>
             EOF
@@ -167,8 +194,9 @@ jobs:
       - run:
           name: Upload to App Store Connect (optional)
           command: |
-            if [ -z "$APPLE_ID" ] || [ -z "$APP_SPECIFIC_PASSWORD" ]; then
-              echo "Skipping App Store upload - credentials not configured"
+            if [ -z "$FASTLANE_USER" ] || [ -z "$FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD" ]; then
+              echo "⚠️  Skipping App Store upload - credentials not configured"
+              echo "To enable uploads, set FASTLANE_USER and FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD"
               exit 0
             fi
             
@@ -180,11 +208,14 @@ jobs:
               exit 1
             fi
             
+            echo "📤 Uploading to App Store Connect..."
             xcrun altool --upload-app \
               --type ios \
               --file "$IPA_PATH" \
-              --username "$APPLE_ID" \
-              --password "$APP_SPECIFIC_PASSWORD"
+              --username "$FASTLANE_USER" \
+              --password "$FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD"
+            
+            echo "✅ Upload complete!"
 
 workflows:
   version: 2
