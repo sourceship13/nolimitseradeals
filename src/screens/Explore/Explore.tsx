@@ -274,7 +274,7 @@ const ExploreScreen = ({ navigation }: any) => {
           onPress={() => navigation.navigate('Settings')}
           style={styles.settingsButton}
         >
-          <Text style={[iOSUIKit.callout, { color: colors.primary }]}>⚙️</Text>
+          <Text style={[iOSUIKit.title3, { color: colors.primary }]}>⚙️</Text>
         </TouchableOpacity>
       </View>
       

@@ -11,12 +11,22 @@ const ProfileScreen = ({ navigation }: any) => {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <Toolbar
-        title="Profile"
-        onBack={() => navigation.goBack()}
-        showSettings={true}
-        onSettings={() => navigation.navigate('Settings')}
-      />
+      <View
+        style={[
+          styles.header,
+          { backgroundColor: colors.surface, borderBottomColor: colors.border },
+        ]}
+      >
+        <Text style={[styles.headerTitle, { color: colors.text }]}>
+          Profile
+        </Text>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Settings')}
+          style={styles.settingsButton}
+        >
+          <Text style={[iOSUIKit.title3, { color: colors.primary }]}>⚙️</Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.container}>
         <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
           <Text style={[styles.avatarText, { color: colors.background }]}>
@@ -25,40 +35,68 @@ const ProfileScreen = ({ navigation }: any) => {
           </Text>
         </View>
         {/* Show user's name under badge */}
-        <Text style={[styles.userName, { color: colors.text }]}> {(user?.first_name + ' ' + user?.last_name || user?.username || user?.email || 'User')} </Text>
-        <Text style={[styles.accountType, { color: colors.textSecondary }]}>Regular Account</Text>
-        
+        <Text style={[styles.userName, { color: colors.text }]}>
+          {' '}
+          {user?.first_name + ' ' + user?.last_name ||
+            user?.username ||
+            user?.email ||
+            'User'}{' '}
+        </Text>
+        <Text style={[styles.accountType, { color: colors.textSecondary }]}>
+          Regular Account
+        </Text>
+
         <View style={styles.statsRow}>
           <View style={styles.stat}>
-            <Text style={[styles.statValue, { color: colors.secondary }]}>12</Text>
-            <Text style={[styles.statLabel, { color: colors.disabled }]}>Deals Saved</Text>
+            <Text style={[styles.statValue, { color: colors.secondary }]}>
+              12
+            </Text>
+            <Text style={[styles.statLabel, { color: colors.disabled }]}>
+              Deals Saved
+            </Text>
           </View>
           <View style={styles.stat}>
-            <Text style={[styles.statValue, { color: colors.secondary }]}>8</Text>
-            <Text style={[styles.statLabel, { color: colors.disabled }]}>Redeemed</Text>
+            <Text style={[styles.statValue, { color: colors.secondary }]}>
+              8
+            </Text>
+            <Text style={[styles.statLabel, { color: colors.disabled }]}>
+              Redeemed
+            </Text>
           </View>
           <View style={styles.stat}>
-            <Text style={[styles.statValue, { color: colors.secondary }]}>24</Text>
-            <Text style={[styles.statLabel, { color: colors.disabled }]}>Referrals</Text>
+            <Text style={[styles.statValue, { color: colors.secondary }]}>
+              24
+            </Text>
+            <Text style={[styles.statLabel, { color: colors.disabled }]}>
+              Referrals
+            </Text>
           </View>
         </View>
-        
-        <TouchableOpacity 
-          style={[styles.menuBtn, { backgroundColor: colors.surface }]} 
+
+        <TouchableOpacity
+          style={[styles.menuBtn, { backgroundColor: colors.surface }]}
           onPress={() => navigation.navigate('SavedDeals')}
         >
-          <Text style={[styles.menuBtnText, { color: colors.text }]}>My Deals</Text>
+          <Text style={[styles.menuBtnText, { color: colors.text }]}>
+            My Deals
+          </Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.menuBtn, { backgroundColor: colors.surface }]} 
+
+        <TouchableOpacity
+          style={[styles.menuBtn, { backgroundColor: colors.surface }]}
           onPress={() => navigation.navigate('Settings')}
         >
-          <Text style={[styles.menuBtnText, { color: colors.text }]}>Preferences</Text>
+          <Text style={[styles.menuBtnText, { color: colors.text }]}>
+            Preferences
+          </Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity style={[styles.menuBtn, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.menuBtnText, { color: colors.text }]}>Invite Friends</Text>
+
+        <TouchableOpacity
+          style={[styles.menuBtn, { backgroundColor: colors.surface }]}
+        >
+          <Text style={[styles.menuBtnText, { color: colors.text }]}>
+            Invite Friends
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -123,6 +161,24 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   menuBtnText: iOSUIKit.calloutObject,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    paddingTop: 50, // Account for status bar
+    borderBottomWidth: 1,
+  },
+  headerTitle: StyleSheet.flatten([
+    iOSUIKit.largeTitleEmphasized,
+    {
+      fontSize: 24, // Override default size for header
+    },
+  ]),
+  settingsButton: {
+    padding: 8,
+  },
 });
 
 export default ProfileScreen;
