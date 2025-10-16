@@ -103,7 +103,7 @@ const SettingsScreen = ({ navigation }: any) => {
                 <Text style={[iOSUIKit.body, { color: colors.text }]}>{category.name}</Text>
                 <Switch 
                   value={categories[category.slug] ?? true} 
-                  onValueChange={v => setCategories({ ...categories, [category.slug]: v })} 
+                  onValueChange={value => setCategories({ ...categories, [category.slug]: value })} 
                 />
               </View>
             ))
@@ -112,7 +112,7 @@ const SettingsScreen = ({ navigation }: any) => {
             Object.keys(categories).map(key => (
               <View style={styles.row} key={key}>
                 <Text style={[iOSUIKit.body, { color: colors.text }]}>{key.charAt(0).toUpperCase() + key.slice(1)}</Text>
-                <Switch value={categories[key as keyof typeof categories]} onValueChange={v => setCategories({ ...categories, [key]: v })} />
+                <Switch value={categories[key as keyof typeof categories]} onValueChange={value => setCategories({ ...categories, [key]: value })} />
               </View>
             ))
           )}
