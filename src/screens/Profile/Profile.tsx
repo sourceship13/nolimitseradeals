@@ -6,7 +6,7 @@ import Toolbar from '../../components/Toolbar';
 import { iOSUIKit } from 'react-native-typography';
 
 const ProfileScreen = ({ navigation }: any) => {
-  const { isDarkMode } = useAuth();
+  const { isDarkMode, user } = useAuth();
   const colors = getColors(isDarkMode);
 
   return (
@@ -19,10 +19,13 @@ const ProfileScreen = ({ navigation }: any) => {
       />
       <View style={styles.container}>
         <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-          <Text style={[styles.avatarText, { color: colors.background }]}>U</Text>
+          <Text style={[styles.avatarText, { color: colors.background }]}>
+            {user?.first_name ? user.first_name.charAt(0) : 'U'}
+            {user?.last_name ? user.last_name.charAt(0) : ''}
+          </Text>
         </View>
-        
-        <Text style={[styles.userName, { color: colors.text }]}>User Name</Text>
+        {/* Show user's name under badge */}
+        <Text style={[styles.userName, { color: colors.text }]}> {(user?.first_name + ' ' + user?.last_name || user?.username || user?.email || 'User')} </Text>
         <Text style={[styles.accountType, { color: colors.textSecondary }]}>Regular Account</Text>
         
         <View style={styles.statsRow}>
@@ -85,7 +88,7 @@ const styles = StyleSheet.create({
   avatarText: StyleSheet.flatten([
     iOSUIKit.title3Emphasized,
     {
-      fontSize: 36,
+      fontSize: 26,
     },
   ]),
   userName: StyleSheet.flatten([

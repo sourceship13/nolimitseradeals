@@ -636,7 +636,7 @@ const styles = StyleSheet.create({
   },
   dislikeIconText: {
     fontSize: 60,
-    color: '#FFF',
+    color: '#000',
     fontWeight: 'bold',
     textAlign: 'center',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
