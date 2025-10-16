@@ -78,7 +78,7 @@ const MainTabNavigator = () => {
           {
             fontSize: 12, // Override the large title size for tab bar
             color: isDarkMode ? '#FFFFFF' : '#000000', // White for dark mode, black for light mode
-            marginTop: -14, // Reduce space between icon and label
+            marginTop: -12, // Reduce space between icon and label
           }
         ],
         tabBarIconStyle: {
@@ -89,22 +89,22 @@ const MainTabNavigator = () => {
       <Tab.Screen 
         name="SwipeTab" 
         component={SwipeScreen}
-        options={{ tabBarLabel: 'Discover' }}
+        options={{ tabBarLabel: 'DISCOVER' }}
       />
       <Tab.Screen 
         name="ExploreTab" 
         component={ExploreScreen}
-        options={{ tabBarLabel: 'Explore' }}
+        options={{ tabBarLabel: 'EXPLORE' }}
       />
       <Tab.Screen 
         name="SavedTab" 
         component={SavedDealsScreen}
-        options={{ tabBarLabel: 'Saved' }}
+        options={{ tabBarLabel: 'SAVED' }}
       />
       <Tab.Screen 
         name="ProfileTab" 
         component={ProfileScreen}
-        options={{ tabBarLabel: 'Profile' }}
+        options={{ tabBarLabel: 'PROFILE' }}
       />
     </Tab.Navigator>
   );
