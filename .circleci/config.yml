@@ -232,10 +232,16 @@ workflows:
   version: 2
   build_and_deploy:
     jobs:
-      - install_dependencies
+      - install_dependencies:
+          context:
+            - nolimitsera-context 
       - build_android:
+          context:
+            - nolimitsera-context 
           requires:
             - install_dependencies
       - build_ios:
+          context:
+            - nolimitsera-context
           requires:
             - install_dependencies
