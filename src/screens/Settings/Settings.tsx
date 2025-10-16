@@ -121,19 +121,33 @@ const SettingsScreen = ({ navigation }: any) => {
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Notifications</Text>
           <View style={styles.row}>
             <Text style={[iOSUIKit.body, { color: colors.text }]}>New deals nearby</Text>
-            <Switch value={notifications.deals} onValueChange={v => setNotifications({ ...notifications, deals: v })} />
+            <Switch value={notifications.deals} onValueChange={value => setNotifications({ ...notifications, deals: value })} />
           </View>
           <View style={styles.row}>
             <Text style={[iOSUIKit.body, { color: colors.text }]}>Deal expiry reminders</Text>
-            <Switch value={notifications.expiry} onValueChange={v => setNotifications({ ...notifications, expiry: v })} />
+            <Switch value={notifications.expiry} onValueChange={value => setNotifications({ ...notifications, expiry: value })} />
           </View>
           <View style={styles.row}>
             <Text style={[iOSUIKit.body, { color: colors.text }]}>Friend referrals</Text>
-            <Switch value={notifications.referrals} onValueChange={v => setNotifications({ ...notifications, referrals: v })} />
+            <Switch value={notifications.referrals} onValueChange={value => setNotifications({ ...notifications, referrals: value })} />
           </View>
         </View>
-
+        
         <TouchableOpacity 
+          style={[styles.button, { backgroundColor: colors.error }]} 
+          onPress={handleLogout}
+        >
+          <Text style={[iOSUIKit.callout, { color: '#fff', fontWeight: 'bold' }]}>Sign Out</Text>
+        </TouchableOpacity>        
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Developer Options</Text>
+          <TouchableOpacity 
+            style={[styles.button, { backgroundColor: colors.error, marginBottom: 16 }]} 
+            onPress={() => navigation.navigate('Debug')}
+          >
+            <Text style={[iOSUIKit.callout, { color: colors.background, fontWeight: 'bold' }]}>🔧 Debug Console</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
           style={[styles.button, { backgroundColor: colors.error, marginBottom: 8 }]} 
           onPress={() => navigation.navigate('NetworkDebug')}
         >
@@ -153,21 +167,6 @@ const SettingsScreen = ({ navigation }: any) => {
         >
           <Text style={[iOSUIKit.callout, { color: '#fff', fontWeight: 'bold' }]}>Test Deal Sharing</Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.button, { backgroundColor: colors.error }]} 
-          onPress={handleLogout}
-        >
-          <Text style={[iOSUIKit.callout, { color: '#fff', fontWeight: 'bold' }]}>Sign Out</Text>
-        </TouchableOpacity>        {/* Debug Section */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Developer Options</Text>
-          <TouchableOpacity 
-            style={[styles.button, { backgroundColor: colors.error, marginBottom: 16 }]} 
-            onPress={() => navigation.navigate('Debug')}
-          >
-            <Text style={[iOSUIKit.callout, { color: colors.background, fontWeight: 'bold' }]}>🔧 Debug Console</Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>
