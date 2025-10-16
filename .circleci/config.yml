@@ -120,6 +120,15 @@ jobs:
           command: |
             cd ios
             
+            # Debug: Check if MATCH_PASSWORD is set
+            if [ -z "$MATCH_PASSWORD" ]; then
+              echo "❌ ERROR: MATCH_PASSWORD is not set!"
+              echo "Please add it to CircleCI Environment Variables"
+              exit 1
+            else
+              echo "✅ MATCH_PASSWORD is set"
+            fi
+            
             # Create a temporary keychain
             security create-keychain -p "" temp.keychain
             security default-keychain -s temp.keychain
@@ -127,7 +136,9 @@ jobs:
             security set-keychain-settings -t 3600 -u temp.keychain
             
             # Run fastlane match to download and install certificates
-            fastlane match appstore --readonly
+            # Explicitly export MATCH_PASSWORD for fastlane
+            export MATCH_PASSWORD="$MATCH_PASSWORD"
+            fastlane match appstore --readonly --verbose
       
       - run:
           name: Build iOS archive (Release)
