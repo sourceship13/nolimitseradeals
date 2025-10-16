@@ -19,11 +19,14 @@ const PLACEHOLDER_DEAL = {
 };
 
 const SwipeScreen = ({ navigation }: any) => {
-
-  const { isDarkMode, deals, dealsLoading } = useAuth();
+  const { isDarkMode, deals, dealsLoading, heartedDeals } = useAuth();
   const colors = getColors(isDarkMode);
   const [currentDealIndex, setCurrentDealIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
+
+  // Filter out hearted deals
+  const heartedDealIds = new Set((heartedDeals || []).map((d: any) => d.deal_id || d.id));
+  const unheartedDeals = deals.filter((deal: any) => !heartedDealIds.has(deal.id || deal.deal_id));
 
   // Animated values for swipe gestures
   const translateX = useRef(new Animated.Value(0)).current;
@@ -43,7 +46,7 @@ const SwipeScreen = ({ navigation }: any) => {
 
   // Deals are now fetched globally via useAuth hook
 
-  const currentDeal = deals.length > 0 ? deals[currentDealIndex] : PLACEHOLDER_DEAL;
+  const currentDeal = unheartedDeals.length > 0 ? unheartedDeals[currentDealIndex] : PLACEHOLDER_DEAL;
 
   const resetAnimations = () => {
     Animated.parallel([
@@ -118,19 +121,19 @@ const SwipeScreen = ({ navigation }: any) => {
     if (direction === 'right') {
       navigation.navigate('DealDetail', { deal: currentDeal });
     } else {
-      setCurrentDealIndex((prev) => deals.length > 0 ? (prev + 1) % deals.length : 0);
+      setCurrentDealIndex((prev) => unheartedDeals.length > 0 ? (prev + 1) % unheartedDeals.length : 0);
     }
   };
 
   const handlePreviousDeal = () => {
     setCurrentDealIndex((prev) => {
-      if (deals.length === 0) return 0;
-      return prev === 0 ? deals.length - 1 : prev - 1;
+      if (unheartedDeals.length === 0) return 0;
+      return prev === 0 ? unheartedDeals.length - 1 : prev - 1;
     });
   };
 
   const handleNextDeal = () => {
-    setCurrentDealIndex((prev) => deals.length > 0 ? (prev + 1) % deals.length : 0);
+    setCurrentDealIndex((prev) => unheartedDeals.length > 0 ? (prev + 1) % unheartedDeals.length : 0);
   };
 
   return (
