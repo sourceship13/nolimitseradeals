@@ -6,7 +6,7 @@ import ApiConfig from '../../libs/utils/api.utils';
 import { iOSUIKit } from 'react-native-typography';
 
 const ExploreScreen = ({ navigation }: any) => {
-  const { isDarkMode, categories, availableCategories, deals, dealsLoading, refreshDeals } = useAuth();
+  const { isDarkMode, categories, availableCategories, deals, dealsLoading, refreshDeals, heartedDeals } = useAuth();
   const colors = getColors(isDarkMode);
   
   // Filter available categories to show only the ones the user has enabled
@@ -33,6 +33,9 @@ const ExploreScreen = ({ navigation }: any) => {
 
   // Deals are now fetched globally via useAuth hook
 
+  // Filter out hearted deals
+  const heartedDealIds = new Set((heartedDeals || []).map((d: any) => d.deal_id || d.id));
+  
   // Filter deals by category settings (enabled/disabled switches from Settings)
   const categoryFilteredDeals = Object.keys(categories).length === 0
     ? deals // If no category preferences set, show all deals
@@ -47,15 +50,18 @@ const ExploreScreen = ({ navigation }: any) => {
         return matchingCategory && categories[matchingCategory.slug] !== false;
       });
 
+  // Remove hearted deals from filtered list
+  const unheartedDeals = categoryFilteredDeals.filter(deal => !heartedDealIds.has(deal.id || deal.deal_id));
+
   // Then filter by selectedCategory if manually selected
   const filteredDeals = selectedCategory
-    ? categoryFilteredDeals.filter(deal => {
+    ? unheartedDeals.filter(deal => {
         // Match against category_name since that's what's in your API response
         const dealCategory = (deal.category_name || '').toLowerCase();
         const selectedCat = availableCategories.find(cat => cat.slug === selectedCategory);
         return selectedCat && dealCategory === selectedCat.name.toLowerCase();
       })
-    : categoryFilteredDeals;
+    : unheartedDeals;
 
   // Sort deals: Premium first, then featured deals (priority_score > 0), then regular deals
   const sortedDeals = [...filteredDeals].sort((a, b) => {
