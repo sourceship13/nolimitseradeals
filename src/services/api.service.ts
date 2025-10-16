@@ -48,10 +48,7 @@ class ApiService {
     
     // CRITICAL: Check for local IP usage
     if (url.includes('192.168') || url.includes('localhost') || url.includes(':8080')) {
-      console.error('🚨 CRITICAL ERROR: API request using local IP!');
-      console.error('🚨 URL:', url);
-      console.error('🚨 Base URL:', this.baseURL);
-      console.error('🚨 This should NOT happen - all requests should go to staging server!');
+      console.log('🚨 API WORKING WITH LOCAL SERVER', url, this.baseURL);
     }
     
     // Enhanced debug logging for physical device troubleshooting
@@ -167,14 +164,17 @@ class ApiService {
 
   async getHeartedDeals(): Promise<ApiResponse<any[]>> {
     // Try multiple possible endpoints for hearted deals
+    // const endpointsToTry = [
+    //   '/user/hearted',      // Most likely endpoint for user's hearted deals
+    //   '/user/favorites',    // Alternative naming
+    //   '/user/saved',        // Another common naming
+    //   '/deals/hearted',     // Original endpoint (might not exist)
+    //   '/user/deals/hearted', // Nested endpoint
+    //   '/favorites',         // Simple endpoint
+    //   '/saved-deals'        // Another possibility
+    // ];
     const endpointsToTry = [
-      '/user/hearted',      // Most likely endpoint for user's hearted deals
-      '/user/favorites',    // Alternative naming
-      '/user/saved',        // Another common naming
-      '/deals/hearted',     // Original endpoint (might not exist)
-      '/user/deals/hearted', // Nested endpoint
-      '/favorites',         // Simple endpoint
-      '/saved-deals'        // Another possibility
+      '/deals/hearted',      // Most likely endpoint for user's hearted deals
     ];
 
     let lastError: any = null;
