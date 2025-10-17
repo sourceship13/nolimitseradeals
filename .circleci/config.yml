@@ -151,15 +151,28 @@ jobs:
             security set-keychain-settings -t 3600 -u temp.keychain
             
             # Run fastlane match to download and install certificates
-            # Explicitly export MATCH_PASSWORD for fastlane
             export MATCH_PASSWORD="$MATCH_PASSWORD"
-            export GIT_SSH_COMMAND="ssh -v"
             fastlane match appstore --readonly --verbose --app_identifier "org.sera.dev.nolimitsera"
             
             # Debug: List installed provisioning profiles
             echo ""
             echo "🔍 Installed provisioning profiles:"
-            ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles found"
+            ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles directory"
+            echo ""
+            echo "🔍 Profile names:"
+            for profile in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
+              if [ -f "$profile" ]; then
+                echo "Profile: $profile"
+                security cms -D -i "$profile" | grep -A 1 "Name" || true
+                security cms -D -i "$profile" | grep -A 1 "application-identifier" || true
+                echo "---"
+              fi
+            done
+            
+            # List certificates in keychain
+            echo ""
+            echo "🔍 Certificates in keychain:"
+            security find-identity -v -p codesigning temp.keychain
       
       - run:
           name: Build iOS archive (Release)
@@ -269,14 +282,14 @@ workflows:
     jobs:
       - install_dependencies:
           context:
-            - nolimitsera-context
+            - nolimitsera-context  # Replace with your actual context name
       - build_android:
           context:
-            - nolimitsera-context
+            - nolimitsera-context  # Replace with your actual context name
           requires:
             - install_dependencies
       - build_ios:
           context:
-            - nolimitsera-context
+            - nolimitsera-context  # Replace with your actual context name
           requires:
             - install_dependencies
