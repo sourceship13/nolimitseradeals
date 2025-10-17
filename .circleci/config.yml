@@ -179,14 +179,7 @@ jobs:
           command: |
             cd ios
             
-            # Get the provisioning profile UUID
-            PROFILE_PATH=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | head -n 1)
-            PROFILE_UUID=$(basename "$PROFILE_PATH" .mobileprovision)
-            
-            echo "🔍 Using provisioning profile: $PROFILE_UUID"
-            
-            # Build archive with manual code signing
-            # Only apply provisioning profile to the main app target, not to Pods
+            # Build archive with manual signing
             set -o pipefail
             xcodebuild \
               -workspace nolimitseradeals.xcworkspace \
@@ -195,7 +188,6 @@ jobs:
               -sdk iphoneos \
               -archivePath build/nolimitseradeals.xcarchive \
               DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-              CODE_SIGN_IDENTITY="Apple Distribution" \
               clean archive 2>&1 | tee xcodebuild.log
             
             # Capture the exit code
@@ -289,14 +281,14 @@ workflows:
     jobs:
       - install_dependencies:
           context:
-            - nolimitsera-context  # Replace with your actual context name
+            - your-context-name  # Replace with your actual context name
       - build_android:
           context:
-            - nolimitsera-context  # Replace with your actual context name
+            - your-context-name  # Replace with your actual context name
           requires:
             - install_dependencies
       - build_ios:
           context:
-            - nolimitsera-context  # Replace with your actual context name
+            - your-context-name  # Replace with your actual context name
           requires:
             - install_dependencies
