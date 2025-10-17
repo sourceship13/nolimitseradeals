@@ -18,6 +18,7 @@ import Toolbar from '../../components/Toolbar';
 import ApiService from '../../services/api.service';
 import DealShareButton from '../../components/DealShareButton';
 import { iOSUIKit } from 'react-native-typography';
+import { useDealSharing } from '../../libs/hooks/useDealSharing';
 
 // Type definitions for better type safety
 interface DealDetailProps {
@@ -118,6 +119,20 @@ const DealDetailScreen: React.FC<DealDetailProps> = (props) => {
   // Simple heart state - just use global state directly
   const dealId = deal?.deal_id || deal?.id;
   const isSaved = dealId ? isDealHearted(dealId) : false;
+
+  const {
+      contacts,
+      selectedContacts,
+      shareProgress,
+      hasContactsPermission,
+      requestContactsAccess,
+      toggleContactSelection,
+      shareDeal,
+      searchContacts,
+      clearSelection,
+      canShare,
+      selectedCount,
+    } = useDealSharing(deal?.id, deal.min_shares_required);
   
   // Debug heart state changes
   useEffect(() => {
@@ -431,11 +446,11 @@ const DealDetailScreen: React.FC<DealDetailProps> = (props) => {
           <View style={styles.actionButtons}>
             <TouchableOpacity
               style={[styles.saveButton, { 
-                backgroundColor: isSaved ? '#FF69B4' : colors.border,
+                backgroundColor: !shareProgress?.canRedeem ? colors.disabled : colors.border || isSaved ? '#FF69B4' : colors.border,
                 opacity: loading ? 0.7 : 1
               }]}
               onPress={handleSave}
-              disabled={loading}
+              disabled={loading || !shareProgress?.canRedeem} 
             >
               <MaterialIcons 
                 name={isSaved ? "favorite" : "favorite-border"} 
@@ -450,8 +465,9 @@ const DealDetailScreen: React.FC<DealDetailProps> = (props) => {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.redeemButton, { backgroundColor: colors.primary }]}
+              style={[styles.redeemButton, { backgroundColor: (loading || !shareProgress?.canRedeem) ? colors.disabled : colors.primary }]}
               onPress={handleRedeem}
+              disabled={loading || !shareProgress?.canRedeem} 
             >
               <MaterialIcons name="redeem" size={20} color="#fff" />
               <Text style={styles.redeemButtonText}>Redeem Deal</Text>
