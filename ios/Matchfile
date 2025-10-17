@@ -3,3 +3,5 @@ git_url("git@github.com:ajp-sourceship/nolimitseradeals_fastlane_match.git")
 storage_mode("git")
 
 type("appstore")
+
+app_identifier("org.sera.dev.nolimitsera")
