@@ -185,7 +185,8 @@ jobs:
             
             echo "🔍 Using provisioning profile: $PROFILE_UUID"
             
-            # Build archive with manual code signing - force all settings
+            # Build archive with manual code signing
+            # Only apply provisioning profile to the main app target, not to Pods
             set -o pipefail
             xcodebuild \
               -workspace nolimitseradeals.xcworkspace \
@@ -193,13 +194,8 @@ jobs:
               -configuration Release \
               -sdk iphoneos \
               -archivePath build/nolimitseradeals.xcarchive \
-              CODE_SIGN_STYLE=Manual \
               DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-              PROVISIONING_PROFILE="$PROFILE_UUID" \
-              PROVISIONING_PROFILE_SPECIFIER="$PROFILE_UUID" \
               CODE_SIGN_IDENTITY="Apple Distribution" \
-              CODE_SIGNING_REQUIRED=YES \
-              CODE_SIGNING_ALLOWED=YES \
               clean archive 2>&1 | tee xcodebuild.log
             
             # Capture the exit code
@@ -293,14 +289,14 @@ workflows:
     jobs:
       - install_dependencies:
           context:
-            - nolimitsera-context  # Replace with your actual context name
+            - your-context-name  # Replace with your actual context name
       - build_android:
           context:
-            - nolimitsera-context  # Replace with your actual context name
+            - your-context-name  # Replace with your actual context name
           requires:
             - install_dependencies
       - build_ios:
           context:
-            - nolimitsera-context  # Replace with your actual context name
+            - your-context-name  # Replace with your actual context name
           requires:
             - install_dependencies
