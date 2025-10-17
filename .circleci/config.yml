@@ -116,6 +116,13 @@ jobs:
             - ~/.cocoapods
       
       - run:
+          name: Test SSH Connection to GitHub
+          command: |
+            echo "🔍 Testing SSH connection to GitHub..."
+            ssh -T git@github.com -o StrictHostKeyChecking=no || true
+            echo "✅ SSH test complete"
+      
+      - run:
           name: Setup code signing with Fastlane Match
           command: |
             cd ios
@@ -129,6 +136,14 @@ jobs:
               echo "✅ MATCH_PASSWORD is set"
             fi
             
+            # Debug: Show what git URL Match will use
+            echo "🔍 Checking Matchfile configuration..."
+            cat Matchfile
+            
+            # Disable SSH host key checking for GitHub
+            mkdir -p ~/.ssh
+            ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts 2>/dev/null
+            
             # Create a temporary keychain
             security create-keychain -p "" temp.keychain
             security default-keychain -s temp.keychain
@@ -138,7 +153,13 @@ jobs:
             # Run fastlane match to download and install certificates
             # Explicitly export MATCH_PASSWORD for fastlane
             export MATCH_PASSWORD="$MATCH_PASSWORD"
-            fastlane match appstore --readonly --verbose
+            export GIT_SSH_COMMAND="ssh -v"
+            fastlane match appstore --readonly --verbose --app_identifier "org.sera.dev.nolimitsera"
+            
+            # Debug: List installed provisioning profiles
+            echo ""
+            echo "🔍 Installed provisioning profiles:"
+            ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles found"
       
       - run:
           name: Build iOS archive (Release)
@@ -154,16 +175,36 @@ jobs:
               -sdk iphoneos \
               -archivePath build/nolimitseradeals.xcarchive \
               -allowProvisioningUpdates \
-              CODE_SIGN_STYLE=Manual \
               DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
               clean archive 2>&1 | tee xcodebuild.log
             
-            # If build failed, show the error
-            if [ ${PIPESTATUS[0]} -ne 0 ]; then
-              echo "🔍 Build failed. Searching for errors..."
-              grep -A 5 "error:" xcodebuild.log || echo "No specific error found"
-              exit 1
+            # Capture the exit code
+            BUILD_EXIT_CODE=${PIPESTATUS[0]}
+            
+            # If build failed, show detailed errors
+            if [ $BUILD_EXIT_CODE -ne 0 ]; then
+              echo ""
+              echo "=========================================="
+              echo "🔍 BUILD FAILED - Searching for errors..."
+              echo "=========================================="
+              echo ""
+              
+              # Show all errors
+              echo "--- ALL ERRORS ---"
+              grep "error:" xcodebuild.log || echo "No 'error:' lines found"
+              
+              echo ""
+              echo "--- CODE SIGNING ISSUES ---"
+              grep -i "signing\|profile\|certificate\|provisioning" xcodebuild.log | grep -i "error\|fail\|invalid" || echo "No signing errors found"
+              
+              echo ""
+              echo "--- LAST 50 LINES OF BUILD ---"
+              tail -50 xcodebuild.log
+              
+              exit $BUILD_EXIT_CODE
             fi
+            
+            echo "✅ Archive built successfully"
       
       - run:
           name: Export IPA
@@ -180,13 +221,7 @@ jobs:
               <key>teamID</key><string>$APPLE_TEAM_ID</string>
               <key>uploadSymbols</key><true/>
               <key>compileBitcode</key><false/>
-              <key>signingStyle</key><string>manual</string>
               <key>stripSwiftSymbols</key><true/>
-              <key>provisioningProfiles</key>
-              <dict>
-                <key>org.sera.dev.nolimitsera</key>
-                <string>match AppStore org.sera.dev.nolimitsera</string>
-              </dict>
             </dict>
             </plist>
             EOF
@@ -234,10 +269,10 @@ workflows:
     jobs:
       - install_dependencies:
           context:
-            - nolimitsera-context 
+            - nolimitsera-context
       - build_android:
           context:
-            - nolimitsera-context 
+            - nolimitsera-context
           requires:
             - install_dependencies
       - build_ios:
