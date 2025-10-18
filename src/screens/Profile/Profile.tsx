@@ -75,10 +75,10 @@ const ProfileScreen = ({ navigation }: any) => {
 
         <TouchableOpacity
           style={[styles.menuBtn, { backgroundColor: colors.surface }]}
-          onPress={() => navigation.navigate('SavedDeals')}
+          onPress={() => navigation.navigate('SavedTab')}
         >
           <Text style={[styles.menuBtnText, { color: colors.text }]}>
-            My Deals
+            Saved Deals
           </Text>
         </TouchableOpacity>
 
