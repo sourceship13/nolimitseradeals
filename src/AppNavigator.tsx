@@ -167,7 +167,6 @@ const AppNavigator = () => {
             
             {/* Debug screens */}
             <Stack.Screen name="Debug" component={DebugScreen} />
-            <Stack.Screen name="DemoShare" component={DemoShareScreen} />
             <Stack.Screen name="PermissionTest" component={PermissionTestScreen} />
             <Stack.Screen name="NetworkDebug" component={NetworkDebugScreen} />
             <Stack.Screen name="Redemption" component={RedemptionScreen} />

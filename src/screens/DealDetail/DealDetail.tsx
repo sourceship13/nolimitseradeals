@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ImageBackground,
-  Image,
   ScrollView,
   Dimensions,
   Platform,
@@ -85,7 +84,7 @@ class DealDetailErrorBoundary extends React.Component<
 
 const { width: screenWidth } = Dimensions.get('window');
 
-const DealDetailScreen: React.FC<DealDetailProps> = props => {
+export const DealDetailScreen: React.FC<DealDetailProps> = props => {
   // Bulletproof parameter extraction
   const safeProps = props || {};
   const navigation = safeProps.navigation || null;
@@ -138,9 +137,9 @@ const DealDetailScreen: React.FC<DealDetailProps> = props => {
     });
   }, [route, initialDeal]);
 
-  const [deal, setDeal] = useState(initialDeal || null);
+  const [deal, _setDeal] = useState(initialDeal || null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
 
   // Simple heart state - just use global state directly
   const dealId = deal?.deal_id || deal?.id;
@@ -162,7 +161,8 @@ const DealDetailScreen: React.FC<DealDetailProps> = props => {
     clearSelection,
     canShare,
     selectedCount,
-  } = useDealSharing(deal?.id, deal.min_shares_required);
+    loading: sharingLoading,
+  } = useDealSharing(dealId, deal?.min_shares_required || 3);
 
   // Debug heart state changes
   useEffect(() => {
@@ -197,6 +197,22 @@ const DealDetailScreen: React.FC<DealDetailProps> = props => {
       setShowModal(true);
     }
   }, [waitingForPermission, hasContactsPermission, contacts]);
+
+  // When a deal becomes redeemable (enough shares), auto-heart it and ensure UI updates
+  useEffect(() => {
+    const isNowRedeemable = shareProgress?.canRedeem;
+    if (isNowRedeemable && dealId && !isSaved) {
+      console.log('🚀 Deal unlocked — auto-hearting and refreshing state for deal', dealId);
+      // fire-and-forget toggleHeartDeal to mark the deal as hearted
+      (async () => {
+        try {
+          await toggleHeartDeal(dealId, deal);
+        } catch (err) {
+          console.warn('Auto-heart failed for deal', dealId, err);
+        }
+      })();
+    }
+  }, [shareProgress?.canRedeem, dealId, isSaved, toggleHeartDeal, deal]);
 
   const handleSave = async () => {
     if (!deal?.deal_id || !user?.id) {
@@ -699,7 +715,7 @@ const DealDetailScreen: React.FC<DealDetailProps> = props => {
                   { backgroundColor: colors.primary },
                 ]}
                 onPress={handlePress}
-                disabled={loading}
+                disabled={sharingLoading}
               >
                 <MaterialIcons
                   name="share"
@@ -713,7 +729,7 @@ const DealDetailScreen: React.FC<DealDetailProps> = props => {
                         deal.min_shares_required || 3
                       })`}
                 </Text>
-                {loading && (
+                {sharingLoading && (
                   <MaterialIcons
                     name="hourglass-empty"
                     size={16}
@@ -866,13 +882,13 @@ const DealDetailScreen: React.FC<DealDetailProps> = props => {
                             { color: colors.textSecondary },
                           ]}
                         >
-                          {loading
-                            ? 'Loading contacts...'
-                            : searchQuery
-                            ? 'No contacts found matching your search'
-                            : 'No contacts found'}
+              {sharingLoading
+                ? 'Loading contacts...'
+                : searchQuery
+                ? 'No contacts found matching your search'
+                : 'No contacts found'}
                         </Text>
-                        {!loading && !searchQuery && (
+                        {!sharingLoading && !searchQuery && (
                           <TouchableOpacity
                             style={[
                               styles.retryButton,
@@ -912,7 +928,7 @@ const DealDetailScreen: React.FC<DealDetailProps> = props => {
                         },
                       ]}
                       onPress={handleShare}
-                      disabled={!canShare || selectedCount === 0 || loading}
+                      disabled={!canShare || selectedCount === 0 || sharingLoading}
                     >
                       <Text
                         style={[
@@ -920,7 +936,7 @@ const DealDetailScreen: React.FC<DealDetailProps> = props => {
                           { color: colors.background },
                         ]}
                       >
-                        {loading
+                        {sharingLoading
                           ? 'Sharing...'
                           : selectedCount === 0
                           ? 'Select contacts to share'
@@ -942,9 +958,9 @@ const DealDetailScreen: React.FC<DealDetailProps> = props => {
                   {
                     backgroundColor: !shareProgress?.canRedeem
                       ? colors.disabled
-                      : colors.border || isSaved
+                      : isSaved
                       ? '#FF69B4'
-                      : colors.border,
+                      : colors.primary,
                     opacity: loading ? 0.7 : 1,
                   },
                 ]}
@@ -954,13 +970,13 @@ const DealDetailScreen: React.FC<DealDetailProps> = props => {
                 <MaterialIcons
                   name={isSaved ? 'favorite' : 'favorite-border'}
                   size={20}
-                  color={isSaved ? '#fff' : colors.textSecondary}
+                  color={isSaved ? '#fff' : colors.background}
                 />
                 <Text
                   style={[
                     styles.saveButtonText,
                     {
-                      color: isSaved ? '#fff' : colors.textSecondary,
+                      color: isSaved ? '#fff' : colors.background,
                     },
                   ]}
                 >
