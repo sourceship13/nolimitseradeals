@@ -4,15 +4,34 @@ platform :ios do
   desc "Push a new beta build to TestFlight"
   lane :beta do
     # Sync code signing using Match
-    sync_code_signing(
+    match(
       type: "appstore",
       app_identifier: "org.sera.dev.nolimitsera",
-      readonly: true
+      readonly: true,
+      keychain_name: "temp.keychain",
+      keychain_password: ""
     )
+    
+    # Get the profile UUID
+    profile_uuid = ENV["sigh_org.sera.dev.nolimitsera_appstore"]
     
     # Increment build number
     increment_build_number(
       build_number: ENV["CIRCLE_BUILD_NUM"] || latest_testflight_build_number + 1
+    )
+    
+    # Disable automatic code signing in the project
+    disable_automatic_code_signing(
+      path: "nolimitseradeals.xcodeproj",
+      team_id: ENV["APPLE_TEAM_ID"]
+    )
+    
+    # Update project settings to use manual signing with the profile
+    update_project_provisioning(
+      xcodeproj: "nolimitseradeals.xcodeproj",
+      profile: profile_uuid,
+      target_filter: "nolimitseradeals",
+      build_configuration: "Release"
     )
     
     # Build the app
@@ -24,7 +43,13 @@ platform :ios do
       output_directory: "./build",
       output_name: "nolimitseradeals.ipa",
       clean: true,
+      codesigning_identity: "Apple Distribution",
+      xcargs: "DEVELOPMENT_TEAM=#{ENV['APPLE_TEAM_ID']} PROVISIONING_PROFILE_SPECIFIER=#{profile_uuid}",
+      buildlog_path: "./buildlogs",
+      suppress_xcode_output: false,
       export_options: {
+        method: "app-store",
+        teamID: ENV["APPLE_TEAM_ID"],
         provisioningProfiles: { 
           "org.sera.dev.nolimitsera" => "match AppStore org.sera.dev.nolimitsera"
         }
