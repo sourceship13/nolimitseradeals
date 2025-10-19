@@ -476,7 +476,15 @@ export const DealDetailScreen: React.FC<DealDetailProps> = props => {
 
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Toolbar title="Deal Details" onBack={() => navigation.goBack()} />
+        <Toolbar
+          title="Deal Details"
+          onBack={() => navigation.goBack()}
+          dealId={dealId}
+          dealObject={deal}
+          showHearted={true}
+          onToggleHearted={toggleHeartDeal}
+          isDealHearted={isDealHearted}
+        />
 
         <ScrollView
           style={styles.scrollContainer}
@@ -952,38 +960,6 @@ export const DealDetailScreen: React.FC<DealDetailProps> = props => {
 
             {/* Action Buttons */}
             <View style={styles.actionButtons}>
-              <TouchableOpacity
-                style={[
-                  styles.saveButton,
-                  {
-                    backgroundColor: !shareProgress?.canRedeem
-                      ? colors.disabled
-                      : isSaved
-                      ? '#FF69B4'
-                      : colors.primary,
-                    opacity: loading ? 0.7 : 1,
-                  },
-                ]}
-                onPress={handleSave}
-                disabled={loading || !shareProgress?.canRedeem}
-              >
-                <MaterialIcons
-                  name={isSaved ? 'favorite' : 'favorite-border'}
-                  size={20}
-                  color={isSaved ? '#fff' : colors.background}
-                />
-                <Text
-                  style={[
-                    styles.saveButtonText,
-                    {
-                      color: isSaved ? '#fff' : colors.background,
-                    },
-                  ]}
-                >
-                  {loading ? 'Loading...' : isSaved ? 'Hearted' : 'Heart Deal'}
-                </Text>
-              </TouchableOpacity>
-
               <TouchableOpacity
                 style={[
                   styles.redeemButton,

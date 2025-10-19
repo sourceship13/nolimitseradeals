@@ -6,6 +6,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { iOSUIKit } from 'react-native-typography';
 
 
+
 interface ToolbarProps {
   title?: string;
   onBack?: () => void;
@@ -13,15 +14,35 @@ interface ToolbarProps {
   showSettings?: boolean;
   onRedemptions?: () => void;
   showRedemptions?: boolean;
+  dealId?: string;
+  dealObject?: any;
+  showHearted?: boolean;
+  onToggleHearted?: (dealId: string, dealObject?: any) => void;
+  isDealHearted?: (dealId: string) => boolean;
 }
 
 
-const Toolbar: React.FC<ToolbarProps> = ({ title = '', onBack, onSettings, showSettings, onRedemptions, showRedemptions }) => {
+
+const Toolbar: React.FC<ToolbarProps> = ({
+  title = '',
+  onBack,
+  onSettings,
+  showSettings,
+  onRedemptions,
+  showRedemptions,
+  dealId,
+  dealObject,
+  showHearted,
+  onToggleHearted,
+  isDealHearted,
+}) => {
   const { isDarkMode } = useAuth();
-  
   // Transparent background with 5% opacity
   const transparentBg = isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
-  
+
+  // Heart icon logic
+  const hearted = dealId && isDealHearted ? isDealHearted(dealId) : false;
+
   return (
     <SafeAreaView edges={["top"]} style={{ backgroundColor: transparentBg }}>
       <View style={[styles.toolbar, { backgroundColor: transparentBg, borderBottomWidth: 0 }]}>  
@@ -41,11 +62,11 @@ const Toolbar: React.FC<ToolbarProps> = ({ title = '', onBack, onSettings, showS
             <View style={{ width: 48 }} />
           )}
         </View>
-        
+
         <View style={styles.titleContainer} pointerEvents="none">
           <Text style={[styles.title, { color: isDarkMode ? '#fff' : '#111' }]}>{title}</Text>
         </View>
-        
+
         <View style={styles.rightButtons}>
           {showRedemptions ? (
             <TouchableOpacity
@@ -71,7 +92,24 @@ const Toolbar: React.FC<ToolbarProps> = ({ title = '', onBack, onSettings, showS
               <Ionicons name="settings-sharp" size={28} color={isDarkMode ? '#fff' : '#222'} />
             </TouchableOpacity>
           ) : null}
-          {!showSettings && !showRedemptions ? <View style={{ width: 40 }} /> : null}
+
+          {showHearted && dealId ? (
+            <TouchableOpacity
+              onPress={() => onToggleHearted && onToggleHearted(dealId, dealObject)}
+              style={styles.settingsBtn}
+              hitSlop={{ top: 32, bottom: 32, left: 32, right: 32 }}
+              activeOpacity={0.6}
+              delayPressIn={0}
+              delayPressOut={50}
+            >
+              <Ionicons
+                name={hearted ? "heart" : "heart-outline"}
+                size={28}
+                color={hearted ? '#e0245e' : isDarkMode ? '#fff' : '#222'}
+              />
+            </TouchableOpacity>
+          ) : null}
+          {!showSettings && !showRedemptions && !showHearted ? <View style={{ width: 40 }} /> : null}
         </View>
       </View>
     </SafeAreaView>
