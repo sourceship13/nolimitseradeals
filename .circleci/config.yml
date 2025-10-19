@@ -168,14 +168,14 @@ workflows:
     jobs:
       - install_dependencies:
           context:
-            - mobile-ci
+            - nolimitsera-context
       - build_android:
           context:
-            - mobile-ci
+            - nolimitsera-context
           requires:
             - install_dependencies
       - build_ios:
           context:
-            - mobile-ci
+            - nolimitsera-context
           requires:
             - install_dependencies
