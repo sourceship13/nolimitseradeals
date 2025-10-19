@@ -1,9 +1,8 @@
--default_platform(:ios)
+default_platform(:ios)
 
 platform :ios do
   desc "Push a new beta build to TestFlight"
   lane :beta do
-    # Sync code signing using Match
     match(
       type: "appstore",
       app_identifier: "org.sera.dev.nolimitsera",
@@ -12,16 +11,13 @@ platform :ios do
       keychain_password: ""
     )
     
-    # Get the profile path from Match
     profile_path = ENV["sigh_org.sera.dev.nolimitsera_appstore_profile-path"]
     profile_uuid = ENV["sigh_org.sera.dev.nolimitsera_appstore"]
     
-    # Increment build number
     increment_build_number(
       build_number: ENV["CIRCLE_BUILD_NUM"] || latest_testflight_build_number + 1
     )
     
-    # Disable automatic code signing in the project
     update_code_signing_settings(
       use_automatic_signing: false,
       path: "nolimitseradeals.xcodeproj",
@@ -32,7 +28,6 @@ platform :ios do
       profile_uuid: profile_uuid
     )
     
-    # Build the app
     build_app(
       workspace: "nolimitseradeals.xcworkspace",
       scheme: "nolimitseradeals",
@@ -54,7 +49,6 @@ platform :ios do
       }
     )
     
-    # Upload to TestFlight
     upload_to_testflight(
       skip_waiting_for_build_processing: true,
       skip_submission: true,
@@ -65,7 +59,6 @@ platform :ios do
   
   desc "Push a new staging build to TestFlight"
   lane :staging do
-    # Same as beta
     beta
   end
 end
