@@ -78,7 +78,7 @@ jobs:
     working_directory: ~/repo
     environment:
       FL_OUTPUT_DIR: output
-      FASTLANE_LANE: beta
+    shell: /bin/bash --login -o pipefail
     steps:
       - checkout
       - attach_workspace:
@@ -97,17 +97,27 @@ jobs:
             - v1-pods-{{ checksum "ios/Podfile.lock" }}
             - v1-pods-
       
+      - restore_cache:
+          keys:
+            - v1-gems-{{ checksum "ios/Gemfile.lock" }}
+            - v1-gems-
+      
       - run:
-          name: Install Fastlane
+          name: Install Ruby gems
           command: |
-            sudo gem install fastlane -NV
-            fastlane --version
+            cd ios
+            bundle install
+      
+      - save_cache:
+          key: v1-gems-{{ checksum "ios/Gemfile.lock" }}
+          paths:
+            - ios/vendor/bundle
       
       - run:
           name: Install CocoaPods
           command: |
             cd ios
-            pod install --repo-update
+            bundle exec pod install
       
       - save_cache:
           key: v1-pods-{{ checksum "ios/Podfile.lock" }}
@@ -116,164 +126,22 @@ jobs:
             - ~/.cocoapods
       
       - run:
-          name: Test SSH Connection to GitHub
-          command: |
-            echo "🔍 Testing SSH connection to GitHub..."
-            ssh -T git@github.com -o StrictHostKeyChecking=no || true
-            echo "✅ SSH test complete"
-      
-      - run:
-          name: Setup code signing with Fastlane Match
+          name: Build and deploy to TestFlight
           command: |
             cd ios
-            
-            # Debug: Check if MATCH_PASSWORD is set
-            if [ -z "$MATCH_PASSWORD" ]; then
-              echo "❌ ERROR: MATCH_PASSWORD is not set!"
-              echo "Please add it to CircleCI Environment Variables"
-              exit 1
-            else
-              echo "✅ MATCH_PASSWORD is set"
-            fi
-            
-            # Debug: Show what git URL Match will use
-            echo "🔍 Checking Matchfile configuration..."
-            cat Matchfile
-            
-            # Disable SSH host key checking for GitHub
-            mkdir -p ~/.ssh
-            ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts 2>/dev/null
-            
-            # Create a temporary keychain
-            security create-keychain -p "" temp.keychain
-            security default-keychain -s temp.keychain
-            security unlock-keychain -p "" temp.keychain
-            security set-keychain-settings -t 3600 -u temp.keychain
-            
-            # Run fastlane match to download and install certificates
-            export MATCH_PASSWORD="$MATCH_PASSWORD"
-            fastlane match appstore --readonly --verbose --app_identifier "org.sera.dev.nolimitsera"
-            
-            # Debug: List installed provisioning profiles
-            echo ""
-            echo "🔍 Installed provisioning profiles:"
-            ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles directory"
-            echo ""
-            echo "🔍 Profile names:"
-            for profile in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
-              if [ -f "$profile" ]; then
-                echo "Profile: $profile"
-                security cms -D -i "$profile" | grep -A 1 "Name" || true
-                security cms -D -i "$profile" | grep -A 1 "application-identifier" || true
-                echo "---"
-              fi
-            done
-            
-            # List certificates in keychain
-            echo ""
-            echo "🔍 Certificates in keychain:"
-            security find-identity -v -p codesigning temp.keychain
+            bundle exec fastlane beta
       
       - run:
-          name: Build iOS archive (Release)
+          name: Display App Version and Build Number
           command: |
-            cd ios
-            
-            # Build archive with manual signing
-            set -o pipefail
-            xcodebuild \
-              -workspace nolimitseradeals.xcworkspace \
-              -scheme nolimitseradeals \
-              -configuration Release \
-              -sdk iphoneos \
-              -archivePath build/nolimitseradeals.xcarchive \
-              DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-              clean archive 2>&1 | tee xcodebuild.log
-            
-            # Capture the exit code
-            BUILD_EXIT_CODE=${PIPESTATUS[0]}
-            
-            # If build failed, show detailed errors
-            if [ $BUILD_EXIT_CODE -ne 0 ]; then
-              echo ""
-              echo "=========================================="
-              echo "🔍 BUILD FAILED - Searching for errors..."
-              echo "=========================================="
-              echo ""
-              
-              # Show all errors
-              echo "--- ALL ERRORS ---"
-              grep "error:" xcodebuild.log || echo "No 'error:' lines found"
-              
-              echo ""
-              echo "--- CODE SIGNING ISSUES ---"
-              grep -i "signing\|profile\|certificate\|provisioning" xcodebuild.log | grep -i "error\|fail\|invalid" || echo "No signing errors found"
-              
-              echo ""
-              echo "--- LAST 50 LINES OF BUILD ---"
-              tail -50 xcodebuild.log
-              
-              exit $BUILD_EXIT_CODE
-            fi
-            
-            echo "✅ Archive built successfully"
-      
-      - run:
-          name: Export IPA
-          command: |
-            cd ios
-            
-            # Create export options
-            cat > ExportOptions.plist \<<EOF
-            <?xml version="1.0" encoding="UTF-8"?>
-            <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-            <plist version="1.0">
-            <dict>
-              <key>method</key><string>app-store</string>
-              <key>teamID</key><string>$APPLE_TEAM_ID</string>
-              <key>uploadSymbols</key><true/>
-              <key>compileBitcode</key><false/>
-              <key>stripSwiftSymbols</key><true/>
-            </dict>
-            </plist>
-            EOF
-            
-            # Export archive
-            xcodebuild -exportArchive \
-              -archivePath build/nolimitseradeals.xcarchive \
-              -exportOptionsPlist ExportOptions.plist \
-              -exportPath build \
-              -allowProvisioningUpdates
+            APP_VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" ios/nolimitseradeals/Info.plist)
+            BUILD_NUMBER=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" ios/nolimitseradeals/Info.plist)
+            echo "App Version: $APP_VERSION"
+            echo "Build Number: $BUILD_NUMBER"
       
       - store_artifacts:
           path: ios/build
           destination: ios_build
-      
-      - run:
-          name: Upload to App Store Connect (optional)
-          command: |
-            if [ -z "$FASTLANE_USER" ] || [ -z "$FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD" ]; then
-              echo "⚠️  Skipping App Store upload - credentials not configured"
-              echo "To enable uploads, set FASTLANE_USER and FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD"
-              exit 0
-            fi
-            
-            cd ios
-            IPA_PATH="build/nolimitseradeals.ipa"
-            
-            if [ ! -f "$IPA_PATH" ]; then
-              echo "❌ IPA not found at $IPA_PATH"
-              exit 1
-            fi
-            
-            echo "📤 Uploading to App Store Connect..."
-            xcrun altool --upload-app \
-              --type ios \
-              --file "$IPA_PATH" \
-              --username "$FASTLANE_USER" \
-              --password "$FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD"
-            
-            echo "✅ Upload complete!"
 
 workflows:
   version: 2
@@ -281,14 +149,14 @@ workflows:
     jobs:
       - install_dependencies:
           context:
-            - nolimitsera-context  # Replace with your actual context name
+            - nolimitsera-context
       - build_android:
           context:
-            - nolimitsera-context  # Replace with your actual context name
+            - nolimitsera-context
           requires:
             - install_dependencies
       - build_ios:
           context:
-            - nolimitsera-context  # Replace with your actual context name
+            - nolimitsera-context
           requires:
             - install_dependencies

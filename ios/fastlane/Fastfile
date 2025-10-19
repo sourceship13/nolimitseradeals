@@ -1,0 +1,48 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Push a new beta build to TestFlight"
+  lane :beta do
+    # Sync code signing using Match
+    sync_code_signing(
+      type: "appstore",
+      app_identifier: "org.sera.dev.nolimitsera",
+      readonly: true
+    )
+    
+    # Increment build number
+    increment_build_number(
+      build_number: ENV["CIRCLE_BUILD_NUM"] || latest_testflight_build_number + 1
+    )
+    
+    # Build the app
+    build_app(
+      workspace: "nolimitseradeals.xcworkspace",
+      scheme: "nolimitseradeals",
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: "./build",
+      output_name: "nolimitseradeals.ipa",
+      clean: true,
+      export_options: {
+        provisioningProfiles: { 
+          "org.sera.dev.nolimitsera" => "match AppStore org.sera.dev.nolimitsera"
+        }
+      }
+    )
+    
+    # Upload to TestFlight
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      skip_submission: true,
+      distribute_external: false,
+      notify_external_testers: false
+    )
+  end
+  
+  desc "Push a new staging build to TestFlight"
+  lane :staging do
+    # Same as beta
+    beta
+  end
+end
