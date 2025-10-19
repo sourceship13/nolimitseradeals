@@ -1,8 +1,4 @@
-cd ios/fastlane
-
-# Replace the entire Fastfile content
-cat > Fastfile <<'EOF'
-default_platform(:ios)
+-default_platform(:ios)
 
 platform :ios do
   desc "Push a new beta build to TestFlight"
@@ -73,4 +69,3 @@ platform :ios do
     beta
   end
 end
-EOF
