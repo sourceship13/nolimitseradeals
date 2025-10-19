@@ -1,5 +1,3 @@
-// src/services/api.service.ts
-// src/services/api.service.ts
 import { Platform } from 'react-native';
 import AuthService from './auth.service';
 import ApiConfig, { apiConfig } from '../libs/utils/api.utils';
@@ -12,12 +10,11 @@ interface ApiResponse<T = any> {
 }
 
 class ApiService {
-  // Dynamic getter to always use current API URL configuration
+
   private get baseURL() {
     return ApiConfig.apiURL;
   }
 
-  // Public endpoints (no authentication required)
   private publicEndpoints = [
     '/auth/login',
     '/auth/register', 
@@ -26,33 +23,24 @@ class ApiService {
     '/auth/resend-code',
     '/auth/forgot-password',
     '/auth/reset-password',
-    // All other endpoints require authentication
   ];
 
-  /**
-   * Determines if an endpoint requires authentication
-   */
   private requiresAuth(endpoint: string): boolean {
     return !this.publicEndpoints.some(publicEndpoint => 
       endpoint.includes(publicEndpoint)
     );
   }
 
-  /**
-   * Generic API call method
-   */
   async makeRequest<T = any>(
     endpoint: string, 
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
     
-    // CRITICAL: Check for local IP usage
     if (url.includes('192.168') || url.includes('localhost') || url.includes(':8080')) {
       console.log('🚨 API WORKING WITH LOCAL SERVER', url, this.baseURL);
     }
     
-    // Enhanced debug logging for physical device troubleshooting
     console.log('=================================');
     console.log('� API SERVICE DEBUG');
     console.log('=================================');
@@ -76,7 +64,6 @@ class ApiService {
         console.log(`🛡️ ApiService: Making authenticated request to: ${url}`);
         console.log(`📋 ApiService: Original options passed to AuthService:`, options);
         
-        // Ensure we have proper options structure for AuthService
         const authOptions = {
           method: 'GET',
           ...options,
@@ -90,7 +77,6 @@ class ApiService {
         response = await AuthService.makeAuthenticatedRequest(url, authOptions);
       } else {
         console.log(`🌐 ApiService: Making public request to: ${url}`);
-        // Use regular fetch for public endpoints
         const headers = {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -119,7 +105,6 @@ class ApiService {
     } catch (error) {
       console.error(`💥 API Error (${endpoint}):`, error);
       
-      // Enhanced error reporting for network issues
       if (error instanceof TypeError && error.message.includes('Network request failed')) {
         console.error(`🚨 Network Error Details:`);
         console.error(`📡 Trying to connect to: ${url}`);
@@ -130,7 +115,6 @@ class ApiService {
         });
         console.error(`💡 Suggestion: Check if device can reach the server`);
         
-        // Throw a more user-friendly error
         throw new Error(`Unable to connect to server. Please check your internet connection and try again.`);
       }
       
@@ -138,7 +122,6 @@ class ApiService {
     }
   }
 
-  // Deals API Methods
   async getDeals(): Promise<ApiResponse<any[]>> {
     return this.makeRequest('/deals/all-v2');
   }
@@ -164,38 +147,9 @@ class ApiService {
   }
 
   async getHeartedDeals(): Promise<ApiResponse<any[]>> {
-    // Try multiple possible endpoints for hearted deals
-    // const endpointsToTry = [
-    //   '/user/hearted',      // Most likely endpoint for user's hearted deals
-    //   '/user/favorites',    // Alternative naming
-    //   '/user/saved',        // Another common naming
-    //   '/deals/hearted',     // Original endpoint (might not exist)
-    //   '/user/deals/hearted', // Nested endpoint
-    //   '/favorites',         // Simple endpoint
-    //   '/saved-deals'        // Another possibility
-    // ];
-    const endpointsToTry = [
-      '/deals/hearted',      // Most likely endpoint for user's hearted deals
-    ];
-
-    let lastError: any = null;
-
-    for (const endpoint of endpointsToTry) {
-      try {
-        console.log(`🧪 Trying ${endpoint} endpoint...`);
-        const result = await this.makeRequest(endpoint);
-        console.log(`✅ Success with ${endpoint}:`, result);
-        return result;
-      } catch (error) {
-        console.log(`❌ ${endpoint} failed:`, error);
-        lastError = error;
-        continue;
-      }
-    }
-
-    // If all endpoints failed, return the last error
-    console.log('❌ All hearted deals endpoints failed');
-    throw lastError;
+    return  await this.makeRequest('/deals/hearted', {
+      method: 'GET',
+    });
   }
 
   async checkHeartStatus(dealId: string): Promise<ApiResponse<{dealId: string, isHearted: boolean, heartCount: number}>> {
@@ -204,7 +158,6 @@ class ApiService {
     });
   }
 
-  // User Profile API Methods
   async getUserProfile(): Promise<ApiResponse<any>> {
     return this.makeRequest('/user/profile');
   }
@@ -216,7 +169,6 @@ class ApiService {
     });
   }
 
-  // Verification API Methods
   async verifyCode(phoneNumber: string, code: string): Promise<ApiResponse> {
     return this.makeRequest('/auth/verify-phone', {
       method: 'POST',
@@ -231,7 +183,6 @@ class ApiService {
     });
   }
 
-  // Analytics/Tracking (if needed)
   async trackDealView(dealId: string): Promise<ApiResponse> {
     return this.makeRequest('/analytics/deal-view', {
       method: 'POST',
@@ -251,6 +202,14 @@ class ApiService {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ shareCount }),
+    });
+  }
+
+  async postContacts(contacts: Array<{ contact_number: string; display_name: string }>): Promise<ApiResponse> {
+    return this.makeRequest('/contacts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contacts }),
     });
   }
 }
