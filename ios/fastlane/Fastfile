@@ -55,18 +55,14 @@ platform :ios do
     )
     
     # Upload to TestFlight
-    # Create API key JSON file from environment variables
-    api_key_json = {
-      key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
-      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
-      key: Base64.decode64(ENV["APP_STORE_CONNECT_API_KEY_KEY"])
-    }.to_json
+    # Create .p8 key file from base64 encoded environment variable
+    key_content = Base64.decode64(ENV["APP_STORE_CONNECT_API_KEY_KEY"])
+    key_file_path = "AuthKey_#{ENV['APP_STORE_CONNECT_API_KEY_KEY_ID']}.p8"
+    File.write(key_file_path, key_content)
     
-    File.write("app_store_connect_api_key.json", api_key_json)
-    
-    # Upload to TestFlight using API Key from JSON
+    # Upload to TestFlight using API Key
     upload_to_testflight(
-      api_key_path: "app_store_connect_api_key.json",
+      api_key_path: key_file_path,
       app_identifier: "org.sera.dev.nolimitsera",
       skip_waiting_for_build_processing: true,
       skip_submission: true,
