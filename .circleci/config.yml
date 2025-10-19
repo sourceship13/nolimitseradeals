@@ -126,10 +126,29 @@ jobs:
             - ~/.cocoapods
       
       - run:
+          name: Setup keychain for code signing
+          command: |
+            # Create a temporary keychain
+            security create-keychain -p "" temp.keychain
+            security default-keychain -s temp.keychain
+            security unlock-keychain -p "" temp.keychain
+            security set-keychain-settings -t 3600 -u temp.keychain
+      
+      - run:
           name: Build and deploy to TestFlight
           command: |
             cd ios
-            bundle exec fastlane beta
+            bundle exec fastlane beta || {
+              echo "====== BUILD FAILED - Showing detailed error log ======"
+              if [ -f ~/Library/Logs/gym/nolimitseradeals-nolimitseradeals.log ]; then
+                echo "Last 100 lines of build log:"
+                tail -100 ~/Library/Logs/gym/nolimitseradeals-nolimitseradeals.log
+                echo ""
+                echo "Searching for errors:"
+                grep "error:" ~/Library/Logs/gym/nolimitseradeals-nolimitseradeals.log || echo "No errors found in log"
+              fi
+              exit 1
+            }
       
       - run:
           name: Display App Version and Build Number
@@ -149,14 +168,14 @@ workflows:
     jobs:
       - install_dependencies:
           context:
-            - nolimitsera-context
+            - mobile-ci
       - build_android:
           context:
-            - nolimitsera-context
+            - mobile-ci
           requires:
             - install_dependencies
       - build_ios:
           context:
-            - nolimitsera-context
+            - mobile-ci
           requires:
             - install_dependencies
