@@ -1,4 +1,5 @@
 // src/services/api.service.ts
+// src/services/api.service.ts
 import { Platform } from 'react-native';
 import AuthService from './auth.service';
 import ApiConfig, { apiConfig } from '../libs/utils/api.utils';
@@ -242,6 +243,14 @@ class ApiService {
     return this.makeRequest('/analytics/deal-share', {
       method: 'POST',
       body: JSON.stringify({ dealId, platform, timestamp: new Date().toISOString() }),
+    });
+  }
+
+  async trackDealUnlocked(dealId: string, shareCount: number): Promise<ApiResponse> {
+    return this.makeRequest(`/deals/${dealId}/share`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ shareCount }),
     });
   }
 }

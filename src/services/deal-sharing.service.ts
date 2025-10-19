@@ -1,3 +1,4 @@
+import ApiService from './api.service';
 import { PermissionsAndroid, Platform, Alert, Linking } from 'react-native';
 import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import Contacts from 'react-native-contacts';
@@ -199,6 +200,20 @@ class DealSharingService {
       if (smsSuccess) {
         // Track the shares locally
         await this.trackShares(dealId, selectedContacts.length);
+
+        // Check if deal is now unlocked and call API endpoint if so
+        const key = `shares_${dealId}`;
+        const sharesString = await AsyncStorage.getItem(key);
+        const currentShares = sharesString ? parseInt(sharesString, 10) : 0;
+        const requiredShares = dealInfo?.min_shares_required || 3;
+        if (currentShares >= requiredShares) {
+          try {
+            await ApiService.trackDealUnlocked(dealId, currentShares);
+            console.log('✅ Called trackDealUnlocked API for deal', dealId, 'with shareCount', currentShares);
+          } catch (err) {
+            console.warn('⚠️ Failed to call trackDealUnlocked API:', err);
+          }
+        }
         
         Alert.alert(
           'SMS Sent Successfully!',
@@ -375,6 +390,7 @@ class DealSharingService {
 
   async getShareProgress(dealId: string, requiredShares: number = 3): Promise<ShareProgress> {
     try {
+      console.log('🔍 Getting share progress for deal:', dealId);
       const key = `shares_${dealId}`;
       const sharesString = await AsyncStorage.getItem(key);
       const currentShares = sharesString ? parseInt(sharesString, 10) : 0;
