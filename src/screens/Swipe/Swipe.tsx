@@ -140,7 +140,7 @@ const SwipeScreen = ({ navigation }: any) => {
     <View style={[styles.screenContainer, { backgroundColor: colors.background }]}>
       {/* 1. Header */}
       <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}> 
-        <Text style={[styles.headerTitle, { color: colors.text }]}>DEALZ</Text>
+        <Text style={[styles.headerTitle, { color: colors.text, fontFamily:'Roboto-Thin' }]}>DEALZ</Text>
         <TouchableOpacity 
           onPress={() => navigation.navigate('Settings')}
           style={styles.settingsButton}
