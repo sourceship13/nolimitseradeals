@@ -58,6 +58,8 @@ jobs:
           name: Build Android APK (release)
           command: |
             cd android
+            # Set Node path for React Native Gradle plugin
+            export NODE_BINARY=$(which node)
             ./gradlew --no-daemon clean assembleRelease
       - save_cache:
           key: v1-gradle-{{ checksum "android/build.gradle" }}-{{ checksum "android/app/build.gradle" }}
