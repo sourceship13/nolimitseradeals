@@ -161,6 +161,14 @@ jobs:
             echo "Build Number: $BUILD_NUMBER"
       
       - store_artifacts:
+          path: ios/build/nolimitseradeals.ipa
+          destination: nolimitseradeals.ipa
+      
+      - store_artifacts:
+          path: ios/build/nolimitseradeals.app.dSYM.zip
+          destination: nolimitseradeals.app.dSYM.zip
+      
+      - store_artifacts:
           path: ios/build
           destination: ios_build
 
