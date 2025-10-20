@@ -148,27 +148,7 @@ const SwipeScreen = ({ navigation }: any) => {
           <Text style={[iOSUIKit.title3, { color: colors.primary }]}>⚙️</Text>
         </TouchableOpacity>
       </View>
-
-      {/* 2. Action buttons row - now above the image */}
-      <View style={styles.actionContainer} pointerEvents="box-none">
-        {/* Previous deal button */}
-        <TouchableOpacity style={[styles.navBtn, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]} onPress={handlePreviousDeal}>
-          <Text style={[iOSUIKit.title3, { color: isDarkMode ? colors.dealArrows : '#000' }]}>←</Text>
-        </TouchableOpacity>
-        {/* Dislike button */}
-        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]} onPress={() => handleSwipe('left')}>
-          <Text style={[iOSUIKit.title3Emphasized, { color: colors.error }]}>✗</Text>
-        </TouchableOpacity>
-        {/* Like button */}
-        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]} onPress={() => handleSwipe('right')}>
-          <Text style={[iOSUIKit.title3Emphasized, { color: colors.primary }]}>♥</Text>
-        </TouchableOpacity>
-        {/* Next deal button */}
-        <TouchableOpacity style={[styles.navBtn, { backgroundColor: 'rgba(255, 255, 255, 0.9)' }]} onPress={handleNextDeal}>
-          <Text style={[iOSUIKit.title3, { color: isDarkMode ? colors.dealArrows : '#000' }]}>→</Text>
-        </TouchableOpacity>
-      </View>
-
+      
       {/* 3. Full-screen content area */}
       <PanGestureHandler
         onGestureEvent={onGestureEvent}

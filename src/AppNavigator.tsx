@@ -54,10 +54,12 @@ const MainTabNavigator = () => {
         tabBarActiveTintColor: isDarkMode ? '#FFFFFF' : '#000000', // White for dark mode, black for light mode
         tabBarInactiveTintColor: isDarkMode ? '#9CA3AF' : '#6B7280', // Light gray for dark mode, darker gray for light mode  
         tabBarStyle: {
-          backgroundColor: 'rgba(31, 41, 55, 0.25)', // Nike dark gray/black with 90% opacity
+          backgroundColor: 'rgba(31, 41, 55, 0.85)', // More visible dark gray with opacity
           borderTopColor: 'transparent',
           borderTopWidth: 0,
           borderRadius: 20,
+          // Optionally add blur effect for iOS
+          ...(Platform.OS === 'ios' ? { backdropFilter: 'blur(12px)' } : {}),
           marginHorizontal: 16,
           marginBottom: 20,
           paddingBottom: 8,

@@ -3,9 +3,9 @@
 
 export const Colors = {
   light: {
-    background: '#fff',
+    background: '#E6E9EF',
     surface: '#f5f5f5',
-    primary: '#FF6B35',
+    primary: '#DE541E',
     secondary: '#4ECDC4',
     accent: '#1877F3',
     error: '#e74c3c',
@@ -27,8 +27,8 @@ export const Colors = {
   },
   dark: {
     background: '#000',
-    surface: '#111',
-    primary: '#FF6B35',
+    surface: '#36393B',
+    primary: '#DE541E',
     secondary: '#4ECDC4',
     accent: '#BB86FC',
     error: '#CF6679',
