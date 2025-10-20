@@ -1,4 +1,5 @@
 import React from 'react';
+import { Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -21,6 +22,7 @@ import { useAuth, getColors } from './libs/hooks/useAuth';
 import { ActivityIndicator, View } from 'react-native';
 import { iOSUIKit } from 'react-native-typography';
 import RedemptionScreen from './screens/Redemption/RedemptionScreen';
+import { Colors } from './libs/colors';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -54,7 +56,7 @@ const MainTabNavigator = () => {
         tabBarActiveTintColor: isDarkMode ? '#FFFFFF' : '#000000', // White for dark mode, black for light mode
         tabBarInactiveTintColor: isDarkMode ? '#9CA3AF' : '#6B7280', // Light gray for dark mode, darker gray for light mode  
         tabBarStyle: {
-          backgroundColor: 'rgba(31, 41, 55, 0.85)', // More visible dark gray with opacity
+          backgroundColor: Colors.dark.surface, // More visible dark gray with opacity
           borderTopColor: 'transparent',
           borderTopWidth: 0,
           borderRadius: 20,

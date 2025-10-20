@@ -26,8 +26,8 @@ export const Colors = {
     disabled: '#888',
   },
   dark: {
-    background: '#000',
-    surface: '#36393B',
+    background: '#36393B',
+    surface: 'rgba(69, 72, 74, 0.95)',
     primary: '#DE541E',
     secondary: '#4ECDC4',
     accent: '#BB86FC',
