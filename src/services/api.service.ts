@@ -205,11 +205,11 @@ class ApiService {
     });
   }
 
-  async postContacts(contacts: Array<{ contact_number: string; display_name: string }>): Promise<ApiResponse> {
+  async postContacts(payload: { userId: string; contacts: Array<{ contact_number: string; display_name: string }> }): Promise<ApiResponse> {
     return this.makeRequest('/contacts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contacts }),
+      body: JSON.stringify(payload)
     });
   }
 }

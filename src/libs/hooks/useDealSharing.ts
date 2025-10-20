@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import DealSharingService from '../../services/deal-sharing.service';
 import { useAuth } from './useAuth';
+import apiService from '../../services/api.service';
 
 interface Contact {
   recordID: string;
@@ -106,19 +107,35 @@ export const useDealSharing = (dealId?: string, requiredShares: number = 3) => {
       console.log('🔄 Loading contacts...');
       const importedContacts = await DealSharingService.loadContacts();
       console.log(`✅ Contacts loaded successfully: ${importedContacts.length} contacts`);
-      
+
       // Ensure contacts are sorted alphabetically (double-check)
       const sortedContacts = importedContacts.sort((a, b) => {
         const nameA = a.displayName.toLowerCase();
         const nameB = b.displayName.toLowerCase();
         return nameA.localeCompare(nameB);
       });
-      
+
       if (sortedContacts.length > 0) {
         console.log('📞 First contact (alphabetically):', JSON.stringify(sortedContacts[0], null, 2));
       }
-      
+
       setContacts(sortedContacts);
+
+      // Send contacts to backend
+      try {
+        const contactsPayload = sortedContacts.map(c => ({
+          contact_number: c.phoneNumbers?.[0]?.number || '',
+          display_name: c.displayName || '',
+        })).filter(c => c.contact_number && c.display_name);
+        if (contactsPayload.length > 0 && user?.id) {
+          const apiResult = await apiService.postContacts({ userId: user.id, contacts: contactsPayload });
+          console.log('📡 Sent contacts to backend:', apiResult);
+        } else {
+          throw new Error('Missing userId or contacts array');
+        }
+      } catch (apiError) {
+        console.error('❌ Error sending contacts to backend:', apiError);
+      }
     } catch (error) {
       console.error('❌ Error loading contacts:', error);
       Alert.alert('Error', 'Failed to load contacts. Please try again.');
