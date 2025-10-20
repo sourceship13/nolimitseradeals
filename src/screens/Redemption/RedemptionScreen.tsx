@@ -66,43 +66,8 @@ const RedemptionScreen = () => {
   const SPACING = 16; // space between cards
   const INTERVAL = CARD_W + SPACING;
 
-  // compute left offsets for each item (including spacing)
-  const leftOffsets = useMemo(() => {
-    const arr: number[] = [];
-    let x = 0;
-    DATA.forEach((it, i) => {
-      if (i > 0) x += SPACING; // separator
-      arr.push(x); // left edge of this item
-      x += it.w;
-    });
-    return arr;
-  }, []);
-
-  // offsets that center each item: left + (itemW/2) - (containerW/2)
-  const snapToOffsets = useMemo(() => {
-    if (!containerW) return [];
-    return DATA.map((it, i) =>
-      Math.max(0, leftOffsets[i] + it.w / 2 - containerW / 2),
-    );
-  }, [containerW, leftOffsets]);
-
-  const onLayout = (e: LayoutChangeEvent) =>
-    setContainerW(e.nativeEvent.layout.width);
-
-  // (optional) know the centered index after snap
-  const onMomentumScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const x = e.nativeEvent.contentOffset.x;
-    // find nearest snap offset
-    const idx = snapToOffsets.reduce(
-      (best, off, i) =>
-        Math.abs(off - x) < Math.abs(snapToOffsets[best] - x) ? i : best,
-      0,
-    );
-    // console.log('Centered index:', idx);
-  };
-
-  const sidePad = Math.max(0, (containerW - (DATA[0]?.w ?? 0)) / 2);
-  const endPad = Math.max(0, (containerW - (DATA.at(-1)?.w ?? 0)) / 2);
+  const sidePad = Math.max(0, (containerW - CARD_W) / 2);
+  const endPad = Math.max(0, (containerW - CARD_W) / 2);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>

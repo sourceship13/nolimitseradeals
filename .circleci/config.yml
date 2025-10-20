@@ -160,13 +160,34 @@ jobs:
             echo "App Version: $APP_VERSION"
             echo "Build Number: $BUILD_NUMBER"
       
+      - run:
+          name: List build artifacts
+          command: |
+            echo "📦 Contents of ios/build directory:"
+            ls -lah ios/build/ || echo "Build directory not found"
+            echo ""
+            echo "🔍 Looking for IPA file:"
+            find ios -name "*.ipa" || echo "No IPA files found"
+            echo ""
+            echo "📝 IPA file details:"
+            file ios/build/nolimitseradeals.ipa || echo "IPA not found"
+            echo ""
+            echo "📊 IPA file size:"
+            du -h ios/build/nolimitseradeals.ipa || echo "IPA not found"
+      
+      - run:
+          name: Rename IPA for clarity
+          command: |
+            cp ios/build/nolimitseradeals.ipa ios/nolimitseradeals-build-${CIRCLE_BUILD_NUM}.ipa
+            echo "✅ Created: ios/nolimitseradeals-build-${CIRCLE_BUILD_NUM}.ipa"
+      
+      - store_artifacts:
+          path: ios/nolimitseradeals-build-${CIRCLE_BUILD_NUM}.ipa
+          destination: nolimitseradeals-build-${CIRCLE_BUILD_NUM}.ipa
+      
       - store_artifacts:
           path: ios/build/nolimitseradeals.ipa
           destination: nolimitseradeals.ipa
-      
-      - store_artifacts:
-          path: ios/build/nolimitseradeals.app.dSYM.zip
-          destination: nolimitseradeals.app.dSYM.zip
       
       - store_artifacts:
           path: ios/build
