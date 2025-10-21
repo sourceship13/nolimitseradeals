@@ -82,9 +82,10 @@ class ApiConfig {
   };
   
   // Store the environment
-  private currentEnv: Environment;
+  private currentEnv: Environment = getEnvironment();
   
   private constructor() {
+    this.currentEnv = getEnvironment();
   }
   
   static getInstance(): ApiConfig {
@@ -100,23 +101,22 @@ class ApiConfig {
   
   get baseURL(): string {
     const physicalDevice = isPhysicalDevice();
-    
     switch (this.currentEnv) {
       case 'local':
         // Smart local URL selection based on device type
         if (physicalDevice) {
           return this.urls.local.physical;
+        } else {
+          // Simulators use standard localhost
+          if (Platform.OS === 'ios') {
+            return this.urls.local.ios;
+          } else {
+            return this.urls.local.android;
+          }
         }
-        
-        // Simulators use standard localhost
-        const simulatorURL = Platform.OS === 'ios'
-          ? this.urls.local.ios
-        return simulatorURL;
-          
-        return this.urls.staging;
-        
+      case 'production':
         return this.urls.production;
-        
+      case 'staging':
       default:
         return this.urls.staging;
     }
@@ -160,15 +160,14 @@ export const switchEnvironment = (env: Environment) => {
 // Export helper to force physical device detection (for testing)
 export const forcePhysicalDevice = (isPhysical: boolean | null) => {
   // Only allow this if FORCE_STAGING_ALWAYS is false
-    return;
-  }
-  
+  // (implementation placeholder)
   // Refresh the configuration
   const newEnv = getEnvironment();
   apiConfig.setEnvironment(newEnv);
 };
 
 // Export helper to verify current configuration
+export const getCurrentConfig = () => {
   return {
     environment: apiConfig.environment,
     baseURL: apiConfig.baseURL,
@@ -179,23 +178,19 @@ export const forcePhysicalDevice = (isPhysical: boolean | null) => {
 
 // Export helper to force complete configuration refresh
   
+export const forceCompleteConfigRefresh = () => {
   // Reset all overrides
   FORCE_PHYSICAL_DEVICE = null;
-  
   // Force re-evaluation of environment
-  
+  const newEnv = getEnvironment();
   // Update the singleton instance
   apiConfig.setEnvironment(newEnv);
-  
-  
   // Double check no local IPs are being used
   if (apiConfig.baseURL.includes('192.168') || apiConfig.baseURL.includes('localhost')) {
     console.error('🚨 ERROR: Still using local IP! Base URL:', apiConfig.baseURL);
   }
-  
   // Log the results
   getCurrentConfig();
-  
   return apiConfig;
 };
 

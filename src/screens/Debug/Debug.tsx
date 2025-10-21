@@ -199,10 +199,6 @@ const DebugScreen = ({ navigation }: any) => {
         <Text style={styles.buttonText}>Test Token Headers</Text>
       </TouchableOpacity>
       
-      <TouchableOpacity style={styles.button} onPress={testLogin}>
-        <Text style={styles.buttonText}>Test Login (test@example.com)</Text>
-      </TouchableOpacity>
-      
       <TouchableOpacity style={styles.button} onPress={fillTestCredentials}>
         <Text style={styles.buttonText}>Go to Sign In</Text>
       </TouchableOpacity>
