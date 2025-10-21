@@ -22,18 +22,9 @@ const SignInScreen = ({ navigation }: any) => {
 
     try {
       setLoading(true);
-      console.log('=================================');
-      console.log('� SIGN IN DEBUG');
-      console.log('=================================');
-      console.log('📧 Email:', email);
-      console.log('📱 Platform:', Platform.OS);
-      console.log('🔧 Dev Mode:', __DEV__ ? 'YES' : 'NO');
-      console.log('⏰ Timestamp:', new Date().toISOString());
-      console.log('=================================');
       
       await login({ email, password });
       
-      console.log('✅ SignIn: Login successful, AppNavigator will handle navigation automatically');
     } catch (error) {
       console.error('❌ SignIn: Login failed:', error);
       

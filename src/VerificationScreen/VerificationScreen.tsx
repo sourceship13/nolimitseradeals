@@ -14,8 +14,6 @@ import ApiService from '../services/api.service';
 import authService from '../services/auth.service'; // Add this import
 import { iOSUIKit } from 'react-native-typography';
 
-console.log('authService:', authService);
-console.log('authService.verifyCode:', authService?.verifyCode);
 
 const VerificationScreen = ({ navigation, route }: any) => {
   const { isDarkMode } = useAuth();
@@ -152,8 +150,6 @@ const VerificationScreen = ({ navigation, route }: any) => {
     if (resendTimer > 0) return; // Prevent spam while timer is active
 
     try {
-      console.log('Resending code for:', identifier);
-
       const result = await authService.resendVerificationCode(identifier);
 
       if (result.success) {

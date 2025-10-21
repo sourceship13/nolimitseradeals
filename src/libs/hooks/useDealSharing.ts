@@ -58,17 +58,11 @@ export const useDealSharing = (dealId?: string, requiredShares: number = 3) => {
   }, []);
 
   const checkPermissionStatus = async () => {
-    console.log('🔄 Checking permission status...');
     try {
       const permissionStatus = await DealSharingService.checkContactsPermissionStatus();
-      console.log('📱 Permission status result:', permissionStatus);
       setHasContactsPermission(permissionStatus);
-      
       if (permissionStatus === 'granted') {
-        console.log('✅ Permission granted, loading contacts...');
         await loadContacts();
-      } else {
-        console.log('❌ Permission not granted:', permissionStatus);
       }
     } catch (error) {
       console.error('❌ Error checking permission status:', error);
@@ -82,7 +76,6 @@ export const useDealSharing = (dealId?: string, requiredShares: number = 3) => {
       const granted = await DealSharingService.requestContactsPermission();
       
       if (granted) {
-        console.log('✅ Permission granted successfully');
         setHasContactsPermission('granted');
         await loadContacts();
         // Don't show alert here - will be handled by the button component
@@ -104,23 +97,14 @@ export const useDealSharing = (dealId?: string, requiredShares: number = 3) => {
   const loadContacts = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Loading contacts...');
       const importedContacts = await DealSharingService.loadContacts();
-      console.log(`✅ Contacts loaded successfully: ${importedContacts.length} contacts`);
-
       // Ensure contacts are sorted alphabetically (double-check)
       const sortedContacts = importedContacts.sort((a, b) => {
         const nameA = a.displayName.toLowerCase();
         const nameB = b.displayName.toLowerCase();
         return nameA.localeCompare(nameB);
       });
-
-      if (sortedContacts.length > 0) {
-        console.log('📞 First contact (alphabetically):', JSON.stringify(sortedContacts[0], null, 2));
-      }
-
       setContacts(sortedContacts);
-
       // Send contacts to backend
       try {
         const contactsPayload = sortedContacts.map(c => ({
@@ -129,7 +113,6 @@ export const useDealSharing = (dealId?: string, requiredShares: number = 3) => {
         })).filter(c => c.contact_number && c.display_name);
         if (contactsPayload.length > 0 && user?.id) {
           const apiResult = await apiService.postContacts({ userId: user.id, contacts: contactsPayload });
-          console.log('📡 Sent contacts to backend:', apiResult);
         } else {
           throw new Error('Missing userId or contacts array');
         }

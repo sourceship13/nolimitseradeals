@@ -25,14 +25,12 @@ function AppWithStatusBar() {
     // Handle initial URL if app is opened via deep link
     Linking.getInitialURL().then((url) => {
       if (url) {
-        console.log('🔗 App opened with initial URL:', url);
         AppReturnUtils.handleAppReturn(url);
       }
     });
 
     // Listen for deep link events while app is running
     const handleUrl = (event: { url: string }) => {
-      console.log('🔗 Deep link received:', event.url);
       AppReturnUtils.handleAppReturn(event.url);
     };
 

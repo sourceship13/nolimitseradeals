@@ -108,26 +108,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Fetch all deals from API
   const fetchDeals = async () => {
-    console.log('🔄 fetchDeals: Starting function...');
     try {
       setDealsLoading(true);
-      console.log('🛍️ fetchDeals: Set loading to true, now calling API...');
       
       const result = await ApiService.getDeals();
-      console.log('✅ fetchDeals: getDeals succeeded:', result);
       
       if (result.success && result.data) {
         // Handle both direct array and object with data property
         const dealsData = result.data || result;
         const finalDeals = Array.isArray(dealsData) ? dealsData : [];
         
-        console.log('✅ Processed deals:', finalDeals.length);
-        console.log('📋 Sample deal structure:', finalDeals[0] || 'No deals');
-        
         setDeals(finalDeals);
         return finalDeals;
       } else {
-        console.log('⚠️ No deals found or API error:', result);
+
         setDeals([]);
         return [];
       }
@@ -142,20 +136,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Fetch hearted deals from API
   const fetchHeartedDeals = async () => {
-    console.log('🔄 fetchHeartedDeals: Starting function...');
     try {
       setHeartedDealsLoading(true);
-      console.log('💖 fetchHeartedDeals: Set loading to true, now calling API...');
       
-      console.log('🎯 fetchHeartedDeals: Trying getHeartedDeals...');
       const result = await ApiService.getHeartedDeals();
-      console.log('✅ fetchHeartedDeals: getHeartedDeals succeeded:', result);
       
       if (result.success && result.data) {
-        console.log('✅ Fetched hearted deals response:', result);
-        console.log('📋 Result data type:', typeof result.data);
-        console.log('📋 Result data content:', result.data);
-        
         // Handle new API response format: { dealIds: [...], count: number }
         let heartedDealIds: string[] = [];
         
@@ -164,13 +150,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const dataObj = result.data as any;
           if (dataObj.dealIds && Array.isArray(dataObj.dealIds)) {
             heartedDealIds = dataObj.dealIds;
-            console.log('🎯 Using new API format - dealIds array:', heartedDealIds);
-            console.log('🎯 Deal count from API:', dataObj.count);
           }
         } else if (Array.isArray(result.data)) {
           // Legacy format: array of deal objects
           heartedDealIds = result.data.map((deal: any) => deal.deal_id || deal.id).filter(Boolean);
-          console.log('🎯 Using legacy API format - extracting IDs:', heartedDealIds);
         }
         
         // Convert deal IDs to minimal deal objects for compatibility
@@ -180,14 +163,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           isHearted: true // Flag to indicate this is a hearted deal
         }));
         
-        console.log('✅ Processed hearted deals:', heartedDealsArray.length);
-        console.log('📋 Hearted deal IDs:', heartedDealIds);
-        console.log('� Sample hearted deal object:', heartedDealsArray[0] || 'No deals');
-        
         setHeartedDeals(heartedDealsArray);
         return heartedDealsArray;
       } else {
-        console.log('⚠️ No hearted deals found or API error:', result);
         setHeartedDeals([]);
         return [];
       }
@@ -210,7 +188,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const result = await ApiService.getCategories();
       
       if (result.success && result.data) {
-        console.log('📂 Fetched categories from API:', result.data.length);
         setAvailableCategories(result.data);
         
         // Handle category preferences more intelligently
@@ -252,29 +229,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const initializeApp = async () => {
     try {
       setLoading(true);
-      console.log('🚀 InitializeApp: Starting app initialization...');
       
       // Load saved preferences
       await loadPreferences();
       
       // Check authentication status
-      console.log('🔍 InitializeApp: Checking authentication status...');
       const isAuth = await AuthService.isAuthenticated();
-      console.log(`🔍 InitializeApp: isAuthenticated = ${isAuth}`);
       
       if (isAuth) {
-        console.log('✅ InitializeApp: User is authenticated, getting user data...');
         // Get stored user data
         const currentUser = await AuthService.getCurrentUser();
-        console.log(`👤 InitializeApp: Current user:`, currentUser ? 'Found' : 'Not found');
         setUser(currentUser as User | null);
         
         // Fetch categories after user is authenticated
-        console.log('📂 InitializeApp: Fetching categories for authenticated user...');
         await fetchCategories();
         
         // Fetch all deals (available for all users)
-        console.log('🛍️ InitializeApp: Fetching all deals...');
         try {
           await fetchDeals();
         } catch (dealsError) {
@@ -282,7 +252,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         
         // Fetch hearted deals after user is authenticated
-        console.log('💖 InitializeApp: Fetching hearted deals for authenticated user...');
         try {
           await fetchHeartedDeals();
         } catch (heartedDealsError) {
@@ -292,28 +261,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Try to refresh user data from server
         if (currentUser) {
           try {
-            console.log('🔄 InitializeApp: Refreshing user data from server...');
             const freshUser = await AuthService.getProfile();
-            console.log('✅ InitializeApp: User data refreshed from server');
             setUser(freshUser as User);
           } catch (error) {
-            console.log('⚠️ InitializeApp: Using cached user data, server refresh failed:', error);
+            console.error('⚠️ InitializeApp: Using cached user data, server refresh failed:', error);
             // Keep using cached data if refresh fails
           }
         }
       } else {
-        console.log('❌ InitializeApp: User is not authenticated');
         setUser(null);
         
         // Even for non-authenticated users, fetch deals and categories
-        console.log('🛍️ InitializeApp: Fetching deals for guest user...');
         try {
           await fetchDeals();
         } catch (dealsError) {
           console.error('⚠️ InitializeApp: Failed to fetch deals for guest, but continuing...', dealsError);
         }
         
-        console.log('📂 InitializeApp: Fetching categories for guest user...');
         try {
           await fetchCategories();
         } catch (categoriesError) {
@@ -325,7 +289,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
     } finally {
       setLoading(false);
-      console.log('🏁 InitializeApp: App initialization complete');
     }
   };
 
@@ -356,7 +319,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else {
           // If availableCategories is empty, just restore the saved categories as-is
           // This prevents clearing categories when availableCategories hasn't loaded yet
-          console.log('⚠️ Loading saved categories without validation (availableCategories empty)');
           setCategoriesState(parsedCategories);
         }
       } else if (availableCategories.length > 0) {
@@ -378,7 +340,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       appState.current.match(/inactive|background/) &&
       nextAppState === 'active'
     ) {
-      console.log('📱 App came to foreground, refreshing data...');
       
       // Always try to restore categories from storage first
       restoreCategoriesFromStorage();
@@ -388,7 +349,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // App has come to the foreground
       // Always refresh deals when app comes to foreground (for all users)
-      console.log('🛍️ App foreground: Refreshing deals...');
       fetchDeals();
       
       if (user) {
@@ -397,7 +357,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Refresh categories when app comes back to foreground (only if user is authenticated)
         fetchCategories();
         // Refresh hearted deals when app comes back to foreground
-        console.log('💖 App foreground: Refreshing hearted deals...');
         fetchHeartedDeals();
       } else {
         // Even without user, try to fetch categories for guest mode
@@ -413,7 +372,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const savedCategories = await AsyncStorage.getItem('categories');
       if (savedCategories !== null) {
         const parsedCategories = JSON.parse(savedCategories);
-        console.log('🔄 Restoring categories from storage:', parsedCategories);
         setCategoriesState(parsedCategories);
         return parsedCategories;
       }
@@ -435,11 +393,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Enhanced setCategories that persists preference
   const setCategories = async (value: Record<string, boolean>) => {
-    console.log('💾 Saving categories to storage:', value);
     setCategoriesState(value);
     try {
       await AsyncStorage.setItem('categories', JSON.stringify(value));
-      console.log('✅ Categories saved successfully');
     } catch (error) {
       console.error('❌ Error saving categories:', error);
     }
@@ -469,7 +425,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Heart a deal (API + state update)
   const heartDeal = async (dealId: string, dealObject?: any): Promise<boolean> => {
-    console.log('💖 heartDeal called:', { dealId, dealObject: !!dealObject });
     
     if (!user?.id) {
       console.error('❌ Cannot heart deal: user not authenticated');
@@ -489,14 +444,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ...(dealObject && typeof dealObject === 'object' ? dealObject : {})
         };
         setHeartedDeals(prev => [...prev, dealToAdd]);
-        console.log('✅ Added deal to hearted deals optimistically:', dealToAdd);
       }
-
       // Make API call
-      console.log('🚀 Making API call to heart deal:', dealId);
       await ApiService.heartDeal(dealId);
-      console.log('✅ API heart call succeeded');
-      
       // Refresh both hearted deals and all deals in background for consistency
       Promise.all([
         refreshHeartedDeals().catch(err => {
@@ -510,18 +460,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return true;
     } catch (error: any) {
       console.error('❌ Heart deal failed:', error);
-      
       // Revert optimistic update on error
       setHeartedDeals(prev => prev.filter(d => d.deal_id !== dealId && d.id !== dealId));
-      console.log('🔄 Reverted optimistic update due to API failure');
-      
       return false;
     }
   };
 
   // Unheart a deal (API + state update)
   const unheartDeal = async (dealId: string): Promise<boolean> => {
-    console.log('💔 unheartDeal called:', { dealId });
     
     if (!user?.id) {
       console.error('❌ Cannot unheart deal: user not authenticated');
@@ -534,13 +480,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Optimistic update - remove from global state immediately
       setHeartedDeals(prev => prev.filter(d => d.deal_id !== dealId && d.id !== dealId));
-      console.log('✅ Removed deal from local state optimistically');
-
       // Make API call
-      console.log('🚀 Making API call to unheart deal:', dealId);
       await ApiService.unheartDeal(dealId);
-      console.log('✅ API unheart call succeeded');
-      
       // Refresh both hearted deals and all deals in background for consistency
       Promise.all([
         refreshHeartedDeals().catch(err => {
@@ -557,7 +498,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Revert optimistic update on error (restore original deals)
       setHeartedDeals(originalDeals);
-      console.log('🔄 Reverted optimistic update due to API failure');
       
       return false;
     }
@@ -566,10 +506,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Toggle heart status (convenience function)
   const toggleHeartDeal = async (dealId: string, dealObject?: any): Promise<boolean> => {
     const isCurrentlyHearted = isDealHearted(dealId);
-    console.log('🔄 toggleHeartDeal called:', { dealId, isCurrentlyHearted });
     
     if (isCurrentlyHearted) {
-console.log("*********Called UNHEART",dealId, dealObject);
       return await unheartDeal(dealId);
     } else {
       return await heartDeal(dealId, dealObject);
@@ -594,11 +532,8 @@ console.log("*********Called UNHEART",dealId, dealObject);
       setUser(loggedInUser as User);
       
       // Fetch categories after successful login
-      console.log('📂 Login: Fetching categories for newly authenticated user...');
       await fetchCategories();
-      
       // Fetch hearted deals after successful login
-      console.log('💖 Login: Fetching hearted deals for newly authenticated user...');
       try {
         await fetchHeartedDeals();
       } catch (heartedDealsError) {

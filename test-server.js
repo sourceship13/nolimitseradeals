@@ -107,27 +107,11 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, '0.0.0.0', () => {
   const localIP = getLocalIP();
-  console.log('🚀 Test Server Started!');
-  console.log('');
-  console.log('📍 Access Points:');
-  console.log(`   Local:   http://localhost:${PORT}`);
-  console.log(`   Network: http://${localIP}:${PORT}`);
-  console.log('');
-  console.log('🧪 Test URLs:');
-  console.log(`   Health:  http://${localIP}:${PORT}/health`);
-  console.log(`   API:     http://${localIP}:${PORT}/api/health`);
-  console.log('');
-  console.log('📱 For React Native physical device:');
-  console.log(`   Use: http://${localIP}:8080 as base URL`);
-  console.log('');
-  console.log('⏹️  Press Ctrl+C to stop server');
 });
 
 // Graceful shutdown
 process.on('SIGINT', () => {
-  console.log('\n🛑 Shutting down test server...');
   server.close(() => {
-    console.log('✅ Server stopped');
     process.exit(0);
   });
 });

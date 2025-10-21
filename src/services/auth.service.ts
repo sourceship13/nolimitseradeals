@@ -39,7 +39,6 @@ class AuthService {
     options: RequestInit = {}
   ): Promise<Response> {
     const accessToken = await this.getAccessToken();
-    console.log(`🔑 AuthService.fetchWithConfig: Retrieved access token: ${accessToken ? `EXISTS (${accessToken.substring(0, 20)}...)` : 'NULL'}`);
     
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -47,10 +46,8 @@ class AuthService {
       ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
     };
 
-    console.log(`📤 AuthService.fetchWithConfig: Final headers for ${url}:`, headers);
     
     const response = await fetch(url, { ...options, headers });
-    console.log(`📥 AuthService.fetchWithConfig: Response status: ${response.status} for ${url}`);
     
     return response;
   }
@@ -100,7 +97,6 @@ class AuthService {
   private async getAccessToken(): Promise<string | null> {
     try {
       const token = await AsyncStorage.getItem('accessToken');
-      console.log(`🔍 AuthService.getAccessToken: ${token ? `Token found (${token.substring(0, 10)}...)` : 'No token found'}`);
       return token;
     } catch (error) {
       console.error('Error getting access token:', error);
@@ -135,8 +131,6 @@ class AuthService {
     url: string,
     options: RequestInit = {}
   ): Promise<Response> {
-    console.log(`🔐 AuthService.makeAuthenticatedRequest: Called with URL: ${url}`);
-    console.log(`🔐 AuthService.makeAuthenticatedRequest: Options received:`, options);
     
     try {
       // First attempt with current token
@@ -144,15 +138,12 @@ class AuthService {
       
       // If not 401, return the response
       if (response.status !== 401) {
-        console.log(`🔐 AuthService.makeAuthenticatedRequest: Success with status: ${response.status}`);
         return response;
       }
 
-      console.log(`🔄 AuthService.makeAuthenticatedRequest: Got 401, attempting token refresh...`);
       
       // If 401, try to refresh token
       const newAccessToken = await this.refreshAccessToken();
-      console.log(`✅ AuthService.makeAuthenticatedRequest: Token refreshed successfully`);
       
       // Retry with new token
       const retryResponse = await fetch(url, {
@@ -164,14 +155,12 @@ class AuthService {
         },
       });
 
-      console.log(`🔐 AuthService.makeAuthenticatedRequest: Retry response status: ${retryResponse.status}`);
       return retryResponse;
     } catch (error) {
       console.error(`❌ AuthService.makeAuthenticatedRequest: Error:`, error);
       
       // If refresh failed, clear tokens and throw
       if (error instanceof Error && (error.message.includes('refresh') || error.message.includes('No refresh token'))) {
-        console.log(`🧹 AuthService.makeAuthenticatedRequest: Clearing tokens due to refresh failure`);
         await this.clearTokens();
       }
       throw error;
@@ -217,17 +206,14 @@ class AuthService {
 
   // Refresh access token
   private async refreshAccessToken(): Promise<string> {
-    console.log(`🔄 AuthService.refreshAccessToken: Starting token refresh process...`);
     
     // Prevent multiple simultaneous refresh calls
     if (this.refreshPromise) {
-      console.log(`⏳ AuthService.refreshAccessToken: Refresh already in progress, waiting...`);
       return this.refreshPromise;
     }
 
     this.refreshPromise = (async () => {
       try {
-        console.log(`📱 AuthService.refreshAccessToken: Getting refresh token from storage...`);
         const refreshToken = await this.getRefreshToken();
         
         if (!refreshToken) {
@@ -235,7 +221,6 @@ class AuthService {
           throw new Error('No refresh token available');
         }
 
-        console.log(`📤 AuthService.refreshAccessToken: Sending refresh request to ${API_BASE_URL}/auth/refresh`);
         const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
           method: 'POST',
           headers: {
@@ -244,7 +229,6 @@ class AuthService {
           body: JSON.stringify({ refreshToken }),
         });
 
-        console.log(`📥 AuthService.refreshAccessToken: Refresh response status: ${response.status}`);
 
         if (!response.ok) {
           const errorData = await response.text();
@@ -253,7 +237,6 @@ class AuthService {
         }
 
         const data = await response.json();
-        console.log(`📦 AuthService.refreshAccessToken: Refresh response data keys:`, Object.keys(data));
         
         const { accessToken, refreshToken: newRefreshToken } = data;
 
@@ -262,13 +245,11 @@ class AuthService {
           throw new Error('Invalid refresh response: missing access token');
         }
 
-        console.log(`💾 AuthService.refreshAccessToken: Storing new tokens...`);
         await this.storeTokens({
           accessToken,
           refreshToken: newRefreshToken || refreshToken, // Use new refresh token if provided, otherwise keep current one
         });
 
-        console.log(`✅ AuthService.refreshAccessToken: Token refresh completed successfully`);
         return accessToken;
       } catch (error) {
         console.error(`💥 AuthService.refreshAccessToken: Token refresh failed:`, error);
@@ -284,20 +265,17 @@ class AuthService {
   // Public method to proactively refresh tokens (for app state changes, etc.)
   public async proactiveTokenRefresh(): Promise<void> {
     try {
-      console.log(`🔄 AuthService.proactiveTokenRefresh: Starting proactive token refresh...`);
       
       // Check if we have tokens
       const accessToken = await this.getAccessToken();
       const refreshToken = await this.getRefreshToken();
       
       if (!accessToken || !refreshToken) {
-        console.log(`⚠️ AuthService.proactiveTokenRefresh: No tokens found, skipping refresh`);
         return;
       }
       
       // Attempt to refresh
       await this.refreshAccessToken();
-      console.log(`✅ AuthService.proactiveTokenRefresh: Proactive refresh completed successfully`);
     } catch (error) {
       console.error(`❌ AuthService.proactiveTokenRefresh: Proactive refresh failed (this is expected if refresh token is also expired):`, error);
       // Don't throw - this is a background operation
@@ -307,7 +285,6 @@ class AuthService {
   async verifyCode(identifier: string, code: string) {
   try {
     const url = `${API_BASE_URL}/auth/verify-code`;
-    console.log('Verifying code at:', url);
     
     const response = await fetch(url, {
       method: 'POST',
@@ -321,7 +298,6 @@ class AuthService {
     });
 
     const text = await response.text();
-    console.log('Verification response:', text);
     
     let result;
     try {
@@ -375,9 +351,6 @@ async resendVerificationCode(identifier: string) {
 }) {
   try {
     const url = `${API_BASE_URL}/auth/register`;
-    console.log('🔴 FULL URL:', url);
-    console.log('🔴 API_BASE_URL:', API_BASE_URL);
-    console.log('🔴 Sending data:', data);
     
     const response = await fetch(url, {
       method: 'POST',
@@ -387,11 +360,9 @@ async resendVerificationCode(identifier: string) {
       body: JSON.stringify(data),
     });
     
-    console.log('🔴 Response status:', response.status);
     
     // Log the raw response first
     const responseText = await response.text();
-    console.log('🔴 Response text:', responseText);
     
     // Check if it's HTML
     if (responseText.startsWith('<')) {
@@ -414,7 +385,6 @@ async resendVerificationCode(identifier: string) {
     }
     
     // Success! Return the result
-    console.log('✅ Registration successful:', result);
     return result;
     
   } catch (error) {
@@ -442,9 +412,6 @@ async resendVerificationCode(identifier: string) {
         headers['X-Device-ID'] = deviceId;
       }
 
-      console.log(`🔑 AuthService.login: Attempting login to ${API_BASE_URL}/auth/login`);
-      console.log(`🔑 AuthService.login: Credentials:`, { ...credentials, password: '[HIDDEN]' });
-      console.log(`🔑 AuthService.login: Headers:`, headers);
 
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
@@ -452,7 +419,6 @@ async resendVerificationCode(identifier: string) {
         body: JSON.stringify(credentials),
       });
 
-      console.log(`🔑 AuthService.login: Response status:`, response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -539,7 +505,6 @@ async resendVerificationCode(identifier: string) {
   async isAuthenticated(): Promise<boolean> {
     const token = await this.getAccessToken();
     const isAuth = !!token;
-    console.log(`🔐 AuthService.isAuthenticated: ${isAuth} (token: ${token ? 'exists' : 'null'})`);
     return isAuth;
   }
 

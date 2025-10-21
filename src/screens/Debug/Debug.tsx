@@ -31,7 +31,6 @@ const DebugScreen = ({ navigation }: any) => {
       
       // Test a simple authenticated endpoint
       try {
-        console.log('🧪 Debug: Testing authenticated request directly...');
         const testResponse = await AuthService.makeAuthenticatedRequest(
           'https://your-api-url.com/test-auth', // Replace with actual test endpoint
           { method: 'GET' }
@@ -80,17 +79,11 @@ const DebugScreen = ({ navigation }: any) => {
 
   const testTokenHeaders = async () => {
     try {
-      console.log('🔍 Debug: Testing token in headers directly...');
-      
       // Get the token directly
       const accessToken = await AsyncStorage.getItem('accessToken');
-      console.log('🔑 Debug: Access token from storage:', accessToken ? 'EXISTS' : 'NULL');
-      
       // Test manual fetch with token
       const apiUrl = await import('../../libs/utils/api.utils');
       const testUrl = `${apiUrl.default.apiURL}/deals/categories`;
-      
-      console.log('🧪 Debug: Making manual fetch request with Bearer token...');
       const manualResponse = await fetch(testUrl, {
         method: 'GET',
         headers: {
@@ -98,17 +91,12 @@ const DebugScreen = ({ navigation }: any) => {
           'Authorization': accessToken ? `Bearer ${accessToken}` : '',
         },
       });
-      
-      console.log('📡 Debug: Manual fetch response status:', manualResponse.status);
-      
       if (!manualResponse.ok) {
         const errorText = await manualResponse.text();
         console.error('❌ Debug: Manual fetch error:', errorText);
       } else {
         const data = await manualResponse.json();
-        console.log('✅ Debug: Manual fetch success:', data);
       }
-      
     } catch (error) {
       console.error('❌ Debug: Token test failed:', error);
     }
@@ -117,41 +105,29 @@ const DebugScreen = ({ navigation }: any) => {
 
   const testApiConnection = async () => {
     try {
-      console.log('🔍 Debug: Testing API connection...');
       const apiUrl = await import('../../libs/utils/api.utils');
-      console.log('📍 API Base URL:', apiUrl.default.apiURL);
-      
-      // Test basic connectivity
-      const response = await fetch(`${apiUrl.default.apiURL}/health`);
-      console.log('🌐 Health check response status:', response.status);
-      
-      if (response.ok) {
-        const data = await response.text();
-        console.log('✅ Health check response:', data);
+      try {
+        const apiUrl = await import('../../libs/utils/api.utils');
+        // Test basic connectivity
+        const response = await fetch(`${apiUrl.default.apiURL}/health`);
+        if (response.ok) {
+          const data = await response.text();
+        }
+      } catch (error) {
+        setDebugInfo({ error: String(error) });
       }
-    } catch (error) {
-      console.error('❌ API connection test failed:', error);
-    }
-    await checkDebugInfo();
-  };
-
-  const testLogin = async () => {
-    try {
+      await checkDebugInfo();
       // This is just a test - replace with real credentials if you have test ones
       const credentials = { email: 'test@example.com', password: 'password123' };
-      console.log('🧪 Debug: Attempting test login with:', credentials.email);
       const result = await AuthService.login(credentials);
-      console.log('✅ Debug: Test login result:', result);
       await checkDebugInfo();
     } catch (error) {
-      console.log('❌ Debug: Test login error:', error);
       await checkDebugInfo();
     }
   };
 
   const fillTestCredentials = () => {
     // This will help you test - you can replace with real test credentials
-    console.log('📝 Debug: You can add test credentials to the SignIn screen');
     navigation.goBack();
   };
 

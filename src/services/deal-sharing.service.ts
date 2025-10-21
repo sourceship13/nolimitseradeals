@@ -43,18 +43,14 @@ class DealSharingService {
   }
 
   async checkContactsPermissionStatus(): Promise<'granted' | 'denied' | 'blocked' | 'unavailable'> {
-    console.log('🔍 Checking contacts permission status...');
     
     try {
       const permission = Platform.OS === 'ios' 
         ? PERMISSIONS.IOS.CONTACTS 
         : PERMISSIONS.ANDROID.READ_CONTACTS;
 
-      console.log('📱 Platform:', Platform.OS);
-      console.log('📱 Using permission:', permission);
 
       const result = await check(permission);
-      console.log('📱 Permission check result:', result);
       
       switch (result) {
         case RESULTS.GRANTED:
@@ -66,7 +62,6 @@ class DealSharingService {
         case RESULTS.UNAVAILABLE:
           return 'unavailable';
         default:
-          console.log('📱 Unknown permission result:', result);
           return 'denied';
       }
     } catch (error) {
@@ -85,7 +80,6 @@ class DealSharingService {
   }
 
   async requestContactsPermission(): Promise<boolean> {
-    console.log('📞 Requesting contacts permission...');
     
     try {
       const permission = Platform.OS === 'ios' 
@@ -93,7 +87,6 @@ class DealSharingService {
         : PERMISSIONS.ANDROID.READ_CONTACTS;
 
       const result = await request(permission);
-      console.log('📱 Permission request result:', result);
       
       return result === RESULTS.GRANTED;
     } catch (error) {
@@ -108,29 +101,24 @@ class DealSharingService {
   }
 
   async loadContacts(): Promise<Contact[]> {
-    console.log('📞 Loading contacts from device...');
     
     try {
       // Check permission first
       const permissionStatus = await this.checkContactsPermissionStatus();
       if (permissionStatus !== 'granted') {
-        console.log('❌ No permission to load contacts:', permissionStatus);
         return [];
       }
 
       // Load real contacts using react-native-contacts
       const contacts = await Contacts.getAll();
-      console.log(`📱 Loaded ${contacts.length} contacts from device`);
       
       // Filter contacts that have phone numbers
       const contactsWithPhones = contacts.filter(contact => 
         contact.phoneNumbers && contact.phoneNumbers.length > 0
       );
       
-      console.log(`📞 Filtered to ${contactsWithPhones.length} contacts with phone numbers`);
       
       if (contactsWithPhones.length > 0) {
-        console.log('📞 Sample contact raw data:', JSON.stringify(contactsWithPhones[0], null, 2));
       }
       
       // Transform contacts to ensure displayName is available
@@ -150,9 +138,7 @@ class DealSharingService {
         return nameA.localeCompare(nameB);
       });
       
-      console.log(`📞 Contacts sorted alphabetically: ${sortedContacts.length} contacts`);
       if (sortedContacts.length > 0) {
-        console.log('📞 First contact (alphabetically):', JSON.stringify(sortedContacts[0], null, 2));
       }
       
       // Return the sorted contacts
@@ -170,7 +156,6 @@ class DealSharingService {
   }
 
   async shareWithContacts(dealId: string, selectedContacts: Contact[], dealInfo: any): Promise<boolean> {
-    console.log(`📤 Sharing deal ${dealId} with ${selectedContacts.length} contacts`);
     
     try {
       // Create SMS content
@@ -182,8 +167,6 @@ class DealSharingService {
         .filter(number => number)
         .map(number => number.replace(/[^\d+]/g, '')); // Clean phone numbers
       
-      console.log('📱 SMS Content:', shareMessage);
-      console.log('📞 Recipients:', phoneNumbers);
       
       if (phoneNumbers.length === 0) {
         Alert.alert(
@@ -209,7 +192,6 @@ class DealSharingService {
         if (currentShares >= requiredShares) {
           try {
             await ApiService.trackDealUnlocked(dealId, currentShares);
-            console.log('✅ Called trackDealUnlocked API for deal', dealId, 'with shareCount', currentShares);
           } catch (err) {
             console.warn('⚠️ Failed to call trackDealUnlocked API:', err);
           }
@@ -244,10 +226,6 @@ class DealSharingService {
 
   private async sendSMSViaAPI(phoneNumbers: string[], message: string, dealInfo: any): Promise<boolean> {
     try {
-      console.log('📤 Sending SMS to:', phoneNumbers.length, 'recipients');
-      console.log('📞 Recipients:', phoneNumbers);
-      console.log('📝 Message preview:', message.substring(0, 100) + '...');
-      console.log('📱 Platform:', Platform.OS);
       
       if (phoneNumbers.length === 0) {
         console.error('❌ No phone numbers provided');
@@ -260,7 +238,6 @@ class DealSharingService {
         .map(num => num.trim())
         .filter(num => num.length >= 7); // Minimum phone number length
       
-      console.log('📞 Cleaned recipients:', cleanedNumbers);
       
       if (cleanedNumbers.length === 0) {
         console.error('❌ No valid phone numbers after cleaning');
@@ -283,7 +260,6 @@ class DealSharingService {
 
   private async sendSMSiOS(phoneNumbers: string[], message: string): Promise<boolean> {
     try {
-      console.log('🍎 Using iOS native Messages app via Linking...');
       
       // Create SMS URL for iOS
       const encodedMessage = encodeURIComponent(message);
@@ -299,17 +275,13 @@ class DealSharingService {
         
         // Alternative format for iOS if the above doesn't work
         if (!(await Linking.canOpenURL(smsUrl))) {
-          console.log('🔄 Trying alternative iOS SMS format...');
           smsUrl = `sms:${recipients}&body=${encodedMessage}`;
         }
       }
       
-      console.log('📱 iOS SMS URL:', smsUrl);
-      console.log('📱 Recipients count:', phoneNumbers.length);
       
       // Check if SMS URL can be opened
       const canOpen = await Linking.canOpenURL(smsUrl);
-      console.log('📱 Can open SMS URL:', canOpen);
       
       if (!canOpen) {
         throw new Error('SMS URL scheme not supported');
@@ -317,7 +289,6 @@ class DealSharingService {
       
       // Open iOS Messages app
       await Linking.openURL(smsUrl);
-      console.log('✅ iOS Messages app opened successfully');
       
       // On iOS with Linking, we assume success since the Messages app opened
       return true;
@@ -326,7 +297,6 @@ class DealSharingService {
       console.error('❌ iOS SMS Error:', error);
       
       // Fallback to react-native-sms for iOS if Linking fails
-      console.log('🔄 Falling back to react-native-sms for iOS...');
       return await this.sendSMSAndroid(phoneNumbers, message);
     }
   }
@@ -334,26 +304,20 @@ class DealSharingService {
   private async sendSMSAndroid(phoneNumbers: string[], message: string): Promise<boolean> {
     return new Promise((resolve) => {
       try {
-        console.log('🤖 Using react-native-sms for Android/Fallback...');
         
         SendSMS.send({
           body: message,
           recipients: phoneNumbers,
           allowAndroidSendWithoutReadPermission: true
         }, (completed: boolean, cancelled: boolean, error: boolean) => {
-          console.log('📱 SMS Composer Result - Completed:', completed, 'Cancelled:', cancelled, 'Error:', error);
           
           if (completed) {
-            console.log('✅ SMS sent successfully to', phoneNumbers.length, 'recipients');
             resolve(true);
           } else if (cancelled) {
-            console.log('📱 User cancelled SMS sending');
             resolve(false);
           } else if (error) {
-            console.log('❌ SMS Composer Error');
             resolve(false);
           } else {
-            console.log('❓ Unknown SMS result, treating as cancelled');
             resolve(false);
           }
         });
@@ -382,7 +346,6 @@ class DealSharingService {
       const newTotal = currentShares + shareCount;
       
       await AsyncStorage.setItem(key, newTotal.toString());
-      console.log(`📊 Tracked ${shareCount} new shares for deal ${dealId}. Total: ${newTotal}`);
     } catch (error) {
       console.error('❌ Error tracking shares:', error);
     }
@@ -390,7 +353,6 @@ class DealSharingService {
 
   async getShareProgress(dealId: string, requiredShares: number = 3): Promise<ShareProgress> {
     try {
-      console.log('🔍 Getting share progress for deal:', dealId);
       const key = `shares_${dealId}`;
       const sharesString = await AsyncStorage.getItem(key);
       const currentShares = sharesString ? parseInt(sharesString, 10) : 0;

@@ -89,11 +89,7 @@ const SignUpScreen = ({ navigation }: any) => {
         last_name: fields.lastName.trim(),
         phone_number: fields.phone.trim(),
       });
-
-      console.log('Registration successful:', result);
-
       // Registration successful - user will be handled by auth context
-
       // Show success and navigate
       Alert.alert(
         'Welcome to DEALZ! 🎉',
@@ -105,7 +101,6 @@ const SignUpScreen = ({ navigation }: any) => {
           },
         ]
       );
-
       // Clear form
       setFields({
         firstName: '',

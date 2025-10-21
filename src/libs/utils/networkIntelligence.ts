@@ -17,13 +17,13 @@ let DeviceInfo: any = null;
 try {
   NetInfo = require('@react-native-netinfo/netinfo');
 } catch (e) {
-  console.log('📡 NetInfo not available - using basic network detection');
+  console.error('📡 NetInfo not available - using basic network detection');
 }
 
 try {
   DeviceInfo = require('react-native-device-info');
 } catch (e) {
-  console.log('📱 DeviceInfo not available - using fallback device detection');
+  console.error('📱 DeviceInfo not available - using fallback device detection');
 }
 
 export interface NetworkState {
@@ -69,7 +69,7 @@ class NetworkIntelligence {
         const isEmulator = await DeviceInfo.isEmulator();
         return !isEmulator;
       } catch (error) {
-        console.log('DeviceInfo detection failed, using fallback');
+        console.error('DeviceInfo detection failed, using fallback');
       }
     }
 
@@ -107,7 +107,7 @@ class NetworkIntelligence {
           type: state.type || 'unknown'
         };
       } catch (error) {
-        console.log('NetInfo fetch failed, using fallback');
+        console.error('NetInfo fetch failed, using fallback');
       }
     }
 

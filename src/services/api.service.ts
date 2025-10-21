@@ -36,33 +36,14 @@ class ApiService {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
-    
-    if (url.includes('192.168') || url.includes('localhost') || url.includes(':8080')) {
-      console.log('🚨 API WORKING WITH LOCAL SERVER', url, this.baseURL);
-    }
-    
-    console.log('=================================');
-    console.log('� API SERVICE DEBUG');
-    console.log('=================================');
-    console.log(`📍 Endpoint: ${endpoint}`);
-    console.log(`🌐 Full URL: ${url}`);
-    console.log(`🔒 Requires Auth: ${this.requiresAuth(endpoint)}`);
-    console.log(`📱 Platform: ${Platform.OS}`);
-    console.log(`🔧 Dev Mode: ${__DEV__ ? 'YES' : 'NO'}`);
-    console.log(`🏠 Base URL: ${this.baseURL}`);
-    console.log(`📋 API Config:`, {
-      environment: apiConfig.environment,
-      isLocal: apiConfig.isLocal,
-      baseURL: apiConfig.baseURL
-    });
-    console.log('=================================');
+        
+  // if (url.includes('192.168') || url.includes('localhost') || url.includes(':8080')) {
+  // }
     
     try {
       let response: Response;
       
       if (this.requiresAuth(endpoint)) {
-        console.log(`🛡️ ApiService: Making authenticated request to: ${url}`);
-        console.log(`📋 ApiService: Original options passed to AuthService:`, options);
         
         const authOptions = {
           method: 'GET',
@@ -73,10 +54,8 @@ class ApiService {
           },
         };
         
-        console.log(`📋 ApiService: Modified options for AuthService:`, authOptions);
         response = await AuthService.makeAuthenticatedRequest(url, authOptions);
       } else {
-        console.log(`🌐 ApiService: Making public request to: ${url}`);
         const headers = {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -91,10 +70,8 @@ class ApiService {
         });
       }
 
-      console.log(`📡 Response status: ${response.status}`);
       
       const data = await response.json();
-      console.log(`📦 Response data:`, data);
       
       if (!response.ok) {
         console.error(`❌ API Error: ${response.status} - ${data.message || data.error}`);

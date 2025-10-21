@@ -25,8 +25,6 @@ export class AppReturnUtils {
    */
   private static async sendSMSiOSWithReturn(phoneNumbers: string[], message: string): Promise<boolean> {
     try {
-      console.log('🍎 Opening iOS Messages with Return-to-App support...');
-      
       const encodedMessage = encodeURIComponent(message);
       let smsUrl: string;
 
@@ -38,8 +36,6 @@ export class AppReturnUtils {
         const recipients = phoneNumbers.join(',');
         smsUrl = `sms://open?addresses=${recipients}&body=${encodedMessage}`;
       }
-      
-      console.log('📱 SMS URL with Return Support:', smsUrl);
       
       // Check if SMS can be opened
       const canOpen = await Linking.canOpenURL(smsUrl);
@@ -53,7 +49,6 @@ export class AppReturnUtils {
       // Open Messages app - iOS will automatically show "Return to [App Name]"
       await Linking.openURL(smsUrl);
       
-      console.log('✅ Messages app opened with Return breadcrumb');
       return true;
 
     } catch (error) {
@@ -67,13 +62,9 @@ export class AppReturnUtils {
    */
   private static async sendSMSAndroid(phoneNumbers: string[], message: string): Promise<boolean> {
     try {
-      console.log('🤖 Opening Android SMS app...');
-      
       const encodedMessage = encodeURIComponent(message);
       const recipients = phoneNumbers.join(';');
       const smsUrl = `sms:${recipients}?body=${encodedMessage}`;
-      
-      console.log('📱 Android SMS URL:', smsUrl);
       
       const canOpen = await Linking.canOpenURL(smsUrl);
       if (!canOpen) {
@@ -81,7 +72,6 @@ export class AppReturnUtils {
       }
 
       await Linking.openURL(smsUrl);
-      console.log('✅ Android SMS app opened');
       return true;
 
     } catch (error) {
@@ -97,7 +87,6 @@ export class AppReturnUtils {
     try {
       // You can add any pre-return logic here
       // For example, saving current state, analytics, etc.
-      console.log('🔄 Preparing app for potential return...');
       
       // The iOS breadcrumb will be shown automatically based on:
       // 1. CFBundleDisplayName in Info.plist
@@ -113,13 +102,11 @@ export class AppReturnUtils {
    * Handles deep link when user returns to app
    */
   static handleAppReturn(url: string): void {
-    console.log('🏠 User returned to app via:', url);
     
     // You can add specific logic here for when users return
     // For example, showing a success message, tracking analytics, etc.
     
     if (url.includes('sms-sent')) {
-      console.log('📱 User returned after SMS action');
       // Could show a success message or update UI
     }
   }
@@ -139,7 +126,6 @@ export class AppReturnUtils {
       await this.prepareForReturn();
       await Linking.openURL(phoneUrl);
       
-      console.log('📞 Phone app opened with Return breadcrumb');
       return true;
 
     } catch (error) {
@@ -171,7 +157,6 @@ export class AppReturnUtils {
       await this.prepareForReturn();
       await Linking.openURL(emailUrl);
       
-      console.log('✉️ Email app opened with Return breadcrumb');
       return true;
 
     } catch (error) {

@@ -10,9 +10,6 @@ const SettingsScreen = ({ navigation }: any) => {
   const colors = getColors(isDarkMode);
   
   // Debug categories
-  console.log('🔍 Settings Debug - categories:', categories);
-  console.log('🔍 Settings Debug - availableCategories:', availableCategories);
-  console.log('🔍 Settings Debug - Object.keys(categories):', Object.keys(categories));
   
   const [locationEnabled, setLocationEnabled] = useState(true);
   const [radius, setRadius] = useState('5 miles');
@@ -26,7 +23,6 @@ const SettingsScreen = ({ navigation }: any) => {
   useEffect(() => {
     const initializeCategories = async () => {
       if (Object.keys(categories).length === 0) {
-        console.log('📝 Settings: No categories found, refreshing...');
         await refreshCategories();
       }
     };
@@ -48,9 +44,7 @@ const SettingsScreen = ({ navigation }: any) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              console.log('🚪 Settings: User initiated logout');
               await logout();
-              console.log('✅ Settings: Logout successful, navigating to SignIn');
               // Navigation will be handled automatically by AppNavigator when user becomes null
             } catch (error) {
               console.error('❌ Settings: Logout failed:', error);

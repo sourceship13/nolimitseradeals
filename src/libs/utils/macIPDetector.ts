@@ -26,8 +26,6 @@ class MacIPDetector {
       '172.16.0',    // Private network range
     ];
 
-    console.log('🔍 Detecting Mac IP for localhost access...');
-
     for (const pattern of ipPatterns) {
       // Test a few IPs in each range (usually router assigns 2-254)
       const testIPs = [
@@ -41,14 +39,12 @@ class MacIPDetector {
       for (const ip of testIPs) {
         const result = await this.testIPConnection(ip);
         if (result) {
-          console.log(`✅ Found Mac IP: ${ip}`);
           this.cachedIP = ip;
           return ip;
         }
       }
     }
 
-    console.log('❌ Could not detect Mac IP automatically');
     return null;
   }
 
@@ -69,7 +65,6 @@ class MacIPDetector {
         clearTimeout(timeout);
 
         if (response.ok) {
-          console.log(`✅ Server found at ${ip}:${port}`);
           return true;
         }
       } catch (error) {
@@ -135,7 +130,6 @@ class MacIPDetector {
    */
   static setManualIP(ip: string): void {
     this.cachedIP = ip;
-    console.log(`📝 Mac IP manually set to: ${ip}`);
   }
 
   /**

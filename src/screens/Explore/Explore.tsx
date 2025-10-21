@@ -32,42 +32,8 @@ const ExploreScreen = ({ navigation }: any) => {
       ? availableCategories
       : availableCategories.filter(cat => categories[cat.slug]);
 
-  // Debug category filtering
-  console.log(
-    '🔍 Explore Debug - availableCategories:',
-    availableCategories.length,
-    availableCategories.map(c => c.slug),
-  );
-  console.log('🔍 Explore Debug - categories object:', categories);
-  console.log(
-    '🔍 Explore Debug - activeCategories:',
-    activeCategories.length,
-    activeCategories.map(c => c.slug),
-  );
-
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  console.log('🔍 Explore Debug - total deals:', deals.length);
-  console.log(
-    '🔍 Explore Debug - deals after category filter:',
-    deals.length,
-    '→',
-    Object.keys(categories).length === 0
-      ? deals.length
-      : deals.filter(deal => {
-          const dealCategory = (deal.category_name || '').toLowerCase();
-          const matchingCategory = availableCategories.find(
-            cat => cat.name.toLowerCase() === dealCategory,
-          );
-          return (
-            matchingCategory && categories[matchingCategory.slug] !== false
-          );
-        }).length,
-  );
-  console.log('🔍 Explore Debug - selectedCategory:', selectedCategory);
-
-  // Deals are now fetched globally via useAuth hook
 
   // Filter out hearted deals
   const heartedDealIds = new Set(
@@ -123,14 +89,6 @@ const ExploreScreen = ({ navigation }: any) => {
 
   const renderDealCard = ({ item, index }: { item: any; index: number }) => {
     // Debug card rendering for problematic positions
-    if (index === 0 || index === 1 || index === 8 || index === 9) {
-      console.log(`🎴 Rendering card ${index + 1}:`, {
-        id: item.id,
-        business_name: item.business_name,
-        hasDescription: !!item.description,
-        position: index,
-      });
-    }
 
     const isFeatured = item.priority_score && item.priority_score > 0;
     const isPremium =
@@ -271,7 +229,6 @@ const ExploreScreen = ({ navigation }: any) => {
         .filter(url => url && typeof url === 'string' && url.trim().length > 0);
 
       if (finalImages.length > 0) {
-        console.log(`✅ Using deal_images[0]: ${finalImages[0]}`);
         return finalImages[0];
       }
     }
@@ -282,8 +239,7 @@ const ExploreScreen = ({ navigation }: any) => {
       typeof deal_image_url === 'string' &&
       deal_image_url.trim().length > 0
     ) {
-      console.log(`✅ Using deal_image_url: ${deal_image_url}`);
-      return deal_image_url;
+  return deal_image_url;
     }
 
     // 3. Generic image URL (might be deal-specific)
@@ -292,8 +248,7 @@ const ExploreScreen = ({ navigation }: any) => {
       typeof image_url === 'string' &&
       image_url.trim().length > 0
     ) {
-      console.log(`✅ Using image_url: ${image_url}`);
-      return image_url;
+  return image_url;
     }
 
     // 4. Generic images array (could be strings or objects)
@@ -308,14 +263,10 @@ const ExploreScreen = ({ navigation }: any) => {
         .filter(url => url && typeof url === 'string' && url.trim().length > 0);
 
       if (finalImages.length > 0) {
-        console.log(`✅ Using images[0]: ${finalImages[0]}`);
         return finalImages[0];
       }
     }
 
-    console.log(
-      `❌ No deal-specific images found for deal ${deal.id}, showing emoji fallback`,
-    );
     return null;
   };
 

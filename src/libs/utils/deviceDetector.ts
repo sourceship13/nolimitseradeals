@@ -33,7 +33,7 @@ class DeviceDetector {
         return this._isPhysicalDevice;
       }
     } catch (error) {
-      console.log('DeviceInfo not available, using fallback detection');
+      console.error('DeviceInfo not available, using fallback detection');
     }
 
     // Method 2: Fallback heuristics without extra packages
@@ -93,7 +93,7 @@ class DeviceDetector {
         info.platformConstants = Platform.constants;
       }
     } catch (error) {
-      console.log('Could not get extended device info:', error);
+      console.error('Could not get extended device info:', error);
     }
 
     this._deviceInfo = info;

@@ -38,10 +38,8 @@ const SwipeScreen = ({ navigation }: any) => {
 
   // Debug: Ensure opacity starts at 0 and log it
   useEffect(() => {
-    console.log('🔍 SwipeScreen mounted - setting opacity to 0');
-    likeOpacity.setValue(0);
-    dislikeOpacity.setValue(0);
-    console.log('🔍 Opacity values set to 0');
+  likeOpacity.setValue(0);
+  dislikeOpacity.setValue(0);
   }, []);
 
   // Deals are now fetched globally via useAuth hook
@@ -63,24 +61,19 @@ const SwipeScreen = ({ navigation }: any) => {
     { 
       useNativeDriver: false, // Don't use native driver for opacity changes
       listener: (event: any) => {
+  // translationX is already declared in the Animated.event mapping above
         const { translationX } = event.nativeEvent;
-        console.log('🎯 Swipe translationX:', translationX);
-        
         // Calculate rotation based on horizontal movement
         const rotateValue = translationX / 10;
-        rotate.setValue(rotateValue);
-        
         // Show like/dislike indicators based on swipe direction
         if (translationX > 20) {
           // Swiping right - show heart (starts at 20px for easier testing)
           const opacity = Math.min(1, Math.max(0, translationX / 100));
-          console.log('❤️ Like indicator - translationX:', translationX, 'opacity:', opacity);
           likeOpacity.setValue(opacity);
           dislikeOpacity.setValue(0);
         } else if (translationX < -20) {
           // Swiping left - show X (starts at -20px for easier testing)
           const opacity = Math.min(1, Math.max(0, Math.abs(translationX) / 100));
-          console.log('❌ Dislike indicator - translationX:', translationX, 'opacity:', opacity);
           dislikeOpacity.setValue(opacity);
           likeOpacity.setValue(0);
         } else {
@@ -93,25 +86,25 @@ const SwipeScreen = ({ navigation }: any) => {
   );
 
   const onHandlerStateChange = (event: any) => {
-    const { nativeEvent } = event;
-    console.log('🎯 Handler state:', nativeEvent.state, 'translationX:', nativeEvent.translationX);
+  // nativeEvent is already declared above
+  const { nativeEvent } = event;
     
     if (nativeEvent.state === State.END) {
       const { translationX } = nativeEvent;
       
       if (translationX > 150) {
         // Swipe right - like
-        console.log('❤️ Swiped RIGHT - Like!');
+  handleSwipe('right');
         handleSwipe('right');
         resetAnimations();
       } else if (translationX < -150) {
         // Swipe left - dislike
-        console.log('❌ Swiped LEFT - Dislike!');
+  handleSwipe('left');
         handleSwipe('left');
         resetAnimations();
       } else {
         // Snap back to center
-        console.log('🔄 Snap back to center');
+  resetAnimations();
         resetAnimations();
       }
     }

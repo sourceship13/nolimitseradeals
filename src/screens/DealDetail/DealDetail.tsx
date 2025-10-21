@@ -100,15 +100,6 @@ export const DealDetailScreen: React.FC<DealDetailProps> = props => {
     }
   }
 
-  console.log('DealDetailScreen debug:', {
-    propsReceived: !!props,
-    navigationExists: !!navigation,
-    routeExists: !!route,
-    paramsExists: !!(route && route.params),
-    dealExists: !!initialDeal,
-    dealId: initialDeal?.id || 'no-id',
-  });
-
   const {
     isDarkMode,
     user,
@@ -118,24 +109,6 @@ export const DealDetailScreen: React.FC<DealDetailProps> = props => {
     toggleHeartDeal,
   } = useAuth();
   const colors = getColors(isDarkMode);
-
-  // Debug hearted deals from context
-  console.log('🏠 DealDetail Context Debug:', {
-    heartedDealsCount: heartedDeals?.length || 0,
-    heartedDealsLoaded: !!heartedDeals,
-    isAuthenticated: isAuthenticated,
-    currentDealId: initialDeal?.deal_id,
-  });
-
-  // Debug logging to help identify navigation issues
-  useEffect(() => {
-    console.log('DealDetail mounted with:', {
-      hasRoute: !!route,
-      hasParams: !!route?.params,
-      hasDeal: !!initialDeal,
-      dealId: initialDeal?.id,
-    });
-  }, [route, initialDeal]);
 
   const [deal, _setDeal] = useState(initialDeal || null);
   const [loading, setLoading] = useState(false);
@@ -164,28 +137,6 @@ export const DealDetailScreen: React.FC<DealDetailProps> = props => {
     loading: sharingLoading,
   } = useDealSharing(dealId, deal?.min_shares_required || 3);
 
-  // Debug heart state changes
-  useEffect(() => {
-    console.log('💖 HEART STATE CHANGE:', {
-      dealId,
-      finalIsSaved: isSaved,
-      loading,
-      heartedDealsCount: heartedDeals?.length || 0,
-      timestamp: new Date().toLocaleTimeString(),
-    });
-  }, [isSaved, loading, heartedDeals, dealId]);
-
-  // Debug deal structure and heart status
-  useEffect(() => {
-    console.log('🔍 DEAL STRUCTURE DEBUG:', {
-      hasInitialDeal: !!initialDeal,
-      dealId: dealId,
-      isHeartedFromGlobalState: isSaved,
-      heartedDealsCount: heartedDeals?.length || 0,
-      heartedDealIds: heartedDeals?.map(h => h.deal_id || h.id) || [],
-    });
-  }, [initialDeal, isSaved, heartedDeals, dealId]);
-
   useEffect(() => {
     if (
       waitingForPermission &&
@@ -202,8 +153,6 @@ export const DealDetailScreen: React.FC<DealDetailProps> = props => {
   useEffect(() => {
     const isNowRedeemable = shareProgress?.canRedeem;
     if (isNowRedeemable && dealId && !isSaved) {
-      console.log('🚀 Deal unlocked — auto-hearting and refreshing state for deal', dealId);
-      // fire-and-forget toggleHeartDeal to mark the deal as hearted
       (async () => {
         try {
           await toggleHeartDeal(dealId, deal);
@@ -220,12 +169,6 @@ export const DealDetailScreen: React.FC<DealDetailProps> = props => {
       return;
     }
 
-    console.log('💖 Heart button pressed:', {
-      dealId: deal.deal_id,
-      currentHeartStatus: isSaved,
-      heartedDealsCount: heartedDeals?.length || 0,
-    });
-
     setLoading(true);
 
     try {
@@ -233,9 +176,8 @@ export const DealDetailScreen: React.FC<DealDetailProps> = props => {
       const success = await toggleHeartDeal(deal.deal_id, deal);
 
       if (success) {
-        console.log('✅ Heart toggle completed successfully');
       } else {
-        console.log('⚠️ Heart toggle failed');
+        console.warn('⚠️ Heart toggle failed');
         Alert.alert(
           'Error',
           'Failed to update heart status. Please try again.',
@@ -314,13 +256,6 @@ export const DealDetailScreen: React.FC<DealDetailProps> = props => {
   }
 
   const renderImage = ({ item, index }: { item: string; index: number }) => {
-    console.log(`🖼️ Rendering image ${index}:`, {
-      url: item,
-      isValidUrl: !!item && typeof item === 'string' && item.length > 0,
-      startsWithHttp: item?.startsWith('http'),
-      fullUrl: item,
-    });
-
     // Try both ImageBackground and fallback to regular Image for debugging
     return (
       <View style={styles.dealImage}>
@@ -329,9 +264,6 @@ export const DealDetailScreen: React.FC<DealDetailProps> = props => {
           source={{ uri: item }}
           style={StyleSheet.absoluteFill}
           resizeMode="cover"
-          onLoad={() =>
-            console.log(`✅ ImageBackground ${index} loaded successfully`)
-          }
           onError={error => {
             console.error(
               `❌ ImageBackground ${index} failed to load:`,
@@ -339,12 +271,6 @@ export const DealDetailScreen: React.FC<DealDetailProps> = props => {
             );
             console.error(`❌ Failed URL:`, item);
           }}
-          onLoadStart={() =>
-            console.log(`🔄 ImageBackground ${index} loading started`)
-          }
-          onLoadEnd={() =>
-            console.log(`🏁 ImageBackground ${index} loading ended`)
-          }
         >
           <View style={styles.imageOverlay} />
         </ImageBackground>
@@ -353,11 +279,8 @@ export const DealDetailScreen: React.FC<DealDetailProps> = props => {
   };
 
   const handlePress = async () => {
-    console.log('🔄 Button pressed. Permission status:', hasContactsPermission);
-
     // Check contacts permission first
     if (hasContactsPermission !== 'granted') {
-      console.log('❌ Permission not granted, showing permission dialog');
       Alert.alert(
         'Contacts Permission Required',
         'We need access to your contacts to share deals with friends. Would you like to grant permission?',
@@ -387,9 +310,6 @@ export const DealDetailScreen: React.FC<DealDetailProps> = props => {
       );
       return;
     }
-
-    // Permission already granted, show modal directly
-    console.log('✅ Permission granted, opening contact modal');
     setShowModal(true);
   };
 
@@ -410,9 +330,6 @@ export const DealDetailScreen: React.FC<DealDetailProps> = props => {
 
       // The shareDeal function automatically updates shareProgress via loadShareProgress()
       // Button text will now show updated count (e.g., "2/3" after sharing with 2 people)
-      console.log(
-        `✅ Share initiated with ${contactCount} contacts - progress will update after SMS completion`,
-      );
     } catch (error) {
       Alert.alert('Error', 'Failed to share deal. Please try again.');
     }
@@ -567,52 +484,6 @@ export const DealDetailScreen: React.FC<DealDetailProps> = props => {
                   );
               }
 
-              console.log('🖼️ DEAL IMAGES FROM API RESPONSE:', {
-                // Current deal info
-                dealId: deal.deal_id,
-                dealTitle: deal.deal_title,
-                businessName: deal.business_name,
-
-                // Raw image data exactly as returned from API
-                deal_images_from_api: deal_images,
-                deal_image_url_from_api: deal_image_url,
-                business_images_from_api: business_images,
-
-                // Type and validation checks
-                deal_images_type: typeof deal_images,
-                deal_images_isArray: Array.isArray(deal_images),
-                deal_images_isNull: deal_images === null,
-                deal_image_url_type: typeof deal_image_url,
-                deal_image_url_isNull: deal_image_url === null,
-
-                // Final processing result
-                finalImages: finalImages,
-                finalImagesCount: finalImages?.length || 0,
-                showingImages: !!(finalImages && finalImages.length > 0),
-
-                // Source determination
-                imageSource:
-                  finalImages === deal_images
-                    ? 'deal_images'
-                    : finalImages && finalImages[0] === deal_image_url
-                    ? 'deal_image_url'
-                    : finalImages && finalImages[0] === image_url
-                    ? 'image_url'
-                    : finalImages === images
-                    ? 'images'
-                    : finalImages === business_images
-                    ? 'business_images (fallback)'
-                    : finalImages
-                    ? 'unknown_source'
-                    : 'no_images_found',
-
-                // Sample image URLs (if any)
-                firstImageUrl: finalImages?.[0],
-
-                // Complete deal object for reference
-                completeDealObject: deal,
-              });
-
               return finalImages && finalImages.length > 0 ? (
                 <View>
                   <FlatList
@@ -624,11 +495,6 @@ export const DealDetailScreen: React.FC<DealDetailProps> = props => {
                       `image-${index}-${item?.slice?.(-10) || 'unknown'}`
                     }
                     renderItem={renderImage}
-                    onLayout={() => console.log('🖼️ FlatList layout completed')}
-                    ListHeaderComponent={() => {
-                      console.log('🖼️ FlatList header rendering');
-                      return null;
-                    }}
                   />
                 </View>
               ) : (
