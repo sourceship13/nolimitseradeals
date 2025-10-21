@@ -1194,7 +1194,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 09E79078C7CF2C53676CEEEE /* Pods-nolimitseradeals.debug.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-Staging";
 				CLANG_ENABLE_MODULES = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
@@ -1230,7 +1230,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0B29D6088EA2C170C34F23CD /* Pods-nolimitseradeals.release.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-Staging";
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = CM52HNMXXW;
@@ -1403,7 +1403,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 7FD934500D0C384CE6D90893 /* Pods-nolimitseradealsProd.debug.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-Prod";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
@@ -1439,7 +1439,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 064347596D097674AFCD0F36 /* Pods-nolimitseradealsProd.release.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-Prod";
 				CLANG_ENABLE_MODULES = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 6;
