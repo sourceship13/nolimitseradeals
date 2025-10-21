@@ -1196,8 +1196,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = CM52HNMXXW;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = CM52HNMXXW;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = "nolimitseradeals/info-staging.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
@@ -1215,6 +1218,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = org.sera.dev.nolimitsera.staging;
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.sera.dev.nolimitsera.staging;
 				PRODUCT_NAME = nolimitseradeals;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "nolimitsera-staging-prov-profile";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -1420,11 +1425,10 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = org.sera.dev.nolimitsera.staging;
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.sera.dev.nolimitsera.staging;
+				PRODUCT_BUNDLE_IDENTIFIER = org.sera.dev.nolimitsera;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "nolimitsera-staging-prov-profile";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "nolimitsera-prod";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -1437,7 +1441,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = CM52HNMXXW;
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = CM52HNMXXW;
@@ -1462,7 +1466,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = org.sera.dev.nolimitsera;
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = org.sera.dev.nolimitsera;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "match AppStore org.sera.dev.nolimitsera";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "nolimitsera-prod";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
