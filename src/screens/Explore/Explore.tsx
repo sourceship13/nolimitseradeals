@@ -1,64 +1,109 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  Image,
+} from 'react-native';
 import { useAuth } from '../../libs/hooks/useAuth';
 import { getColors } from '../../libs/colors';
 import ApiConfig from '../../libs/utils/api.utils';
 import { iOSUIKit } from 'react-native-typography';
 
 const ExploreScreen = ({ navigation }: any) => {
-  const { isDarkMode, categories, availableCategories, deals, dealsLoading, refreshDeals, heartedDeals } = useAuth();
+  const {
+    isDarkMode,
+    categories,
+    availableCategories,
+    deals,
+    dealsLoading,
+    refreshDeals,
+    heartedDeals,
+  } = useAuth();
   const colors = getColors(isDarkMode);
-  
+
   // Filter available categories to show only the ones the user has enabled
   // If no categories are set (empty object), show all available categories
-  const activeCategories = Object.keys(categories).length === 0 
-    ? availableCategories 
-    : availableCategories.filter(cat => categories[cat.slug]);
-  
+  const activeCategories =
+    Object.keys(categories).length === 0
+      ? availableCategories
+      : availableCategories.filter(cat => categories[cat.slug]);
+
   // Debug category filtering
-  console.log('🔍 Explore Debug - availableCategories:', availableCategories.length, availableCategories.map(c => c.slug));
+  console.log(
+    '🔍 Explore Debug - availableCategories:',
+    availableCategories.length,
+    availableCategories.map(c => c.slug),
+  );
   console.log('🔍 Explore Debug - categories object:', categories);
-  console.log('🔍 Explore Debug - activeCategories:', activeCategories.length, activeCategories.map(c => c.slug));
-  
+  console.log(
+    '🔍 Explore Debug - activeCategories:',
+    activeCategories.length,
+    activeCategories.map(c => c.slug),
+  );
+
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   console.log('🔍 Explore Debug - total deals:', deals.length);
-  console.log('🔍 Explore Debug - deals after category filter:', deals.length, '→', Object.keys(categories).length === 0 ? deals.length : deals.filter(deal => {
-    const dealCategory = (deal.category_name || '').toLowerCase();
-    const matchingCategory = availableCategories.find(cat => cat.name.toLowerCase() === dealCategory);
-    return matchingCategory && categories[matchingCategory.slug] !== false;
-  }).length);
+  console.log(
+    '🔍 Explore Debug - deals after category filter:',
+    deals.length,
+    '→',
+    Object.keys(categories).length === 0
+      ? deals.length
+      : deals.filter(deal => {
+          const dealCategory = (deal.category_name || '').toLowerCase();
+          const matchingCategory = availableCategories.find(
+            cat => cat.name.toLowerCase() === dealCategory,
+          );
+          return (
+            matchingCategory && categories[matchingCategory.slug] !== false
+          );
+        }).length,
+  );
   console.log('🔍 Explore Debug - selectedCategory:', selectedCategory);
 
   // Deals are now fetched globally via useAuth hook
 
   // Filter out hearted deals
-  const heartedDealIds = new Set((heartedDeals || []).map((d: any) => d.deal_id || d.id));
-  
+  const heartedDealIds = new Set(
+    (heartedDeals || []).map((d: any) => d.deal_id || d.id),
+  );
+
   // Filter deals by category settings (enabled/disabled switches from Settings)
-  const categoryFilteredDeals = Object.keys(categories).length === 0
-    ? deals // If no category preferences set, show all deals
-    : deals.filter(deal => {
-        // Find which category this deal belongs to
-        const dealCategory = (deal.category_name || '').toLowerCase();
-        const matchingCategory = availableCategories.find(cat => 
-          cat.name.toLowerCase() === dealCategory
-        );
-        
-        // Only show deals from enabled categories
-        return matchingCategory && categories[matchingCategory.slug] !== false;
-      });
+  const categoryFilteredDeals =
+    Object.keys(categories).length === 0
+      ? deals // If no category preferences set, show all deals
+      : deals.filter(deal => {
+          // Find which category this deal belongs to
+          const dealCategory = (deal.category_name || '').toLowerCase();
+          const matchingCategory = availableCategories.find(
+            cat => cat.name.toLowerCase() === dealCategory,
+          );
+
+          // Only show deals from enabled categories
+          return (
+            matchingCategory && categories[matchingCategory.slug] !== false
+          );
+        });
 
   // Remove hearted deals from filtered list
-  const unheartedDeals = categoryFilteredDeals.filter(deal => !heartedDealIds.has(deal.id || deal.deal_id));
+  const unheartedDeals = categoryFilteredDeals.filter(
+    deal => !heartedDealIds.has(deal.id || deal.deal_id),
+  );
 
   // Then filter by selectedCategory if manually selected
   const filteredDeals = selectedCategory
     ? unheartedDeals.filter(deal => {
         // Match against category_name since that's what's in your API response
         const dealCategory = (deal.category_name || '').toLowerCase();
-        const selectedCat = availableCategories.find(cat => cat.slug === selectedCategory);
+        const selectedCat = availableCategories.find(
+          cat => cat.slug === selectedCategory,
+        );
         return selectedCat && dealCategory === selectedCat.name.toLowerCase();
       })
     : unheartedDeals;
@@ -83,78 +128,88 @@ const ExploreScreen = ({ navigation }: any) => {
         id: item.id,
         business_name: item.business_name,
         hasDescription: !!item.description,
-        position: index
+        position: index,
       });
     }
-    
+
     const isFeatured = item.priority_score && item.priority_score > 0;
-    const isPremium = item.is_premium === true || item.is_premium_business === true;
-    
+    const isPremium =
+      item.is_premium === true || item.is_premium_business === true;
+
     return (
       <TouchableOpacity
         style={[
           styles.card,
-          isDarkMode ? styles.glassCardDark : styles.glassCard, 
-          { 
-            backgroundColor: isDarkMode 
-              ? 'rgba(255, 255, 255, 0.06)' 
+          isDarkMode ? styles.glassCardDark : styles.glassCard,
+          {
+            backgroundColor: isDarkMode
+              ? 'rgba(255, 255, 255, 0.06)'
               : 'rgba(255, 255, 255, 0.15)',
             borderWidth: 0,
-          }
+          },
         ]}
         onPress={() => navigation.navigate('DealDetail', { deal: item })}
         activeOpacity={0.7}
       >
         {/* Gradient overlays temporarily removed */}
-        
+
         {/* Subtle glow effect for dark mode - much more transparent */}
         {isDarkMode && (
           <>
-            <View style={[
-              styles.innerGlow
-            ]} />
-            <View style={[
-              styles.shimmerEffect,
-              {
-                backgroundColor: 'rgba(255, 255, 255, 0.015)',
-              }
-            ]} />
+            <View style={[styles.innerGlow]} />
+            <View
+              style={[
+                styles.shimmerEffect,
+                {
+                  backgroundColor: 'rgba(255, 255, 255, 0.015)',
+                },
+              ]}
+            />
           </>
         )}
-        
+
         {isPremium ? (
-          <View style={[
-            styles.premiumBadge, 
-            { 
-              backgroundColor: '#FF8C00',
-              borderWidth: 1,
-              borderColor: isDarkMode
-                ? 'rgba(255, 255, 255, 0.3)'
-                : '#FF7700', 
-              
-            }
-          ]}>
-            <Text style={[styles.premiumText, { color: '#FFFFFF', fontSize:12 }]}>PREMIUM</Text>
+          <View
+            style={[
+              styles.premiumBadge,
+              {
+                backgroundColor: '#FF8C00',
+                borderWidth: 1,
+                borderColor: isDarkMode
+                  ? 'rgba(255, 255, 255, 0.3)'
+                  : '#FF7700',
+              },
+            ]}
+          >
+            <Text
+              style={[styles.premiumText, { color: '#FFFFFF', fontSize: 12 }]}
+            >
+              PREMIUM
+            </Text>
           </View>
         ) : isFeatured ? (
-          <View style={[
-            styles.featuredBadge, 
-            { 
-              backgroundColor: isDarkMode 
-                ? colors.primary + 'E6' // More opaque in dark mode
-                : colors.primary + '95',
-              borderWidth: 1,
-              borderColor: isDarkMode
-                ? 'rgba(255, 255, 255, 0.3)'
-                : colors.primary + '40'
-            }
-          ]}>
-            <Text style={[styles.featuredText, { color: colors.background }]}>Featured</Text>
+          <View
+            style={[
+              styles.featuredBadge,
+              {
+                backgroundColor: isDarkMode
+                  ? colors.primary + 'E6' // More opaque in dark mode
+                  : colors.primary + '95',
+                borderWidth: 1,
+                borderColor: isDarkMode
+                  ? 'rgba(255, 255, 255, 0.3)'
+                  : colors.primary + '40',
+              },
+            ]}
+          >
+            <Text style={[styles.featuredText, { color: colors.background }]}>
+              Featured
+            </Text>
           </View>
         ) : null}
         <View style={styles.imageContainer}>
           {getDealImageUrl(item) ? (
-            <Image 
+            <Image
               source={{ uri: getDealImageUrl(item)! }}
               style={styles.dealImage}
               resizeMode="cover"
@@ -167,10 +222,16 @@ const ExploreScreen = ({ navigation }: any) => {
             </View>
           )}
         </View>
-        <Text style={[styles.itemBusiness, { color: colors.text, marginTop: 120 }]} numberOfLines={1}>
+        <Text
+          style={[styles.itemBusiness, { color: colors.text, marginTop: 120 }]}
+          numberOfLines={1}
+        >
           {item.business_name || item.business || 'Unknown Business'}
         </Text>
-        <Text style={[styles.itemDescription, { color: colors.textSecondary }]} numberOfLines={2}>
+        <Text
+          style={[styles.itemDescription, { color: colors.textSecondary }]}
+          numberOfLines={2}
+        >
           {item.description || item.descrption || 'No description available'}
         </Text>
         <View style={styles.dealDetails}>
@@ -180,7 +241,9 @@ const ExploreScreen = ({ navigation }: any) => {
             </Text>
           ) : null}
           {item.min_shares_required ? (
-            <Text style={[styles.sharesRequired, { color: colors.textPlaceholder }]}>
+            <Text
+              style={[styles.sharesRequired, { color: colors.textPlaceholder }]}
+            >
               {item.min_shares_required} shares
             </Text>
           ) : null}
@@ -192,39 +255,47 @@ const ExploreScreen = ({ navigation }: any) => {
   // Get the best available deal image URL (DEAL-SPECIFIC images only, matching DealDetail logic)
   const getDealImageUrl = (deal: any): string | null => {
     // Extract image URLs using same logic as DealDetail screen
-    const deal_images = deal.deal_images;           // Deal-specific images array
-    const deal_image_url = deal.deal_image_url;     // Single deal image URL
-    const image_url = deal.image_url;               // Generic image URL  
-    const images = deal.images;                     // Generic images array
+    const deal_images = deal.deal_images; // Deal-specific images array
+    const deal_image_url = deal.deal_image_url; // Single deal image URL
+    const image_url = deal.image_url; // Generic image URL
+    const images = deal.images; // Generic images array
     // Note: Excluding business_images to ensure we only show deal images
-    
+
     let finalImages = null;
-    
+
     // 1. Extract image URLs from deal_images array (objects with image_url property)
     if (deal_images && Array.isArray(deal_images) && deal_images.length > 0) {
       finalImages = deal_images
         .filter(img => img && typeof img === 'object' && img.image_url)
         .map(img => img.image_url)
         .filter(url => url && typeof url === 'string' && url.trim().length > 0);
-      
+
       if (finalImages.length > 0) {
         console.log(`✅ Using deal_images[0]: ${finalImages[0]}`);
         return finalImages[0];
       }
     }
-    
+
     // 2. Single deal image URL
-    if (deal_image_url && typeof deal_image_url === 'string' && deal_image_url.trim().length > 0) {
+    if (
+      deal_image_url &&
+      typeof deal_image_url === 'string' &&
+      deal_image_url.trim().length > 0
+    ) {
       console.log(`✅ Using deal_image_url: ${deal_image_url}`);
       return deal_image_url;
     }
-    
+
     // 3. Generic image URL (might be deal-specific)
-    if (image_url && typeof image_url === 'string' && image_url.trim().length > 0) {
+    if (
+      image_url &&
+      typeof image_url === 'string' &&
+      image_url.trim().length > 0
+    ) {
       console.log(`✅ Using image_url: ${image_url}`);
       return image_url;
     }
-    
+
     // 4. Generic images array (could be strings or objects)
     if (images && Array.isArray(images) && images.length > 0) {
       finalImages = images
@@ -235,14 +306,16 @@ const ExploreScreen = ({ navigation }: any) => {
           return null;
         })
         .filter(url => url && typeof url === 'string' && url.trim().length > 0);
-        
+
       if (finalImages.length > 0) {
         console.log(`✅ Using images[0]: ${finalImages[0]}`);
         return finalImages[0];
       }
     }
-    
-    console.log(`❌ No deal-specific images found for deal ${deal.id}, showing emoji fallback`);
+
+    console.log(
+      `❌ No deal-specific images found for deal ${deal.id}, showing emoji fallback`,
+    );
     return null;
   };
 
@@ -250,9 +323,9 @@ const ExploreScreen = ({ navigation }: any) => {
     const emojiMap: Record<string, string> = {
       'Food & Dining': '🍽️',
       'Coffee & Beverages': '☕',
-      'Automotive': '🚗',
+      Automotive: '🚗',
       'Beauty & Wellness': '💅',
-      'Electronics': '📱',
+      Electronics: '📱',
       'Retail & Shopping': '🛍️',
       'Bakery & Desserts': '🧁',
       'Health & Fitness': '💪',
@@ -263,39 +336,69 @@ const ExploreScreen = ({ navigation }: any) => {
 
   const formatDealType = (type: string) => {
     const typeMap: Record<string, string> = {
-      'free_item': 'Free Item',
-      'bogo': 'BOGO',
-      'percentage': 'Discount',
-      'fixed_amount': 'Save $',
+      free_item: 'Free Item',
+      bogo: 'BOGO',
+      percentage: 'Discount',
+      fixed_amount: 'Save $',
     };
     return typeMap[type] || type;
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background, paddingBottom: 100 }}>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: colors.background,
+        paddingBottom: 100,
+      }}
+    >
       {/* Header with Settings Button */}
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Explore</Text>
-        <TouchableOpacity 
+      <View
+        style={[
+          styles.header,
+          { backgroundColor: colors.surface, borderBottomColor: colors.border },
+        ]}
+      >
+        <Text
+          style={[
+            styles.headerTitle,
+            { color: colors.text, fontFamily: 'Roboto-Thin' },
+          ]}
+        >
+          Explore
+        </Text>
+        <TouchableOpacity
           onPress={() => navigation.navigate('Settings')}
           style={styles.settingsButton}
         >
           <Text style={[iOSUIKit.title3, { color: colors.primary }]}>⚙️</Text>
         </TouchableOpacity>
       </View>
-      
+
       {/* Category Filter Bar */}
-      <View style={[styles.topBar, { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border }]}> 
+      <View
+      >
         {activeCategories.length === 0 ? (
-          <View style={{ padding: 8, alignItems: 'center' }}>
-            <Text style={{ color: colors.text, fontStyle: 'italic', textAlign: 'center' }}>
-              No categories available. 
+          <View style={{ alignItems: 'center' }}>
+            <Text
+              style={{
+                color: colors.text,
+                fontStyle: 'italic',
+                textAlign: 'center',
+              }}
+            >
+              No categories available.
             </Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => navigation.navigate('Settings')}
               style={{ marginTop: 4 }}
             >
-              <Text style={{ color: colors.primary, textDecorationLine: 'underline' }}>
+              <Text
+                style={{
+                  color: colors.primary,
+                  textDecorationLine: 'underline',
+                }}
+              >
                 Go to Settings to manage categories
               </Text>
             </TouchableOpacity>
@@ -307,21 +410,22 @@ const ExploreScreen = ({ navigation }: any) => {
             horizontal
             showsHorizontalScrollIndicator={false}
             renderItem={({ item: cat }) => {
-              const isSelected = cat.slug === null 
-                ? selectedCategory === null 
-                : selectedCategory === cat.slug;
-              
+              const isSelected =
+                cat.slug === null
+                  ? selectedCategory === null
+                  : selectedCategory === cat.slug;
+
               return (
                 <TouchableOpacity
                   onPress={() => setSelectedCategory(cat.slug)}
                   style={[
                     styles.categoryChip,
                     {
-                      backgroundColor: isSelected 
-                        ? ((cat as any).color_hex || colors.primary) 
+                      backgroundColor: isSelected
+                        ? (cat as any).color_hex || colors.primary
                         : colors.chip,
-                      borderColor: isSelected 
-                        ? ((cat as any).color_hex || colors.primary) 
+                      borderColor: isSelected
+                        ? (cat as any).color_hex || colors.primary
                         : colors.borderStrong,
                     },
                   ]}
@@ -333,7 +437,7 @@ const ExploreScreen = ({ navigation }: any) => {
                       {
                         color: isSelected ? colors.background : colors.text,
                         fontWeight: 'bold',
-                      }
+                      },
                     ]}
                   >
                     {cat.name}
@@ -343,10 +447,12 @@ const ExploreScreen = ({ navigation }: any) => {
                       style={[
                         iOSUIKit.caption2,
                         {
-                          color: isSelected ? colors.background : colors.textPlaceholder,
+                          color: isSelected
+                            ? colors.background
+                            : colors.textPlaceholder,
                           fontSize: 10,
                           marginLeft: 4,
-                        }
+                        },
                       ]}
                     >
                       ({(cat as any).active_deal_count})
@@ -365,12 +471,18 @@ const ExploreScreen = ({ navigation }: any) => {
         {dealsLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={[iOSUIKit.body, { color: colors.text, marginTop: 12 }]}>Loading deals...</Text>
+            <Text
+              style={[iOSUIKit.body, { color: colors.text, marginTop: 12 }]}
+            >
+              Loading deals...
+            </Text>
           </View>
         ) : error ? (
           <View style={styles.errorContainer}>
-            <Text style={{ color: colors.error, textAlign: 'center' }}>{error}</Text>
-            <TouchableOpacity 
+            <Text style={{ color: colors.error, textAlign: 'center' }}>
+              {error}
+            </Text>
+            <TouchableOpacity
               style={[styles.retryButton, { backgroundColor: colors.primary }]}
               onPress={() => {
                 setError(null);
@@ -384,23 +496,42 @@ const ExploreScreen = ({ navigation }: any) => {
           <View style={styles.emptyContainer}>
             <Text style={{ fontSize: 48, marginBottom: 12 }}>🔍</Text>
             <Text style={[iOSUIKit.body, { color: colors.text }]}>
-              {selectedCategory ? `No deals in this category` : 'No deals available'}
+              {selectedCategory
+                ? `No deals in this category`
+                : 'No deals available'}
             </Text>
-            <Text style={[iOSUIKit.subhead, { color: colors.textPlaceholder, marginTop: 8, textAlign: 'center' }]}>
-              {selectedCategory ? 'Try selecting a different category' : 'Check back later for new deals!'}
+            <Text
+              style={[
+                iOSUIKit.subhead,
+                {
+                  color: colors.textPlaceholder,
+                  marginTop: 8,
+                  textAlign: 'center',
+                },
+              ]}
+            >
+              {selectedCategory
+                ? 'Try selecting a different category'
+                : 'Check back later for new deals!'}
             </Text>
           </View>
         ) : (
           <>
-            <Text style={[styles.resultsCount, { color: colors.textSecondary }]}>
-              {sortedDeals.length} {sortedDeals.length === 1 ? 'deal' : 'deals'} available
-              {selectedCategory && ' in ' + activeCategories.find(c => c.slug === selectedCategory)?.name}
+            <Text
+              style={[styles.resultsCount, { color: colors.textSecondary }]}
+            >
+              {sortedDeals.length} {sortedDeals.length === 1 ? 'deal' : 'deals'}{' '}
+              available
+              {selectedCategory &&
+                ' in ' +
+                  activeCategories.find(c => c.slug === selectedCategory)?.name}
             </Text>
             <FlatList
               data={sortedDeals}
               keyExtractor={(item, index) => {
                 // Create unique key combining multiple identifiers
-                const baseKey = item.id?.toString() || `${item.business_name}-${index}`;
+                const baseKey =
+                  item.id?.toString() || `${item.business_name}-${index}`;
                 return `deal-${baseKey}-${index}`;
               }}
               numColumns={2}
@@ -468,7 +599,7 @@ const styles = StyleSheet.create({
     {
       marginBottom: 8,
       paddingHorizontal: 4,
-    }
+    },
   ]),
   grid: {
     paddingBottom: 20,
@@ -574,7 +705,7 @@ const styles = StyleSheet.create({
     iOSUIKit.caption2,
     {
       fontWeight: 'bold',
-    }
+    },
   ]),
   premiumBadge: {
     position: 'absolute',
@@ -588,9 +719,8 @@ const styles = StyleSheet.create({
     shadowOffset: {
       width: 0,
       height: 2,
-
     },
-    margin:2,
+    margin: 2,
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 4,
@@ -601,7 +731,7 @@ const styles = StyleSheet.create({
       fontWeight: 'bold',
       letterSpacing: 0.5,
       fontSize: 9, // Keep smaller for premium badge
-    }
+    },
   ]),
   itemImage: {
     fontSize: 28,
@@ -615,7 +745,7 @@ const styles = StyleSheet.create({
       marginBottom: 4,
       textAlign: 'left',
       zIndex: 1,
-    }
+    },
   ]),
   itemDescription: StyleSheet.flatten([
     iOSUIKit.caption2,
@@ -624,7 +754,7 @@ const styles = StyleSheet.create({
       textAlign: 'left',
       lineHeight: 14,
       zIndex: 1,
-    }
+    },
   ]),
   dealDetails: {
     flexDirection: 'row',
@@ -638,13 +768,13 @@ const styles = StyleSheet.create({
     {
       fontWeight: '600',
       fontSize: 10, // Keep smaller for deal type
-    }
+    },
   ]),
   sharesRequired: StyleSheet.flatten([
     iOSUIKit.caption2,
     {
       fontSize: 9, // Keep smaller for shares info
-    }
+    },
   ]),
   imageContainer: {
     position: 'absolute',
@@ -679,11 +809,11 @@ const styles = StyleSheet.create({
     iOSUIKit.largeTitleEmphasized,
     {
       fontSize: 24, // Override default size for header
-    }
+    },
   ]),
   settingsButton: {
     padding: 8,
   },
-})
+});
 
 export default ExploreScreen;
