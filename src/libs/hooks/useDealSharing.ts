@@ -193,19 +193,20 @@ export const useDealSharing = (dealId?: string, requiredShares: number = 3) => {
     }
   };
 
-  const loadShareProgress = async () => {
+  const loadShareProgress = async () =>
+  {
     if (!dealId || !user?.id) return;
 
     try {
       const progress = await DealSharingService.getShareProgress(dealId, requiredShares);
-      
+
       setShareProgress({
         currentShares: progress.currentShares,
         requiredShares: progress.requiredShares,
         canRedeem: progress.canRedeem,
         shareHistory: [] // TODO: Add share history tracking
       });
-
+      
     } catch (error) {
       console.error('❌ Error loading share progress:', error);
     }

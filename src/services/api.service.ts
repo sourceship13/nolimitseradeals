@@ -36,9 +36,6 @@ class ApiService {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
-        
-  // if (url.includes('192.168') || url.includes('localhost') || url.includes(':8080')) {
-  // }
     
     try {
       let response: Response;
@@ -70,7 +67,6 @@ class ApiService {
         });
       }
 
-      
       const data = await response.json();
       
       if (!response.ok) {
@@ -100,7 +96,9 @@ class ApiService {
   }
 
   async getDeals(): Promise<ApiResponse<any[]>> {
-    return this.makeRequest('/deals/all-v2');
+    const response = await this.makeRequest('/deals/all-v2');
+    console.log('📦 Fetched deals:', response);
+    return response;
   }
 
   async getCategories(): Promise<ApiResponse<any[]>> {

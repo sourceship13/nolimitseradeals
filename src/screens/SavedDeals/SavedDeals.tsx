@@ -20,9 +20,19 @@ const SavedDealsScreen = ({ navigation }: any) => {
   // Build a list of full deal objects for hearted deals
   const heartedDealIds = new Set((heartedDeals || []).map(d => d.deal_id || d.id));
   const allSavedDeals = deals.filter(deal => heartedDealIds.has(deal.id || deal.deal_id));
-  // Assume deals have a boolean property 'is_redeemed'
-  const redeemedDeals = allSavedDeals.filter(deal => deal.is_redeemed);
-  const notRedeemedDeals = allSavedDeals.filter(deal => !deal.is_redeemed);
+
+  // Redeemed deals: redemption_status === 'Pending Redemption'
+  const redeemedDeals = allSavedDeals.filter(
+    deal =>
+      (deal.redemption_status && deal.redemption_status === 'Ready to Redeem') ||
+      (deal.redemption_status && deal.redemption_status.toLowerCase() === 'ready to redeem')
+  );
+  // Not redeemed: everything else
+  const notRedeemedDeals = allSavedDeals.filter(
+    deal =>
+      !deal.redemption_status ||
+      (deal.redemption_status && deal.redemption_status.toLowerCase() !== 'almost there, a few more shares!')
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -87,7 +97,12 @@ const SavedDealsScreen = ({ navigation }: any) => {
                 <Text style={[styles.dealBusiness, { color: colors.disabled }]}>{item.business_name || item.business || ''}</Text>
                 <Text style={[styles.dealBusiness, { color: colors.secondary }]}>{item.category_name || ''}</Text>
                 <Text style={[styles.dealBusiness, { color: colors.text }]}>{item.description || ''}</Text>
-                <Text style={[styles.redeemed, { color: '#4CAF50' }]}>Redeemed</Text>
+                <TouchableOpacity
+                  style={[styles.button, { backgroundColor: colors.text }]}
+                  onPress={() => navigation.navigate('Redemption', { deal: item })}
+                >
+                  <Text style={[iOSUIKit.subhead, { color: colors.background, fontWeight: 'bold', justifyContent:'center', alignItems:'center' }]}>View Redemption</Text>
+                </TouchableOpacity>
               </View>
             )}
             contentContainerStyle={styles.list}
