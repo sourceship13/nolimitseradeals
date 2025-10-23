@@ -4,7 +4,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getColors } from '../colors';
 import AuthService from '../../services/auth.service';
 import ApiService from '../../services/api.service';
-import ApiConfig from '../utils/api.utils';
 
 export { getColors };
 import { Category, User, LoginCredentials, RegisterData } from '../../types/global.types';
@@ -59,7 +58,6 @@ interface AuthContextType {
   categories: Record<string, boolean>;
   setCategories: (value: Record<string, boolean>) => void;
   availableCategories: Category[];
-  refreshCategories: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -110,24 +108,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchDeals = async () => {
     try {
       setDealsLoading(true);
-      
       const result = await ApiService.getDeals();
-      
       if (result.success && result.data) {
         // Handle both direct array and object with data property
         const dealsData = result.data || result;
         const finalDeals = Array.isArray(dealsData) ? dealsData : [];
-        
         setDeals(finalDeals);
+        // Extract categories from deals
+        const extractedCategories: Category[] = [];
+        const categoryMap: Record<string, Category> = {};
+        finalDeals.forEach((deal: any) => {
+          const catSlug = deal.category_slug || deal.category || deal.category_name;
+          const catName = deal.category_name || deal.category || deal.category_slug;
+          if (catSlug && !categoryMap[catSlug]) {
+            categoryMap[catSlug] = {
+              id: catSlug,
+              slug: catSlug,
+              name: catName || catSlug,
+              description: '',
+              sort_order: 0,
+              active_deal_count: '0',
+              business_count: '0',
+            };
+          }
+        });
+        Object.values(categoryMap).forEach((cat: Category) => extractedCategories.push(cat));
+        setAvailableCategories(extractedCategories);
+        // Build categories state object (all true by default, or restore from storage)
+        const savedCategories = await AsyncStorage.getItem('categories');
+        let mergedCategories: Record<string, boolean> = {};
+        if (savedCategories) {
+          const parsedCategories = JSON.parse(savedCategories);
+          extractedCategories.forEach((cat: Category) => {
+            mergedCategories[cat.slug] = parsedCategories[cat.slug] !== undefined ? parsedCategories[cat.slug] : true;
+          });
+        } else {
+          extractedCategories.forEach((cat: Category) => {
+            mergedCategories[cat.slug] = true;
+          });
+        }
+        setCategoriesState(mergedCategories);
+        await AsyncStorage.setItem('categories', JSON.stringify(mergedCategories));
         return finalDeals;
       } else {
-
         setDeals([]);
+        setAvailableCategories([]);
+        setCategoriesState({});
         return [];
       }
     } catch (error) {
       console.error('❌ Error fetching deals:', error);
       setDeals([]);
+      setAvailableCategories([]);
+      setCategoriesState({});
       return [];
     } finally {
       setDealsLoading(false);
@@ -183,47 +216,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Fetch categories from API
-  const fetchCategories = async () => {
-    try {
-      const result = await ApiService.getCategories();
-      
-      if (result.success && result.data) {
-        setAvailableCategories(result.data);
-        
-        // Handle category preferences more intelligently
-        const savedCategories = await AsyncStorage.getItem('categories');
-        if (savedCategories) {
-          // Merge existing preferences with new categories
-          const parsedCategories = JSON.parse(savedCategories);
-          const mergedCategories: Record<string, boolean> = {};
-          
-          result.data.forEach((cat: Category) => {
-            // Use saved preference if exists, otherwise default to true for new categories
-            mergedCategories[cat.slug] = parsedCategories[cat.slug] !== undefined 
-              ? parsedCategories[cat.slug] 
-              : true;
-          });
-          
-          setCategoriesState(mergedCategories);
-          // Re-save the merged categories to storage
-          await AsyncStorage.setItem('categories', JSON.stringify(mergedCategories));
-        } else {
-          // No saved preferences - set all to true
-          const defaultCategories: Record<string, boolean> = {};
-          result.data.forEach((cat: Category) => {
-            defaultCategories[cat.slug] = true;
-          });
-          setCategoriesState(defaultCategories);
-          await AsyncStorage.setItem('categories', JSON.stringify(defaultCategories));
-        }
-        
-        return result.data;
-      }
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-      return [];
-    }
-  };
 
   // Initialize app (auth + preferences)
   const initializeApp = async () => {
@@ -235,29 +227,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Check authentication status
       const isAuth = await AuthService.isAuthenticated();
-      
       if (isAuth) {
         // Get stored user data
         const currentUser = await AuthService.getCurrentUser();
         setUser(currentUser as User | null);
-        
-        // Fetch categories after user is authenticated
-        await fetchCategories();
-        
         // Fetch all deals (available for all users)
         try {
           await fetchDeals();
         } catch (dealsError) {
           console.error('⚠️ InitializeApp: Failed to fetch deals, but continuing...', dealsError);
         }
-        
         // Fetch hearted deals after user is authenticated
         try {
           await fetchHeartedDeals();
         } catch (heartedDealsError) {
           console.error('⚠️ InitializeApp: Failed to fetch hearted deals, but continuing...', heartedDealsError);
         }
-        
         // Try to refresh user data from server
         if (currentUser) {
           try {
@@ -270,18 +255,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } else {
         setUser(null);
-        
-        // Even for non-authenticated users, fetch deals and categories
+        // Even for non-authenticated users, fetch deals
         try {
           await fetchDeals();
         } catch (dealsError) {
           console.error('⚠️ InitializeApp: Failed to fetch deals for guest, but continuing...', dealsError);
-        }
-        
-        try {
-          await fetchCategories();
-        } catch (categoriesError) {
-          console.error('⚠️ InitializeApp: Failed to fetch categories for guest, but continuing...', categoriesError);
         }
       }
     } catch (error) {
@@ -355,12 +333,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Refresh user data when app comes back to foreground
         refreshUser();
         // Refresh categories when app comes back to foreground (only if user is authenticated)
-        fetchCategories();
         // Refresh hearted deals when app comes back to foreground
         fetchHeartedDeals();
       } else {
         // Even without user, try to fetch categories for guest mode
-        fetchCategories();
       }
     }
     appState.current = nextAppState;
@@ -403,7 +379,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Refresh categories manually
   const refreshCategories = async () => {
-    await fetchCategories();
   };
 
   // Refresh deals manually
@@ -532,7 +507,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(loggedInUser as User);
       
       // Fetch categories after successful login
-      await fetchCategories();
       // Fetch hearted deals after successful login
       try {
         await fetchHeartedDeals();
