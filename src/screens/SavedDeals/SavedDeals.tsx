@@ -155,7 +155,7 @@ const SavedDealsScreen = ({ navigation }: any) => {
                 <Text style={[styles.dealBusiness, { color: colors.text }]}>{item.description || ''}</Text>
                 <TouchableOpacity
                   style={[styles.button, { backgroundColor: colors.text }]}
-                  onPress={() => navigation.navigate('Redemption', { deal: item })}
+                  onPress={() => navigation.navigate('DealDetail', { deal: item })}
                 >
                   <Text style={[iOSUIKit.subhead, { color: colors.background, fontWeight: 'bold' }]}>Redeem Now</Text>
                 </TouchableOpacity>
