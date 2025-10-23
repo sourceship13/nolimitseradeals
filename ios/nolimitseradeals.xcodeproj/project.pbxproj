@@ -1032,13 +1032,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-nolimitseradeals/Pods-nolimitseradeals-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-nolimitseradeals/Pods-nolimitseradeals-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -1075,13 +1071,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-nolimitseradealsProd/Pods-nolimitseradealsProd-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-nolimitseradealsProd/Pods-nolimitseradealsProd-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -1134,13 +1126,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-nolimitseradeals/Pods-nolimitseradeals-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-nolimitseradeals/Pods-nolimitseradeals-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -1155,13 +1143,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-nolimitseradealsProd/Pods-nolimitseradealsProd-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-nolimitseradealsProd/Pods-nolimitseradealsProd-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
