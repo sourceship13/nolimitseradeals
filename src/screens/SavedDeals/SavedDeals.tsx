@@ -109,7 +109,7 @@ const SavedDealsScreen = ({ navigation }: any) => {
             scrollEnabled={false}
           />
         )}
-        <Text style={[styles.title, { color: colors.text }]}>Saved (Not Redeemed)</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Share more to Redeem</Text>
         {isLoading ? (
           <Text style={[iOSUIKit.body, { color: colors.text, textAlign: 'center' }]}>Loading saved deals...</Text>
         ) : notRedeemedDeals.length === 0 ? (
