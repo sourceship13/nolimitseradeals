@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import DealSharingService from '../../services/deal-sharing.service';
 import { useAuth } from './useAuth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import apiService from '../../services/api.service';
 
 interface Contact {
@@ -34,7 +35,7 @@ interface ShareProgress {
 }
 
 export const useDealSharing = (dealId?: string, requiredShares: number = 3) => {
-  const { user } = useAuth();
+  const { user, heartDeal } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<Array<{
     contactId: string;
@@ -161,7 +162,6 @@ export const useDealSharing = (dealId?: string, requiredShares: number = 3) => {
 
     try {
       setLoading(true);
-      
       // Convert selected contacts to Contact format for the service
       const contactsToShare = selectedContacts.map(sc => {
         const originalContact = contacts.find(c => c.recordID === sc.contactId);
@@ -176,15 +176,25 @@ export const useDealSharing = (dealId?: string, requiredShares: number = 3) => {
           emailAddresses: []
         };
       });
-      
       const success = await DealSharingService.shareWithContacts(dealId || '', contactsToShare, deal);
-      
       if (success) {
         // Clear selection and reload progress
         setSelectedContacts([]);
         await loadShareProgress();
+        // Heart the deal after first successful share
+        if (dealId && user?.id) {
+          // Check current share count
+          const key = `shares_${dealId}`;
+          const sharesString = await AsyncStorage.getItem(key);
+          const currentShares = sharesString ? parseInt(sharesString, 10) : 0;
+          if (currentShares >= 1) {
+            // Heart the deal after first share
+            if (typeof heartDeal === 'function') {
+              await heartDeal(dealId, deal);
+            }
+          }
+        }
       }
-      
     } catch (error) {
       console.error('❌ Error sharing deal:', error);
       Alert.alert('Error', 'Failed to share deal. Please try again.');
