@@ -55,7 +55,7 @@ jobs:
           command: |
             echo "export NODE_BINARY=$(which node)" >> $BASH_ENV
             source $BASH_ENV
-            cat > android/local.properties << EOF
+            cat > android/local.properties \<< EOF
             sdk.dir=/home/circleci/android-sdk
             EOF
             echo "Node binary: $NODE_BINARY"
