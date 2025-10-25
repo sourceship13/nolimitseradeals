@@ -42,60 +42,67 @@ jobs:
             - package-lock.json
 
   build_android:
-  executor: android-executor
-  steps:
-    - checkout
-    - attach_workspace:
-        at: .
-    
-    - run:
-        name: Accept Android SDK licenses
-        command: yes | sdkmanager --licenses || true
-    
-    - restore_cache:
-        keys:
-          - v1-gradle-{{ checksum "android/build.gradle" }}-{{ checksum "android/app/build.gradle" }}
-          - v1-gradle-
-    
-    - run:
-        name: Set Node.js path for React Native
-        command: |
-          echo "export NODE_BINARY=$(which node)" >> $BASH_ENV
-          source $BASH_ENV
-          echo "Node binary path: $NODE_BINARY"
-          node --version
-    
-    - run:
-        name: Clean Gradle cache (first run)
-        command: |
-          cd android
-          ./gradlew clean --no-daemon
-    
-    - run:
-        name: Build Android APK (release)
-        command: |
-          cd android
-          # Explicitly set node binary for React Native Gradle plugin
-          export NODE_BINARY=$(which node)
-          echo "Building with Node at: $NODE_BINARY"
-          ./gradlew assembleRelease \
-            --no-daemon \
-            -Dorg.gradle.jvmargs="-Xmx4096m -XX:MaxMetaspaceSize=512m" \
-            --stacktrace
-    
-    - save_cache:
-        key: v1-gradle-{{ checksum "android/build.gradle" }}-{{ checksum "android/app/build.gradle" }}
-        paths:
-          - ~/.gradle
-          - android/.gradle
-    
-    - store_artifacts:
-        path: android/app/build/outputs/apk/release/app-release.apk
-        destination: android_apk
-    
-    - store_artifacts:
-        path: android/app/build/outputs/mapping/release
-        destination: android_mapping
+    executor: android-executor
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      
+      - run:
+          name: Accept Android SDK licenses
+          command: yes | sdkmanager --licenses || true
+      
+      - run:
+          name: Setup Android environment
+          command: |
+            # Set Node binary path
+            echo "export NODE_BINARY=$(which node)" >> $BASH_ENV
+            source $BASH_ENV
+            
+            # Create local.properties
+            cat > android/local.properties << EOF
+            sdk.dir=/home/circleci/android-sdk
+            EOF
+            
+            echo "Node binary: $NODE_BINARY"
+            echo "Node version: $(node --version)"
+            echo "NPM version: $(npm --version)"
+      
+      - restore_cache:
+          keys:
+            - v1-gradle-{{ checksum "android/build.gradle" }}-{{ checksum "android/app/build.gradle" }}
+            - v1-gradle-
+      
+      - run:
+          name: Clean Gradle cache
+          command: |
+            cd android
+            ./gradlew clean --no-daemon
+      
+      - run:
+          name: Build Android APK (release)
+          command: |
+            cd android
+            export NODE_BINARY=$(which node)
+            echo "Building with Node at: $NODE_BINARY"
+            ./gradlew assembleRelease \
+              --no-daemon \
+              --stacktrace \
+              -Dorg.gradle.jvmargs="-Xmx4096m -XX:MaxMetaspaceSize=512m"
+      
+      - save_cache:
+          key: v1-gradle-{{ checksum "android/build.gradle" }}-{{ checksum "android/app/build.gradle" }}
+          paths:
+            - ~/.gradle
+            - android/.gradle
+      
+      - store_artifacts:
+          path: android/app/build/outputs/apk/release/app-release.apk
+          destination: android_apk
+      
+      - store_artifacts:
+          path: android/app/build/outputs/mapping/release
+          destination: android_mapping
 
   build_ios:
     macos:
