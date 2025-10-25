@@ -1,3 +1,4 @@
+// ...existing imports and code...
 import { Platform } from 'react-native';
 import AuthService from './auth.service';
 import ApiConfig, { apiConfig } from '../libs/utils/api.utils';
@@ -10,6 +11,7 @@ interface ApiResponse<T = any> {
 }
 
 class ApiService {
+  
 
   private get baseURL() {
     return ApiConfig.apiURL;
@@ -182,6 +184,20 @@ class ApiService {
 
   async postContacts(payload: { userId: string; contacts: Array<{ contact_number: string; display_name: string }> }): Promise<ApiResponse> {
     return this.makeRequest('/contacts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  }
+
+  async postDealRedemption(payload: {
+    userId: string;
+    dealId: string;
+    userSavedDealId: string;
+    sharesRequired: number;
+    [key: string]: any;
+  }): Promise<ApiResponse> {
+    return this.makeRequest('/api/deal-redemption', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)

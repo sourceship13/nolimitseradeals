@@ -1,3 +1,10 @@
+type RedemptionRouteParams = {
+  code?: string;
+  deal?: any;
+  userId?: string;
+  userSavedDealId?: string;
+  sharesRequired?: number;
+};
 import React, { useMemo, useRef, useState } from 'react';
 
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -21,6 +28,8 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import SlideToUnlock from '../../components/SlideToUnlock';
+import ApiService from '../../services/api.service';
 
 type Item = {
   id: string;
@@ -49,10 +58,15 @@ const DATA: Item[] = [
 
 const RedemptionScreen = () => {
   const route = useRoute();
+  const params = (route.params || {}) as RedemptionRouteParams;
   const navigation = useNavigation();
   const { isDarkMode } = useAuth();
   const colors = getColors(isDarkMode);
-  const { code, deal } = route.params || {};
+  const code = params.code;
+  const deal = params.deal;
+  const userId = params.userId;
+  const userSavedDealId = params.userSavedDealId;
+  const sharesRequired = params.sharesRequired;
 
   const listRef = useRef<FlatList<Item>>(null);
   const [containerW, setContainerW] = useState(0);
@@ -148,14 +162,28 @@ const RedemptionScreen = () => {
             })}
           />
         </View>
-        <TouchableOpacity
-          style={[styles.doneBtn, { backgroundColor: colors.primary }]}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={[iOSUIKit.title3, { color: colors.background }]}>
-            Done
-          </Text>
-        </TouchableOpacity>
+        <SlideToUnlock
+          label="Slide to Mark Redeemed by Business"
+          onUnlock={async () => {
+            if (!userId || !userSavedDealId || !sharesRequired || !deal?.id) {
+              console.error('Missing required redemption parameters');
+              // Optionally show feedback to user
+              return;
+            }
+            try {
+              await ApiService.postDealRedemption({
+                userId,
+                dealId: deal.id,
+                userSavedDealId,
+                sharesRequired,
+              });
+              navigation.goBack();
+            } catch (err) {
+              // Optionally show error feedback
+              console.error('Deal redemption failed', err);
+            }
+          }}
+        />
       </View>
     </View>
   );

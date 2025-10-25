@@ -3,101 +3,31 @@ default_platform(:ios)
 platform :ios do
   desc "Push a new beta build to TestFlight"
   lane :beta do
-    # Create App Store Connect API Key from environment variables
-    api_key = nil
-    if ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"] && ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"] && ENV["APP_STORE_CONNECT_API_KEY_KEY"]
-      # Write the key to a temporary file
-      key_path = "/tmp/AuthKey_#{ENV['APP_STORE_CONNECT_API_KEY_KEY_ID']}.p8"
-      
-      # Decode and write the key
-      File.write(key_path, Base64.decode64(ENV["APP_STORE_CONNECT_API_KEY_KEY"]))
-      
-      api_key = app_store_connect_api_key(
-        key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
-        issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
-        key_filepath: key_path,
-        in_house: false
-      )
-      puts "✅ Using App Store Connect API Key for authentication"
-    else
-      puts "⚠️ Warning: API Key environment variables not set"
-      UI.user_error!("Missing API Key environment variables")
-    end
-    
-    # Sync code signing using Match
+    # Setup certificates
     match(
       type: "appstore",
       app_identifier: "org.sera.dev.nolimitsera",
-      readonly: true,
-      keychain_name: "temp.keychain",
-      keychain_password: "",
-      git_url: ENV["MATCH_GIT_URL"],
-      git_basic_authorization: Base64.strict_encode64("#{ENV['MATCH_GIT_USERNAME']}:#{ENV['MATCH_GIT_TOKEN']}")
+      readonly: true
     )
-    
-    # Get the profile path from Match
-    profile_path = ENV["sigh_org.sera.dev.nolimitsera_appstore_profile-path"]
-    profile_uuid = ENV["sigh_org.sera.dev.nolimitsera_appstore"]
     
     # Increment build number
     increment_build_number(
       build_number: ENV["CIRCLE_BUILD_NUM"] || latest_testflight_build_number + 1
     )
     
-    # Disable automatic code signing in the project
-    update_code_signing_settings(
-      use_automatic_signing: false,
-      path: "nolimitseradeals.xcodeproj",
-      team_id: ENV["APPLE_TEAM_ID"],
-      code_sign_identity: "Apple Distribution",
-      bundle_identifier: "org.sera.dev.nolimitsera",
-      profile_name: "match AppStore org.sera.dev.nolimitsera",
-      profile_uuid: profile_uuid
-    )
-    
     # Build the app
     build_app(
       workspace: "nolimitseradeals.xcworkspace",
       scheme: "nolimitseradeals",
-      configuration: "Release",
       export_method: "app-store",
-      output_directory: "./build",
-      output_name: "nolimitseradeals.ipa",
-      clean: true,
-      codesigning_identity: "Apple Distribution",
-      xcargs: "DEVELOPMENT_TEAM=#{ENV['APPLE_TEAM_ID']}",
-      buildlog_path: "./buildlogs",
-      suppress_xcode_output: false,
-      export_options: {
-        method: "app-store",
-        teamID: ENV["APPLE_TEAM_ID"],
-        provisioningProfiles: {
-          "org.sera.dev.nolimitsera" => "match AppStore org.sera.dev.nolimitsera"
-        }
-      }
+      output_directory: "./output/gym",
+      output_name: "nolimitseradeals.ipa"
     )
     
     # Upload to TestFlight
-    puts "🚀 Uploading to TestFlight..."
     upload_to_testflight(
-      api_key: api_key,
       skip_waiting_for_build_processing: true,
-      skip_submission: true,
-      distribute_external: false,
-      notify_external_testers: false,
-      ipa: "./build/nolimitseradeals.ipa",
-      changelog: "Build #{ENV['CIRCLE_BUILD_NUM']} - Automated upload from CircleCI"
+      skip_submission: true
     )
-    
-    puts "✅ Build complete and uploaded to TestFlight!"
-    puts "📦 IPA available at: ./build/nolimitseradeals.ipa"
-    
-    # Clean up the key file
-    File.delete(key_path) if File.exist?(key_path)
-  end
-  
-  desc "Push a new staging build to TestFlight"
-  lane :staging do
-    beta
   end
 end
