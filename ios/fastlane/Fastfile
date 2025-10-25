@@ -4,17 +4,24 @@ platform :ios do
   desc "Push a new beta build to TestFlight"
   lane :beta do
     # Create App Store Connect API Key from environment variables
+    api_key = nil
     if ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"] && ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"] && ENV["APP_STORE_CONNECT_API_KEY_KEY"]
+      # Write the key to a temporary file
+      key_path = "/tmp/AuthKey_#{ENV['APP_STORE_CONNECT_API_KEY_KEY_ID']}.p8"
+      
+      # Decode and write the key
+      File.write(key_path, Base64.decode64(ENV["APP_STORE_CONNECT_API_KEY_KEY"]))
+      
       api_key = app_store_connect_api_key(
         key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
         issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
-        key_content: ENV["APP_STORE_CONNECT_API_KEY_KEY"],
-        is_key_content_base64: true,
+        key_filepath: key_path,
         in_house: false
       )
       puts "✅ Using App Store Connect API Key for authentication"
     else
-      puts "⚠️ Warning: API Key environment variables not set, will try alternative auth"
+      puts "⚠️ Warning: API Key environment variables not set"
+      UI.user_error!("Missing API Key environment variables")
     end
     
     # Sync code signing using Match
@@ -23,7 +30,9 @@ platform :ios do
       app_identifier: "org.sera.dev.nolimitsera",
       readonly: true,
       keychain_name: "temp.keychain",
-      keychain_password: ""
+      keychain_password: "",
+      git_url: ENV["MATCH_GIT_URL"],
+      git_basic_authorization: Base64.strict_encode64("#{ENV['MATCH_GIT_USERNAME']}:#{ENV['MATCH_GIT_TOKEN']}")
     )
     
     # Get the profile path from Match
@@ -82,6 +91,9 @@ platform :ios do
     
     puts "✅ Build complete and uploaded to TestFlight!"
     puts "📦 IPA available at: ./build/nolimitseradeals.ipa"
+    
+    # Clean up the key file
+    File.delete(key_path) if File.exist?(key_path)
   end
   
   desc "Push a new staging build to TestFlight"
