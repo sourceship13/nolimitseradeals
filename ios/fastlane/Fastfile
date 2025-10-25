@@ -48,15 +48,26 @@ platform :ios do
       export_options: {
         method: "app-store",
         teamID: ENV["APPLE_TEAM_ID"],
-        provisioningProfiles: { 
+        provisioningProfiles: {
           "org.sera.dev.nolimitsera" => "match AppStore org.sera.dev.nolimitsera"
         }
       }
     )
     
-    # Build succeeded - IPA is ready for manual upload or artifact download
-    puts "✅ Build complete! IPA available at: ./build/nolimitseradeals.ipa"
-    puts "📦 Download from CircleCI artifacts or manually upload to TestFlight"
+    # Upload to TestFlight
+    puts "🚀 Uploading to TestFlight..."
+    upload_to_testflight(
+      api_key_path: ENV["APP_STORE_CONNECT_API_KEY_PATH"],
+      skip_waiting_for_build_processing: true,
+      skip_submission: true,
+      distribute_external: false,
+      notify_external_testers: false,
+      ipa: "./build/nolimitseradeals.ipa",
+      changelog: "Build #{ENV['CIRCLE_BUILD_NUM']} - Automated upload from CircleCI"
+    )
+    
+    puts "✅ Build complete and uploaded to TestFlight!"
+    puts "📦 IPA available at: ./build/nolimitseradeals.ipa"
   end
   
   desc "Push a new staging build to TestFlight"

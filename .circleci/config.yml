@@ -135,7 +135,14 @@ jobs:
             security default-keychain -s temp.keychain
             security unlock-keychain -p "" temp.keychain
             security set-keychain-settings -t 3600 -u temp.keychain
-      
+
+      - run:
+          name: Setup App Store Connect API Key
+          command: |
+            mkdir -p ~/private_keys
+            echo "$APP_STORE_CONNECT_API_KEY_KEY" | base64 --decode > ~/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_KEY_ID}.p8
+            echo "APP_STORE_CONNECT_API_KEY_PATH=~/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_KEY_ID}.p8" >> $BASH_ENV
+            
       - run:
           name: Build and deploy to TestFlight
           command: |
