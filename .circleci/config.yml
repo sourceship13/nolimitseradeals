@@ -172,46 +172,6 @@ jobs:
               fi
               exit 1
             }
-
-- run:
-    name: Build and deploy to TestFlight
-    command: |
-      cd ios
-      bundle exec fastlane beta || {
-        echo "====== BUILD FAILED - Showing detailed error log ======"
-        if [ -f ~/Library/Logs/gym/nolimitseradeals-nolimitseradeals.log ]; then
-          echo "Last 100 lines of build log:"
-          tail -100 ~/Library/Logs/gym/nolimitseradeals-nolimitseradeals.log
-          echo ""
-          echo "Searching for errors:"
-          grep "error:" ~/Library/Logs/gym/nolimitseradeals-nolimitseradeals.log || echo "No errors found in log"
-        fi
-        exit 1
-      }
-
-
-      - run:
-          name: Setup App Store Connect API Key
-          command: |
-            mkdir -p ~/private_keys
-            echo "$APP_STORE_CONNECT_API_KEY_KEY" | base64 --decode > ~/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_KEY_ID}.p8
-            echo "APP_STORE_CONNECT_API_KEY_PATH=~/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_KEY_ID}.p8" >> $BASH_ENV
-
-      - run:
-          name: Build and deploy to TestFlight
-          command: |
-            cd ios
-            bundle exec fastlane beta || {
-              echo "====== BUILD FAILED - Showing detailed error log ======"
-              if [ -f ~/Library/Logs/gym/nolimitseradeals-nolimitseradeals.log ]; then
-                echo "Last 100 lines of build log:"
-                tail -100 ~/Library/Logs/gym/nolimitseradeals-nolimitseradeals.log
-                echo ""
-                echo "Searching for errors:"
-                grep "error:" ~/Library/Logs/gym/nolimitseradeals-nolimitseradeals.log || echo "No errors found in log"
-              fi
-              exit 1
-            }
       
       - run:
           name: Display App Version and Build Number
