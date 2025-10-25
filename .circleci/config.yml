@@ -47,59 +47,44 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      
       - run:
           name: Accept Android SDK licenses
           command: yes | sdkmanager --licenses || true
-      
       - run:
           name: Setup Android environment
           command: |
-            # Set Node binary path
             echo "export NODE_BINARY=$(which node)" >> $BASH_ENV
             source $BASH_ENV
-            
-            # Create local.properties
             cat > android/local.properties << EOF
             sdk.dir=/home/circleci/android-sdk
             EOF
-            
             echo "Node binary: $NODE_BINARY"
             echo "Node version: $(node --version)"
             echo "NPM version: $(npm --version)"
-      
       - restore_cache:
           keys:
             - v1-gradle-{{ checksum "android/build.gradle" }}-{{ checksum "android/app/build.gradle" }}
             - v1-gradle-
-      
       - run:
           name: Clean Gradle cache
           command: |
             cd android
             ./gradlew clean --no-daemon
-      
       - run:
           name: Build Android APK (release)
           command: |
             cd android
             export NODE_BINARY=$(which node)
             echo "Building with Node at: $NODE_BINARY"
-            ./gradlew assembleRelease \
-              --no-daemon \
-              --stacktrace \
-              -Dorg.gradle.jvmargs="-Xmx4096m -XX:MaxMetaspaceSize=512m"
-      
+            ./gradlew assembleRelease --no-daemon --stacktrace -Dorg.gradle.jvmargs="-Xmx4096m -XX:MaxMetaspaceSize=512m"
       - save_cache:
           key: v1-gradle-{{ checksum "android/build.gradle" }}-{{ checksum "android/app/build.gradle" }}
           paths:
             - ~/.gradle
             - android/.gradle
-      
       - store_artifacts:
           path: android/app/build/outputs/apk/release/app-release.apk
           destination: android_apk
-      
       - store_artifacts:
           path: android/app/build/outputs/mapping/release
           destination: android_mapping
@@ -116,7 +101,6 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      
       - run:
           name: Show versions
           command: |
@@ -124,49 +108,40 @@ jobs:
             npm --version
             xcodebuild -version
             sw_vers
-      
       - restore_cache:
           keys:
             - v1-pods-{{ checksum "ios/Podfile.lock" }}
             - v1-pods-
-      
       - restore_cache:
           keys:
             - v1-gems-{{ checksum "ios/Gemfile.lock" }}
             - v1-gems-
-      
       - run:
           name: Install Ruby gems
           command: |
             cd ios
             bundle install
-      
       - save_cache:
           key: v1-gems-{{ checksum "ios/Gemfile.lock" }}
           paths:
             - ios/vendor/bundle
-      
       - run:
           name: Install CocoaPods
           command: |
             cd ios
             bundle exec pod install
-      
       - save_cache:
           key: v1-pods-{{ checksum "ios/Podfile.lock" }}
           paths:
             - ios/Pods
             - ~/.cocoapods
-      
       - run:
           name: Setup keychain for code signing
           command: |
-            # Create a temporary keychain
             security create-keychain -p "" temp.keychain
             security default-keychain -s temp.keychain
             security unlock-keychain -p "" temp.keychain
             security set-keychain-settings -t 3600 -u temp.keychain
-
       - run:
           name: Verify API Key environment variables
           command: |
@@ -187,7 +162,6 @@ jobs:
             echo "Key ID: $APP_STORE_CONNECT_API_KEY_KEY_ID"
             echo "Issuer ID: $APP_STORE_CONNECT_API_KEY_ISSUER_ID"
             echo "Key length: ${#APP_STORE_CONNECT_API_KEY_KEY} characters"
-
       - run:
           name: Build and deploy to TestFlight
           command: |
@@ -203,7 +177,6 @@ jobs:
               fi
               exit 1
             }
-      
       - run:
           name: Display App Version and Build Number
           command: |
@@ -211,7 +184,6 @@ jobs:
             BUILD_NUMBER=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" ios/nolimitseradeals/Info.plist)
             echo "App Version: $APP_VERSION"
             echo "Build Number: $BUILD_NUMBER"
-      
       - run:
           name: List build artifacts
           command: |
@@ -226,21 +198,17 @@ jobs:
             echo ""
             echo "📊 IPA file size:"
             du -h ios/build/nolimitseradeals.ipa || echo "IPA not found"
-      
       - run:
           name: Rename IPA for clarity
           command: |
             cp ios/build/nolimitseradeals.ipa ios/nolimitseradeals-build-${CIRCLE_BUILD_NUM}.ipa
             echo "✅ Created: ios/nolimitseradeals-build-${CIRCLE_BUILD_NUM}.ipa"
-      
       - store_artifacts:
           path: ios/nolimitseradeals-build-${CIRCLE_BUILD_NUM}.ipa
           destination: nolimitseradeals-build-${CIRCLE_BUILD_NUM}.ipa
-      
       - store_artifacts:
           path: ios/build/nolimitseradeals.ipa
           destination: nolimitseradeals.ipa
-      
       - store_artifacts:
           path: ios/build
           destination: ios_build
