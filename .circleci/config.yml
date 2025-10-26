@@ -123,9 +123,23 @@ jobs:
             security import cert.p12 -k build.keychain -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
             security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
             
-            # Install provisioning profile
+            # Install provisioning profile with proper UUID
             mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-            echo "$PROVISIONING_PROFILE" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+            PROFILE_PATH=~/Library/MobileDevice/Provisioning\ Profiles/${PROVISIONING_PROFILE_UUID}.mobileprovision
+            echo "$PROVISIONING_PROFILE" | base64 --decode > "$PROFILE_PATH"
+            
+            # Verify profile was installed correctly
+            echo "Installed provisioning profile:"
+            ls -la ~/Library/MobileDevice/Provisioning\ Profiles/
+            
+            # Extract and display profile info
+            security cms -D -i "$PROFILE_PATH" > profile.plist
+            echo "Profile UUID:"
+            /usr/libexec/PlistBuddy -c "Print :UUID" profile.plist || echo "Could not read UUID"
+            echo "Profile Name:"
+            /usr/libexec/PlistBuddy -c "Print :Name" profile.plist || echo "Could not read Name"
+            echo "App ID:"
+            /usr/libexec/PlistBuddy -c "Print :Entitlements:application-identifier" profile.plist || echo "Could not read App ID"
       - run:
           name: Build and deploy to TestFlight
           command: |
