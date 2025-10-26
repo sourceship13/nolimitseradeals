@@ -109,7 +109,6 @@ jobs:
           paths:
             - ios/Pods
             - ~/.cocoapods
-
       - run:
           name: Setup code signing
           command: |
@@ -127,12 +126,33 @@ jobs:
             # Install provisioning profile
             mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
             echo "$PROVISIONING_PROFILE" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
-            
       - run:
           name: Build and deploy to TestFlight
           command: |
             cd ios
-            bundle exec fastlane beta
+            bundle exec fastlane beta 2>&1 | tee build.log || {
+              echo ""
+              echo "====== BUILD FAILED ======"
+              echo ""
+              echo "Last 200 lines of output:"
+              tail -200 build.log
+              echo ""
+              echo "Checking for specific errors:"
+              echo ""
+              echo "=== Code Signing Errors ==="
+              grep -i "signing" build.log | tail -20 || echo "No signing errors"
+              echo ""
+              echo "=== Provisioning Profile Errors ==="
+              grep -i "provisioning" build.log | tail -20 || echo "No provisioning errors"
+              echo ""
+              echo "=== Build Errors ==="
+              grep "error:" build.log | tail -20 || echo "No build errors found"
+              echo ""
+              echo "=== Failed Tasks ==="
+              grep "FAILED" build.log | tail -20 || echo "No failed tasks"
+              echo ""
+              exit 1
+            }
       - run:
           name: Display App Version and Build Number
           command: |
