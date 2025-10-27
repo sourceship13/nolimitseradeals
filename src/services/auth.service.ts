@@ -80,8 +80,9 @@ class AuthService {
   private async storeTokens(tokens: AuthTokens): Promise<void> {
     try {
       // Store refresh token in Keychain (most secure)
+      // Use the same service key that other methods expect
       await Keychain.setInternetCredentials(
-        'com.yourapp.auth',
+        'org.sera.dev.nolimitsera',
         'refreshToken',
         tokens.refreshToken
       );
