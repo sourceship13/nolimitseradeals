@@ -3,11 +3,12 @@ default_platform(:ios)
 platform :ios do
   desc "Build and upload to TestFlight"
   lane :beta do
-    # Setup certificates with Match
+    # Setup certificates with Match - explicitly use SSH URL
     match(
       type: "appstore",
       app_identifier: "org.sera.dev.nolimitsera",
-      readonly: true
+      readonly: true,
+      git_url: "git@github.com-fastlane-match:ajp-sourceship/nolimitseradeals_fastlane_match.git"
     )
     
     # Increment build number
