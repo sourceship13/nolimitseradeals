@@ -110,18 +110,14 @@ jobs:
             - ios/Pods
             - ~/.cocoapods
       - run:
-          name: Setup SSH for Match
+          name: Setup SSH and Keychain for Match
           command: |
+            # Setup SSH
             mkdir -p ~/.ssh
-            
-            # Decode and save SSH key
             echo "$MATCH_GIT_SSH_KEY" | base64 --decode > ~/.ssh/id_ed25519
             chmod 600 ~/.ssh/id_ed25519
-            
-            # Add GitHub to known hosts
             ssh-keyscan github.com >> ~/.ssh/known_hosts
             
-            # Create SSH config
             cat > ~/.ssh/config \<< 'EOF'
             Host github.com-fastlane-match
               HostName github.com
@@ -131,17 +127,29 @@ jobs:
               StrictHostKeyChecking no
             EOF
             
-            # Debug: Check if key was created
-            echo "SSH key file size:"
-            ls -lh ~/.ssh/id_ed25519
+            # Create and setup temporary keychain for code signing
+            KEYCHAIN_PATH=~/Library/Keychains/fastlane.keychain-db
+            KEYCHAIN_PASSWORD=temp_password
             
-            # Debug: Test SSH connection
-            echo "Testing SSH connection to GitHub..."
-            ssh -T git@github.com-fastlane-match || echo "SSH test completed (exit code $?)"
+            # Delete keychain if it exists
+            security delete-keychain "$KEYCHAIN_PATH" 2>/dev/null || true
             
-            # Debug: Try cloning the repo manually
-            echo "Testing git clone..."
-            git clone git@github.com-fastlane-match:ajp-sourceship/nolimitseradeals_fastlane_match.git /tmp/test_clone || echo "Clone test failed"
+            # Create new keychain
+            security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+            
+            # Set as default keychain
+            security default-keychain -s "$KEYCHAIN_PATH"
+            
+            # Unlock keychain
+            security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+            
+            # Set keychain timeout to 3600 seconds
+            security set-keychain-settings -t 3600 -u "$KEYCHAIN_PATH"
+            
+            # Add keychain to search list
+            security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | sed s/\"//g)
+            
+            echo "✅ Keychain setup complete"
       - run:
           name: Build and upload to TestFlight
           command: |

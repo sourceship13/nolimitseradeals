@@ -3,12 +3,18 @@ default_platform(:ios)
 platform :ios do
   desc "Build and upload to TestFlight"
   lane :beta do
-    # Setup certificates with Match - explicitly use SSH URL
+    # Setup the keychain for Match
+    keychain_name = "fastlane.keychain-db"
+    keychain_password = "temp_password"
+    
+    # Setup certificates with Match
     match(
       type: "appstore",
       app_identifier: "org.sera.dev.nolimitsera",
       readonly: true,
-      git_url: "git@github.com-fastlane-match:ajp-sourceship/nolimitseradeals_fastlane_match.git"
+      git_url: "git@github.com-fastlane-match:ajp-sourceship/nolimitseradeals_fastlane_match.git",
+      keychain_name: keychain_name,
+      keychain_password: keychain_password
     )
     
     # Increment build number
