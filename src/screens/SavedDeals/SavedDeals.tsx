@@ -21,18 +21,29 @@ const SavedDealsScreen = ({ navigation }: any) => {
   const heartedDealIds = new Set((heartedDeals || []).map(d => d.deal_id || d.id));
   const allSavedDeals = deals.filter(deal => heartedDealIds.has(deal.id || deal.deal_id));
 
-  // Redeemed deals: redemption_status === 'Pending Redemption'
-  const redeemedDeals = allSavedDeals.filter(
-    deal =>
-      (deal.redemption_status && deal.redemption_status === 'Ready to Redeem') ||
-      (deal.redemption_status && deal.redemption_status.toLowerCase() === 'ready to redeem')
-  );
-  // Not redeemed: everything else
-  const notRedeemedDeals = allSavedDeals.filter(
-    deal =>
-      !deal.redemption_status ||
-      (deal.redemption_status && deal.redemption_status.toLowerCase() !== 'almost there, a few more shares!')
-  );
+  console.log('💾 SavedDeals: allSavedDeals:', allSavedDeals);
+
+
+    // Strictly filter deals by redemption_status only
+    const readyToRedeemDeals = deals.filter(
+      deal => deal.redemption_status && deal.redemption_status.toLowerCase() === 'ready to redeem'
+    );
+
+    const redeemedDeals = deals.filter(
+      deal => deal.redemption_status && deal.redemption_status.toLowerCase() === 'redeemed'
+    );
+
+    const almostRedeemedDeals = deals.filter(
+      deal => deal.redemption_status && deal.redemption_status.toLowerCase() === 'almost there, a few more shares!'
+    );
+
+    // Debug: log allSavedDeals and redeemedDeals
+    React.useEffect(() => {
+      console.log('allSavedDeals:', allSavedDeals);
+      console.log('redeemedDeals:', redeemedDeals);
+      console.log('readyToRedeemDeals:', readyToRedeemDeals);
+      console.log('almostRedeemedDeals:', almostRedeemedDeals);
+    }, [allSavedDeals, redeemedDeals, readyToRedeemDeals, almostRedeemedDeals]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -53,14 +64,14 @@ const SavedDealsScreen = ({ navigation }: any) => {
         </TouchableOpacity>
       </View>
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 80 }}>
-        <Text style={[styles.title, { color: colors.text }]}>Redeemed Deals</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Ready To Redeem</Text>
         {isLoading ? (
           <Text style={[iOSUIKit.body, { color: colors.text, textAlign: 'center' }]}>Loading saved deals...</Text>
-        ) : redeemedDeals.length === 0 ? (
-          <Text style={[iOSUIKit.body, { color: colors.text, textAlign: 'center' }]}>No redeemed deals yet.</Text>
+        ) : readyToRedeemDeals.length === 0 ? (
+          <Text style={[iOSUIKit.body, { color: colors.text, textAlign: 'center' }]}>No deals ready to redeem yet.</Text>
         ) : (
           <FlatList
-            data={redeemedDeals}
+            data={readyToRedeemDeals}
             keyExtractor={item => (item.id || item.deal_id).toString()}
             renderItem={({ item }) => (
               <View style={[styles.card, { backgroundColor: colors.card }]}> 
@@ -112,12 +123,68 @@ const SavedDealsScreen = ({ navigation }: any) => {
         <Text style={[styles.title, { color: colors.text }]}>Share more to Redeem</Text>
         {isLoading ? (
           <Text style={[iOSUIKit.body, { color: colors.text, textAlign: 'center' }]}>Loading saved deals...</Text>
-        ) : notRedeemedDeals.length === 0 ? (
+        ) : almostRedeemedDeals.length === 0 ? (
           <Text style={[iOSUIKit.body, { color: colors.text, textAlign: 'center' }]}>No saved deals yet.</Text>
         ) : (
           <FlatList
-            data={notRedeemedDeals}
+            data={almostRedeemedDeals}
             keyExtractor={item => (item.id || item.deal_id).toString()}
+            renderItem={({ item }) => (
+              <View style={[styles.card, { backgroundColor: colors.card }]}> 
+                {item.deal_images && item.deal_images.length > 0 ? (
+                  <View>
+                    <ImageBackground
+                      source={{ uri: item.deal_images[0].image_url }}
+                      style={[styles.dealImage, { justifyContent: 'center', alignItems: 'center' }]}
+                      imageStyle={{ borderRadius: 8 }}
+                    />
+                  </View>
+                ) : item.deal_image_url ? (
+                  <View>
+                    <ImageBackground
+                      source={{ uri: item.deal_image_url }}
+                      style={[styles.dealImage, { justifyContent: 'center', alignItems: 'center' }]}
+                      imageStyle={{ borderRadius: 8 }}
+                    />
+                  </View>
+                ) : item.business_images && item.business_images.length > 0 ? (
+                  <View>
+                    <ImageBackground
+                      source={{ uri: item.business_images[0].image_url }}
+                      style={[styles.dealImage, { justifyContent: 'center', alignItems: 'center' }]}
+                      imageStyle={{ borderRadius: 8 }}
+                    />
+                  </View>
+                ) : (
+                  <Text style={styles.dealImage}>{item.image ? item.image : '💖'}</Text>
+                )}
+                <Text style={[styles.dealTitle, { color: colors.text }]}> 
+                  {item.deal_title || item.item || item.offer || item.description || 'Saved Deal'}
+                </Text>
+                <Text style={[styles.dealBusiness, { color: colors.disabled }]}>{item.business_name || item.business || ''}</Text>
+                <Text style={[styles.dealBusiness, { color: colors.secondary }]}>{item.category_name || ''}</Text>
+                <Text style={[styles.dealBusiness, { color: colors.text }]}>{item.description || ''}</Text>
+                <TouchableOpacity
+                  style={[styles.button, { backgroundColor: colors.text }]}
+                  onPress={() => navigation.navigate('DealDetail', { deal: item })}
+                >
+                  <Text style={[iOSUIKit.subhead, { color: colors.background, fontWeight: 'bold' }]}>Redeem Now</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            contentContainerStyle={styles.list}
+            scrollEnabled={false}
+          />
+        )}
+        <Text style={[styles.title, { color: colors.text }]}>Redeemed Deals</Text>
+        {isLoading ? (
+          <Text style={[iOSUIKit.body, { color: colors.text, textAlign: 'center' }]}>Loading saved deals...</Text>
+        ) : redeemedDeals.length === 0 ? (
+          <Text style={[iOSUIKit.body, { color: colors.text, textAlign: 'center' }]}>No saved deals yet.</Text>
+        ) : (
+          <FlatList
+            data={redeemedDeals}
+            keyExtractor={item => (item.deal_id || item.id || Math.random().toString()).toString()}
             renderItem={({ item }) => (
               <View style={[styles.card, { backgroundColor: colors.card }]}> 
                 {item.deal_images && item.deal_images.length > 0 ? (

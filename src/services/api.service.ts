@@ -12,7 +12,6 @@ interface ApiResponse<T = any> {
 
 class ApiService {
   
-
   private get baseURL() {
     return ApiConfig.apiURL;
   }
@@ -175,10 +174,13 @@ class ApiService {
   }
 
   async trackDealUnlocked(dealId: string, shareCount: number): Promise<ApiResponse> {
-    return this.makeRequest(`/deals/${dealId}/share`, {
+    const endpoint = `/deals/${dealId}/share`;
+    const payload = { shareCount };
+    console.log('📣 ApiService.trackDealUnlocked ->', { url: `${this.baseURL}${endpoint}`, payload });
+    return this.makeRequest(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ shareCount }),
+      body: JSON.stringify(payload),
     });
   }
 
@@ -193,11 +195,9 @@ class ApiService {
   async postDealRedemption(payload: {
     userId: string;
     dealId: string;
-    userSavedDealId: string;
-    sharesRequired: number;
-    [key: string]: any;
   }): Promise<ApiResponse> {
-    return this.makeRequest('/api/deal-redemption', {
+    console.log('Posting deal redemption with payload:', payload);
+    return this.makeRequest(`/deal-redemption`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)

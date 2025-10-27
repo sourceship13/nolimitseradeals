@@ -60,13 +60,12 @@ const RedemptionScreen = () => {
   const route = useRoute();
   const params = (route.params || {}) as RedemptionRouteParams;
   const navigation = useNavigation();
-  const { isDarkMode } = useAuth();
+  const { isDarkMode, user, refreshDeals } = useAuth();
   const colors = getColors(isDarkMode);
   const code = params.code;
   const deal = params.deal;
-  const userId = params.userId;
-  const userSavedDealId = params.userSavedDealId;
-  const sharesRequired = params.sharesRequired;
+  const userId = user?.id;
+  
 
   const listRef = useRef<FlatList<Item>>(null);
   const [containerW, setContainerW] = useState(0);
@@ -165,18 +164,23 @@ const RedemptionScreen = () => {
         <SlideToUnlock
           label="Slide to Mark Redeemed by Business"
           onUnlock={async () => {
-            if (!userId || !userSavedDealId || !sharesRequired || !deal?.id) {
-              console.error('Missing required redemption parameters');
-              // Optionally show feedback to user
-              return;
-            }
+        if (!userId || !(deal?.id || deal?.deal_id)) {
+          console.error('Missing required redemption parameters', {
+            userId,
+            dealId: deal?.id || deal?.deal_id,
+          });
+          // Optionally show feedback to user
+          return;
+        }
+        const dealId = deal?.id || deal?.deal_id;
+        const payload = {
+          userId: String(userId),
+          dealId: String(dealId),
+        };
             try {
-              await ApiService.postDealRedemption({
-                userId,
-                dealId: deal.id,
-                userSavedDealId,
-                sharesRequired,
-              });
+              await ApiService.postDealRedemption(payload);
+              // Refresh deals to get updated redemption status
+              await refreshDeals();
               navigation.goBack();
             } catch (err) {
               // Optionally show error feedback
