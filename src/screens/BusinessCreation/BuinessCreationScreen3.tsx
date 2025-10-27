@@ -90,16 +90,16 @@ const BusinessCreationScreen3 = ({ navigation }: any) => {
         >
           <View style={styles.container}>
             <Text style={[iOSUIKit.largeTitleEmphasized, { color: colors.text, marginBottom: 16 }]}>
-              Business Creation - Step 2
+              Business Creation - Step 3
             </Text>
             <Text style={[iOSUIKit.body, { color: colors.text, marginVertical: 20 }]}>
-              Upload your business logo and cover photo to make your profile stand out. This helps customers recognize your brand easily.
+              Upload images of your business to enhance your profile and drive customers into your establishment.
             </Text>
             
             {/* Logo Upload */}
             <View style={styles.uploadSection}>
               <Text style={[iOSUIKit.subhead, { color: colors.text, marginBottom: 8, fontWeight: '600' }]}>
-                Business Logo *
+                Business Image 1
               </Text>
               <TouchableOpacity
                 style={[styles.uploadBox, { borderColor: colors.border }]}
@@ -133,7 +133,7 @@ const BusinessCreationScreen3 = ({ navigation }: any) => {
             {/* Cover Photo Upload */}
             <View style={styles.uploadSection}>
               <Text style={[iOSUIKit.subhead, { color: colors.text, marginBottom: 8, fontWeight: '600' }]}>
-                Cover Photo (Optional)
+                Business Image 2
               </Text>
               <TouchableOpacity
                 style={[styles.uploadBoxCover, { borderColor: colors.border }]}
