@@ -79,6 +79,8 @@ class AuthService {
   // Store tokens securely
   private async storeTokens(tokens: AuthTokens): Promise<void> {
     try {
+      console.log('🔐 Storing tokens...');
+      
       // Store refresh token in Keychain (most secure)
       // Use the same service key that other methods expect
       await Keychain.setInternetCredentials(
@@ -86,11 +88,17 @@ class AuthService {
         'refreshToken',
         tokens.refreshToken
       );
+      console.log('✅ Refresh token stored in Keychain');
+
+      // Also store refresh token in AsyncStorage as backup
+      await AsyncStorage.setItem('refreshToken_backup', tokens.refreshToken);
+      console.log('✅ Refresh token backup stored in AsyncStorage');
 
       // Store access token in AsyncStorage (for quick access)
       await AsyncStorage.setItem('accessToken', tokens.accessToken);
+      console.log('✅ Access token stored in AsyncStorage');
     } catch (error) {
-      console.error('Error storing tokens:', error);
+      console.error('❌ Error storing tokens:', error);
       throw error;
     }
   }
@@ -106,15 +114,66 @@ class AuthService {
     }
   }
 
-  // Get refresh token
-  private async getRefreshToken(): Promise<string | null> {
-    try {
-      const credentials = await Keychain.getInternetCredentials('org.sera.dev.nolimitsera');
-      return credentials ? credentials.password : null;
-    } catch (error) {
-      console.error('Error getting refresh token:', error);
-      return null;
+  // Retrieve refresh token with retry and fallback logic
+  async getRefreshToken(): Promise<string | null> {
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY_MS = 500;
+
+    // Try Keychain first with retries
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        console.log(`🔑 Attempting to get refresh token from Keychain (attempt ${attempt}/${MAX_RETRIES})...`);
+        const credentials = await Keychain.getInternetCredentials('org.sera.dev.nolimitsera');
+        
+        if (credentials && credentials.password) {
+          console.log('✅ Refresh token retrieved from Keychain');
+          return credentials.password;
+        }
+        
+        console.warn(`⚠️ No credentials found in Keychain (attempt ${attempt}/${MAX_RETRIES})`);
+        
+        // Wait before retry
+        if (attempt < MAX_RETRIES) {
+          await new Promise<void>(resolve => setTimeout(() => resolve(), RETRY_DELAY_MS * attempt));
+        }
+      } catch (error) {
+        console.error(`❌ Error retrieving refresh token from Keychain (attempt ${attempt}/${MAX_RETRIES}):`, error);
+        
+        // Wait before retry
+        if (attempt < MAX_RETRIES) {
+          await new Promise<void>(resolve => setTimeout(() => resolve(), RETRY_DELAY_MS * attempt));
+        }
+      }
     }
+
+    // Fallback to AsyncStorage backup
+    try {
+      console.log('🔄 Falling back to AsyncStorage backup...');
+      const backupToken = await AsyncStorage.getItem('refreshToken_backup');
+      
+      if (backupToken) {
+        console.log('✅ Refresh token retrieved from AsyncStorage backup');
+        
+        // Attempt to restore to Keychain for next time
+        try {
+          await Keychain.setInternetCredentials(
+            'org.sera.dev.nolimitsera',
+            'refreshToken',
+            backupToken
+          );
+          console.log('✅ Refresh token restored to Keychain from backup');
+        } catch (restoreError) {
+          console.warn('⚠️ Could not restore token to Keychain:', restoreError);
+        }
+        
+        return backupToken;
+      }
+    } catch (error) {
+      console.error('❌ Error retrieving refresh token from AsyncStorage backup:', error);
+    }
+
+    console.error('❌ No refresh token found in storage after all attempts');
+    return null;
   }
 
   // Clear all tokens
