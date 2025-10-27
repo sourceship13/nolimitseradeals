@@ -14,8 +14,15 @@ platform :ios do
       readonly: true,
       git_url: "git@github.com-fastlane-match:ajp-sourceship/nolimitseradeals_fastlane_match.git",
       keychain_name: keychain_name,
-      keychain_password: keychain_password
+      keychain_password: keychain_password,
+      verbose: true
     )
+    
+    # Manually set partition list for codesign access
+    sh("security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k #{keychain_password} ~/Library/Keychains/#{keychain_name}")
+    
+    # Verify certificate is accessible
+    sh("security find-identity -v -p codesigning ~/Library/Keychains/#{keychain_name}")
     
     # Increment build number
     increment_build_number(
