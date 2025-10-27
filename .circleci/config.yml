@@ -78,76 +78,67 @@ jobs:
           destination: android_apk
 
   build_ios:
-  macos:
-    xcode: "16.1.0"
-  resource_class: macos.m1.medium.gen1
-  working_directory: ~/repo
-  environment:
-    FL_OUTPUT_DIR: output
-  shell: /bin/bash --login -o pipefail
-  steps:
-    - checkout
-    - attach_workspace:
-        at: .
-    
-    - run:
-        name: Install Ruby dependencies
-        command: |
-          cd ios
-          bundle update
-          bundle install
-    
-    - restore_cache:
-        keys:
-          - v1-pods-{{ checksum "ios/Podfile.lock" }}
-          - v1-pods-
-    
-    - run:
-        name: Install CocoaPods
-        command: |
-          cd ios
-          bundle exec pod install
-    
-    - save_cache:
-        key: v1-pods-{{ checksum "ios/Podfile.lock" }}
-        paths:
-          - ios/Pods
-          - ~/.cocoapods
-    
-    - run:
-        name: Setup SSH for Match
-        command: |
-          mkdir -p ~/.ssh
-          echo "$MATCH_GIT_SSH_KEY" | base64 --decode > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-          
-          # Setup SSH config for custom Match key
-          cat >> ~/.ssh/config << 'EOF'
-          Host github.com-fastlane-match
-            HostName github.com
-            User git
-            IdentityFile ~/.ssh/id_ed25519
-            IdentitiesOnly yes
-          EOF
-    
-    - run:
-        name: Build and upload to TestFlight
-        command: |
-          cd ios
-          bundle exec fastlane beta
-    
-    - run:
-        name: Display App Version and Build Number
-        command: |
-          APP_VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" ios/nolimitseradeals/Info.plist)
-          BUILD_NUMBER=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" ios/nolimitseradeals/Info.plist)
-          echo "App Version: $APP_VERSION"
-          echo "Build Number: $BUILD_NUMBER"
-    
-    - store_artifacts:
-        path: ios/output
-        destination: ios_build
+    macos:
+      xcode: "16.1.0"
+    resource_class: macos.m1.medium.gen1
+    working_directory: ~/repo
+    environment:
+      FL_OUTPUT_DIR: output
+    shell: /bin/bash --login -o pipefail
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install Ruby dependencies
+          command: |
+            cd ios
+            bundle update
+            bundle install
+      - restore_cache:
+          keys:
+            - v1-pods-{{ checksum "ios/Podfile.lock" }}
+            - v1-pods-
+      - run:
+          name: Install CocoaPods
+          command: |
+            cd ios
+            bundle exec pod install
+      - save_cache:
+          key: v1-pods-{{ checksum "ios/Podfile.lock" }}
+          paths:
+            - ios/Pods
+            - ~/.cocoapods
+      - run:
+          name: Setup SSH for Match
+          command: |
+            mkdir -p ~/.ssh
+            echo "$MATCH_GIT_SSH_KEY" | base64 --decode > ~/.ssh/id_ed25519
+            chmod 600 ~/.ssh/id_ed25519
+            ssh-keyscan github.com >> ~/.ssh/known_hosts
+            
+            cat >> ~/.ssh/config << 'EOF'
+            Host github.com-fastlane-match
+              HostName github.com
+              User git
+              IdentityFile ~/.ssh/id_ed25519
+              IdentitiesOnly yes
+            EOF
+      - run:
+          name: Build and upload to TestFlight
+          command: |
+            cd ios
+            bundle exec fastlane beta
+      - run:
+          name: Display App Version and Build Number
+          command: |
+            APP_VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" ios/nolimitseradeals/Info.plist)
+            BUILD_NUMBER=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" ios/nolimitseradeals/Info.plist)
+            echo "App Version: $APP_VERSION"
+            echo "Build Number: $BUILD_NUMBER"
+      - store_artifacts:
+          path: ios/output
+          destination: ios_build
 
 workflows:
   version: 2

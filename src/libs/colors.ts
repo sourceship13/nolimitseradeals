@@ -24,6 +24,7 @@ export const Colors = {
     instagram: '#E1306C',
     apple: '#000',
     disabled: '#888',
+    placeholder: '#000'
   },
   dark: {
     background: '#36393B',
@@ -47,6 +48,7 @@ export const Colors = {
     instagram: '#E1306C',
     apple: '#fff',
     disabled: '#888',
+    placeholder: '#fff'
   },
 };
 

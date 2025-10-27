@@ -98,6 +98,16 @@ const ProfileScreen = ({ navigation }: any) => {
             Invite Friends
           </Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.menuBtn, { backgroundColor: colors.surface }]}
+          onPress={() => navigation.navigate('BusinessCreationScreen1')}
+        >
+          <Text style={[styles.menuBtnText, { color: colors.text }]}>
+            Business Access
+          </Text>
+        </TouchableOpacity>
+
       </View>
     </View>
   );
