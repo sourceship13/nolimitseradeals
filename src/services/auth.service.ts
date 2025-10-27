@@ -5,6 +5,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Keychain from 'react-native-keychain';
 import ApiConfig from '../libs/utils/api.utils';
+import { getDeviceId } from '../libs/utils/deviceInfo';
 
 const API_BASE_URL = ApiConfig.apiURL;
 
@@ -107,7 +108,7 @@ class AuthService {
   // Get refresh token
   private async getRefreshToken(): Promise<string | null> {
     try {
-      const credentials = await Keychain.getInternetCredentials('com.yourapp.auth');
+      const credentials = await Keychain.getInternetCredentials('org.sera.dev.nolimitsera');
       return credentials ? credentials.password : null;
     } catch (error) {
       console.error('Error getting refresh token:', error);
@@ -120,7 +121,7 @@ class AuthService {
     try {
       await AsyncStorage.removeItem('accessToken');
       await AsyncStorage.removeItem('user');
-      await Keychain.resetInternetCredentials('com.yourapp.auth');
+      await Keychain.resetInternetCredentials('org.sera.dev.nolimitsera');
     } catch (error) {
       console.error('Error clearing tokens:', error);
     }
@@ -215,41 +216,37 @@ class AuthService {
     this.refreshPromise = (async () => {
       try {
         const refreshToken = await this.getRefreshToken();
-        
         if (!refreshToken) {
           console.error(`❌ AuthService.refreshAccessToken: No refresh token found in storage`);
+          await this.clearTokens();
           throw new Error('No refresh token available');
         }
-
+        const deviceId = await getDeviceId();
         const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'x-device-id': deviceId,
           },
           body: JSON.stringify({ refreshToken }),
         });
-
-
         if (!response.ok) {
           const errorData = await response.text();
           console.error(`❌ AuthService.refreshAccessToken: Refresh failed with status ${response.status}: ${errorData}`);
+          await this.clearTokens();
           throw new Error(`Token refresh failed: ${response.status} - ${errorData}`);
         }
-
         const data = await response.json();
-        
         const { accessToken, refreshToken: newRefreshToken } = data;
-
         if (!accessToken) {
           console.error(`❌ AuthService.refreshAccessToken: No access token in refresh response`);
+          await this.clearTokens();
           throw new Error('Invalid refresh response: missing access token');
         }
-
         await this.storeTokens({
           accessToken,
-          refreshToken: newRefreshToken || refreshToken, // Use new refresh token if provided, otherwise keep current one
+          refreshToken: newRefreshToken || refreshToken,
         });
-
         return accessToken;
       } catch (error) {
         console.error(`💥 AuthService.refreshAccessToken: Token refresh failed:`, error);
