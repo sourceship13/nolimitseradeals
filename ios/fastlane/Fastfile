@@ -8,15 +8,23 @@ platform :ios do
       build_number: ENV["CIRCLE_BUILD_NUM"] || Time.now.to_i.to_s
     )
     
-    # Build the app
+    # Build the app with explicit provisioning profile name
     build_app(
       workspace: "nolimitseradeals.xcworkspace",
       scheme: "nolimitseradeals",
       export_method: "app-store",
       output_directory: "./output/gym",
-      output_name: "nolimitseradeals.ipa"
+      output_name: "nolimitseradeals.ipa",
+      codesigning_identity: "Apple Distribution",
+      export_options: {
+        method: "app-store",
+        signingStyle: "manual",
+        provisioningProfiles: {
+          "org.sera.dev.nolimitsera" => ENV["PROVISIONING_PROFILE_NAME"]
+        }
+      }
     )
     
-    puts "✅ Build complete! Download IPA from CircleCI artifacts"
+    puts "✅ Build complete!"
   end
 end

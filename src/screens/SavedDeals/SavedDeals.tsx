@@ -112,7 +112,7 @@ const SavedDealsScreen = ({ navigation }: any) => {
                   style={[styles.button, { backgroundColor: colors.text }]}
                   onPress={() => navigation.navigate('Redemption', { deal: item })}
                 >
-                  <Text style={[iOSUIKit.subhead, { color: colors.background, fontWeight: 'bold', justifyContent:'center', alignItems:'center' }]}>View Redemption</Text>
+                  <Text style={[iOSUIKit.subhead, { color: colors.background, fontWeight: 'bold', textAlign: 'center' }]}>View Redemption</Text>
                 </TouchableOpacity>
               </View>
             )}
