@@ -78,105 +78,76 @@ jobs:
           destination: android_apk
 
   build_ios:
-    macos:
-      xcode: "16.1.0"
-    resource_class: macos.m1.medium.gen1
-    working_directory: ~/repo
-    environment:
-      FL_OUTPUT_DIR: output
-    shell: /bin/bash --login -o pipefail
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - run:
-          name: Install Ruby dependencies
-          command: |
-            cd ios
-            bundle update
-            bundle install
-      - restore_cache:
-          keys:
-            - v1-pods-{{ checksum "ios/Podfile.lock" }}
-            - v1-pods-
-      - run:
-          name: Install CocoaPods
-          command: |
-            cd ios
-            bundle exec pod install
-      - save_cache:
-          key: v1-pods-{{ checksum "ios/Podfile.lock" }}
-          paths:
-            - ios/Pods
-            - ~/.cocoapods
-      - run:
-          name: Setup code signing
-          command: |
-            # Create keychain
-            security create-keychain -p "" build.keychain
-            security default-keychain -s build.keychain
-            security unlock-keychain -p "" build.keychain
-            security set-keychain-settings -t 3600 -u build.keychain
-            
-            # Import certificate
-            echo "$CERTIFICATE_P12" | base64 --decode > cert.p12
-            security import cert.p12 -k build.keychain -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
-            security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
-            
-            # Install provisioning profile with proper UUID
-            mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-            PROFILE_PATH=~/Library/MobileDevice/Provisioning\ Profiles/${PROVISIONING_PROFILE_UUID}.mobileprovision
-            echo "$PROVISIONING_PROFILE" | base64 --decode > "$PROFILE_PATH"
-            
-            # Verify profile was installed correctly
-            echo "Installed provisioning profile:"
-            ls -la ~/Library/MobileDevice/Provisioning\ Profiles/
-            
-            # Extract and display profile info
-            security cms -D -i "$PROFILE_PATH" > profile.plist
-            echo "Profile UUID:"
-            /usr/libexec/PlistBuddy -c "Print :UUID" profile.plist || echo "Could not read UUID"
-            echo "Profile Name:"
-            /usr/libexec/PlistBuddy -c "Print :Name" profile.plist || echo "Could not read Name"
-            echo "App ID:"
-            /usr/libexec/PlistBuddy -c "Print :Entitlements:application-identifier" profile.plist || echo "Could not read App ID"
-      - run:
-          name: Build and deploy to TestFlight
-          command: |
-            cd ios
-            bundle exec fastlane beta 2>&1 | tee build.log || {
-              echo ""
-              echo "====== BUILD FAILED ======"
-              echo ""
-              echo "Last 200 lines of output:"
-              tail -200 build.log
-              echo ""
-              echo "Checking for specific errors:"
-              echo ""
-              echo "=== Code Signing Errors ==="
-              grep -i "signing" build.log | tail -20 || echo "No signing errors"
-              echo ""
-              echo "=== Provisioning Profile Errors ==="
-              grep -i "provisioning" build.log | tail -20 || echo "No provisioning errors"
-              echo ""
-              echo "=== Build Errors ==="
-              grep "error:" build.log | tail -20 || echo "No build errors found"
-              echo ""
-              echo "=== Failed Tasks ==="
-              grep "FAILED" build.log | tail -20 || echo "No failed tasks"
-              echo ""
-              exit 1
-            }
-      - run:
-          name: Display App Version and Build Number
-          command: |
-            APP_VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" ios/nolimitseradeals/Info.plist)
-            BUILD_NUMBER=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" ios/nolimitseradeals/Info.plist)
-            echo "App Version: $APP_VERSION"
-            echo "Build Number: $BUILD_NUMBER"
-      - store_artifacts:
-          path: ios/output
-          destination: ios_build
+  macos:
+    xcode: "16.1.0"
+  resource_class: macos.m1.medium.gen1
+  working_directory: ~/repo
+  environment:
+    FL_OUTPUT_DIR: output
+  shell: /bin/bash --login -o pipefail
+  steps:
+    - checkout
+    - attach_workspace:
+        at: .
+    
+    - run:
+        name: Install Ruby dependencies
+        command: |
+          cd ios
+          bundle update
+          bundle install
+    
+    - restore_cache:
+        keys:
+          - v1-pods-{{ checksum "ios/Podfile.lock" }}
+          - v1-pods-
+    
+    - run:
+        name: Install CocoaPods
+        command: |
+          cd ios
+          bundle exec pod install
+    
+    - save_cache:
+        key: v1-pods-{{ checksum "ios/Podfile.lock" }}
+        paths:
+          - ios/Pods
+          - ~/.cocoapods
+    
+    - run:
+        name: Setup SSH for Match
+        command: |
+          mkdir -p ~/.ssh
+          echo "$MATCH_GIT_SSH_KEY" | base64 --decode > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          
+          # Setup SSH config for custom Match key
+          cat >> ~/.ssh/config << 'EOF'
+          Host github.com-fastlane-match
+            HostName github.com
+            User git
+            IdentityFile ~/.ssh/id_ed25519
+            IdentitiesOnly yes
+          EOF
+    
+    - run:
+        name: Build and upload to TestFlight
+        command: |
+          cd ios
+          bundle exec fastlane beta
+    
+    - run:
+        name: Display App Version and Build Number
+        command: |
+          APP_VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" ios/nolimitseradeals/Info.plist)
+          BUILD_NUMBER=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" ios/nolimitseradeals/Info.plist)
+          echo "App Version: $APP_VERSION"
+          echo "Build Number: $BUILD_NUMBER"
+    
+    - store_artifacts:
+        path: ios/output
+        destination: ios_build
 
 workflows:
   version: 2

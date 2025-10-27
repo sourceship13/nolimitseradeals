@@ -1,30 +1,35 @@
 default_platform(:ios)
 
 platform :ios do
-  desc "Build app"
+  desc "Build and upload to TestFlight"
   lane :beta do
+    # Setup certificates with Match
+    match(
+      type: "appstore",
+      app_identifier: "org.sera.dev.nolimitsera",
+      readonly: true
+    )
+    
     # Increment build number
     increment_build_number(
       build_number: ENV["CIRCLE_BUILD_NUM"] || Time.now.to_i.to_s
     )
     
-    # Build the app with explicit provisioning profile name
+    # Build the app
     build_app(
       workspace: "nolimitseradeals.xcworkspace",
       scheme: "nolimitseradeals",
       export_method: "app-store",
       output_directory: "./output/gym",
-      output_name: "nolimitseradeals.ipa",
-      codesigning_identity: "Apple Distribution",
-      export_options: {
-        method: "app-store",
-        signingStyle: "manual",
-        provisioningProfiles: {
-          "org.sera.dev.nolimitsera" => ENV["PROVISIONING_PROFILE_NAME"]
-        }
-      }
+      output_name: "nolimitseradeals.ipa"
     )
     
-    puts "✅ Build complete!"
+    # Upload to TestFlight
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      skip_submission: true
+    )
+    
+    puts "✅ Build uploaded to TestFlight!"
   end
 end
