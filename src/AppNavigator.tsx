@@ -24,6 +24,7 @@ import { iOSUIKit } from 'react-native-typography';
 import RedemptionScreen from './screens/Redemption/RedemptionScreen';
 import BusinessCreationScreen1 from './screens/BusinessCreation/BusinessCreationScreen1';
 import { Colors } from './libs/colors';
+import BusinessCreationScreen2 from './screens/BusinessCreation/BusinessCreationScreen2';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -176,6 +177,9 @@ const AppNavigator = () => {
             <Stack.Screen name="NetworkDebug" component={NetworkDebugScreen} />
             <Stack.Screen name="Redemption" component={RedemptionScreen} />
             <Stack.Screen name="BusinessCreationScreen1" component={BusinessCreationScreen1} />
+            <Stack.Screen name="BusinessCreationScreen2" component={BusinessCreationScreen2
+              
+            } />
           </>
         )}
       </Stack.Navigator>

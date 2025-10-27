@@ -44,6 +44,12 @@
 	</dict>
 	<key>NSContactsUsageDescription</key>
 	<string>We ask for your Contacts to help you find friends and family to share deals with so you can redeem the Freebies.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need access to your photo library to upload your business logo and cover photo.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>We need access to save photos to your library.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>We need access to your camera to take photos for your business profile.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
 	<key>RCTNewArchEnabled</key>
