@@ -176,14 +176,22 @@ class AuthService {
     return null;
   }
 
-  // Clear all tokens
-  private async clearTokens(): Promise<void> {
+  // Clear stored tokens
+  async clearTokens(): Promise<void> {
     try {
-      await AsyncStorage.removeItem('accessToken');
-      await AsyncStorage.removeItem('user');
+      console.log('🧹 Clearing all tokens...');
+      
+      // Clear Keychain
       await Keychain.resetInternetCredentials('org.sera.dev.nolimitsera');
+      console.log('✅ Keychain tokens cleared');
+      
+      // Clear AsyncStorage
+      await AsyncStorage.removeItem('accessToken');
+      await AsyncStorage.removeItem('refreshToken_backup');
+      console.log('✅ AsyncStorage tokens cleared');
     } catch (error) {
-      console.error('Error clearing tokens:', error);
+      console.error('❌ Error clearing tokens:', error);
+      throw error;
     }
   }
 
