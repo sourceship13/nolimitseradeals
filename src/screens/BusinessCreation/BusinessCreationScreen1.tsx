@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useAuth } from '../../libs/hooks/useAuth';
 import { getColors } from '../../libs/colors';
 import Toolbar from '../../components/Toolbar';
@@ -132,6 +132,20 @@ const BusinessCreationScreen1 = ({ navigation }: any) => {
           placeholderTextColor={colors.placeholder}
         />
       </View>
+      <TouchableOpacity
+        style={{
+          backgroundColor: colors.primary,
+          padding: 15,
+          borderRadius: 10,
+          margin: 24,
+          alignItems: 'center',
+        }}
+        onPress={() => navigation.navigate('BusinessCreationScreen2')}
+      >
+        <Text style={{ color: colors.background, fontWeight: 'bold', fontSize: 16 }}>
+          Next Step
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 };
