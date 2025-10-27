@@ -151,10 +151,25 @@ jobs:
             
             echo "✅ Keychain setup complete"
       - run:
+          name: Generate React Native bundle
+          command: |
+            npx react-native bundle \
+              --entry-file index.js \
+              --platform ios \
+              --dev false \
+              --bundle-output ios/main.jsbundle \
+              --assets-dest ios
+      - run:
           name: Build and upload to TestFlight
           command: |
-            cd ios
-            bundle exec fastlane beta
+            # Generate the bundle first
+            cd ~/repo
+            npx react-native bundle \
+              --entry-file index.js \
+              --platform ios \
+              --dev false \
+              --bundle-output ios/main.jsbundle \
+              --assets-dest ios
       - run:
           name: Display App Version and Build Number
           command: |
