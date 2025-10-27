@@ -16,13 +16,22 @@ platform :ios do
       build_number: ENV["CIRCLE_BUILD_NUM"] || Time.now.to_i.to_s
     )
     
-    # Build the app
+    # Get the provisioning profile from Match
+    profile_env_name = "sigh_org.sera.dev.nolimitsera_appstore_profile-name"
+    
+    # Build the app with explicit profile mapping
     build_app(
       workspace: "nolimitseradeals.xcworkspace",
       scheme: "nolimitseradeals",
       export_method: "app-store",
       output_directory: "./output/gym",
-      output_name: "nolimitseradeals.ipa"
+      output_name: "nolimitseradeals.ipa",
+      export_options: {
+        method: "app-store",
+        provisioningProfiles: {
+          "org.sera.dev.nolimitsera" => ENV[profile_env_name]
+        }
+      }
     )
     
     # Upload to TestFlight

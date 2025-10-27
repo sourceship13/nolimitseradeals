@@ -7,7 +7,7 @@ import { iOSUIKit } from 'react-native-typography';
 import { launchImageLibrary, Asset } from 'react-native-image-picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
-const BusinessCreationScreen2 = ({ navigation }: any) => {
+const BusinessCreationScreen3 = ({ navigation }: any) => {
   const { isDarkMode } = useAuth();
   const colors = getColors(isDarkMode);
   const [logoFile, setLogoFile] = useState<Asset | null>(null);
@@ -253,4 +253,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default BusinessCreationScreen2;
+export default BusinessCreationScreen3;
