@@ -42,10 +42,21 @@ platform :ios do
     profile_name = ENV["sigh_org.sera.dev.nolimitsera_appstore_profile-name"]
     
     # Upload to TestFlight
+    key_path = "/tmp/AuthKey_#{ENV['APP_STORE_CONNECT_API_KEY_KEY_ID']}.p8"
+
+    # Decode from base64 and write to file
+    require 'base64'
+    key_content = Base64.decode64(ENV["APP_STORE_CONNECT_API_KEY_CONTENT"])
+    File.write(key_path, key_content)
+
+    # Verify the file was created
+    puts "Key file size: #{File.size(key_path)} bytes"
+    puts "First line: #{File.readlines(key_path).first}"
+
     api_key = app_store_connect_api_key(
       key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
       issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
-      key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"]
+      key_filepath: key_path
     )
 
     upload_to_testflight(
