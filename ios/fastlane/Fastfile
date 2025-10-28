@@ -41,14 +41,17 @@ platform :ios do
     # Get the provisioning profile name that Match downloaded
     profile_name = ENV["sigh_org.sera.dev.nolimitsera_appstore_profile-name"]
     
-    # Build the app with explicit profile mapping
-    # Before build_app, update code signing settings
-    update_code_signing_settings(
-      use_automatic_signing: false,
-      path: "nolimitseradeals.xcodeproj",
-      code_sign_identity: "Apple Distribution",
-      bundle_identifier: "org.sera.dev.nolimitsera",
-      profile_name: profile_name
+    # Upload to TestFlight
+    puts "🔍 Debugging credentials:"
+    puts "FASTLANE_USER: #{ENV['FASTLANE_USER']}"
+    puts "Password set: #{!ENV['FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD'].nil? && !ENV['FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD'].empty?}"
+    puts "Password length: #{ENV['FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD']&.length}"
+
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      skip_submission: true,
+      username: ENV['FASTLANE_USER'],
+      apple_id: ENV['APPLE_APP_ID']  # Add your app's numeric Apple ID
     )
 
     # Build the app with explicit profile mapping
