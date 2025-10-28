@@ -170,6 +170,8 @@ jobs:
               --dev false \
               --bundle-output ios/main.jsbundle \
               --assets-dest ios
+            cd ios
+            bundle exec fastlane beta
       - run:
           name: Display App Version and Build Number
           command: |
