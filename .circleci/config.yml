@@ -160,6 +160,22 @@ jobs:
               --bundle-output ios/main.jsbundle \
               --assets-dest ios
       - run:
+          name: Strip bitcode from Hermes
+          command: |
+            cd ios
+            
+            # Find and strip bitcode from hermes framework
+            HERMES_FRAMEWORK="Pods/hermes-engine/destroot/Library/Frameworks/universal/hermes.framework/hermes"
+            
+            if [ -f "$HERMES_FRAMEWORK" ]; then
+              echo "Stripping bitcode from Hermes..."
+              xcrun bitcode_strip -r "$HERMES_FRAMEWORK" -o "$HERMES_FRAMEWORK"
+              echo "✅ Bitcode stripped successfully"
+            else
+              echo "⚠️ Hermes framework not found at expected location"
+              find Pods -name "hermes.framework" -type d
+            fi
+      - run:
           name: Build and upload to TestFlight
           command: |
             # Generate the bundle first
