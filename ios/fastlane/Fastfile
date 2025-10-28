@@ -24,23 +24,14 @@ platform :ios do
     # Verify certificate is accessible
     sh("security find-identity -v -p codesigning ~/Library/Keychains/#{keychain_name}")
     
-    # Set marketing version using agvtool
-    sh("xcrun agvtool new-marketing-version 1.1.0")
-
-    # Increment build number
+    # Increment build number only
     increment_build_number(
       build_number: ENV["CIRCLE_BUILD_NUM"] || Time.now.to_i.to_s
     )
     
-    # Get the provisioning profile from Match
-    profile_env_name = "sigh_org.sera.dev.nolimitsera_appstore_profile-name"
+    # Get the provisioning profile name that Match downloaded
+    profile_name = ENV["sigh_org.sera.dev.nolimitsera_appstore_profile-name"]
     
-    update_build_setting(
-      xcodeproj: "nolimitseradeals.xcodeproj",
-      key: "SWIFT_VERSION",
-      value: "5.0"
-    )
-
     # Build the app with explicit profile mapping
     build_app(
       workspace: "nolimitseradeals.xcworkspace",
@@ -55,7 +46,7 @@ platform :ios do
         provisioningProfiles: {
           "org.sera.dev.nolimitsera" => profile_name
         },
-        stripSwiftSymbols: true  # Add this
+        stripSwiftSymbols: true
       }
     )
     
