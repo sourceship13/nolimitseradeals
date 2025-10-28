@@ -14,15 +14,24 @@ platform :ios do
       readonly: true,
       git_url: "git@github.com-fastlane-match:ajp-sourceship/nolimitseradeals_fastlane_match.git",
       keychain_name: keychain_name,
-      keychain_password: keychain_password,
-      verbose: true
+      keychain_password: keychain_password
     )
     
-    # Manually set partition list for codesign access
-    sh("security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k #{keychain_password} ~/Library/Keychains/#{keychain_name}")
+    # Manually set partition list for codesign access - try multiple times
+    sh("security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k #{keychain_password} ~/Library/Keychains/#{keychain_name} || true")
+    
+    # Wait a moment for keychain to settle
+    sleep(2)
+    
+    # Try setting it again
+    sh("security set-key-partition-list -S apple-tool:,apple: -s -k #{keychain_password} ~/Library/Keychains/#{keychain_name}")
     
     # Verify certificate is accessible
-    sh("security find-identity -v -p codesigning ~/Library/Keychains/#{keychain_name}")
+    identities = sh("security find-identity -v -p codesigning ~/Library/Keychains/#{keychain_name}")
+    puts "Available identities:\n#{identities}"
+    
+    # Make absolutely sure the keychain is unlocked
+    sh("security unlock-keychain -p #{keychain_password} ~/Library/Keychains/#{keychain_name}")
     
     # Increment build number only
     increment_build_number(
@@ -41,6 +50,7 @@ platform :ios do
       output_directory: "./output/gym",
       output_name: "nolimitseradeals.ipa",
       skip_profile_detection: true,
+      codesigning_identity: "Apple Distribution",
       export_options: {
         method: "app-store",
         provisioningProfiles: {
