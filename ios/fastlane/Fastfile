@@ -24,6 +24,10 @@ platform :ios do
     # Verify certificate is accessible
     sh("security find-identity -v -p codesigning ~/Library/Keychains/#{keychain_name}")
     
+    increment_version_number(
+      bump_type: "patch"  # This will change 1.0 to 1.0.1
+    )
+
     # Increment build number
     increment_build_number(
       build_number: ENV["CIRCLE_BUILD_NUM"] || Time.now.to_i.to_s
