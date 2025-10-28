@@ -130,6 +130,9 @@ class AuthService {
 
   // Retrieve refresh token with retry and fallback logic
   async getRefreshToken(): Promise<string | null> {
+    // Small delay to ensure AsyncStorage is ready (especially after app resume)
+    await new Promise<void>(resolve => setTimeout(() => resolve(), 50));
+    
     // Try AsyncStorage first (primary storage, more reliable)
     try {
       console.log('🔑 Attempting to get refresh token from AsyncStorage...');
@@ -374,17 +377,26 @@ class AuthService {
   // Public method to proactively refresh tokens (for app state changes, etc.)
   public async proactiveTokenRefresh(): Promise<void> {
     try {
+      console.log('🔄 Proactive token refresh initiated (app foreground)...');
+      
+      // Add delay to ensure AsyncStorage is ready after app resume from background
+      await new Promise<void>(resolve => setTimeout(() => resolve(), 100));
       
       // Check if we have tokens
       const accessToken = await this.getAccessToken();
       const refreshToken = await this.getRefreshToken();
       
       if (!accessToken || !refreshToken) {
+        console.log('⚠️ No tokens found for proactive refresh - user may not be logged in');
         return;
       }
       
+      console.log('✅ Tokens found, proceeding with proactive refresh...');
+      
       // Attempt to refresh
       await this.refreshAccessToken();
+      
+      console.log('✅ Proactive token refresh completed successfully');
     } catch (error) {
       console.error(`❌ AuthService.proactiveTokenRefresh: Proactive refresh failed (this is expected if refresh token is also expired):`, error);
       // Don't throw - this is a background operation
@@ -546,6 +558,20 @@ async resendVerificationCode(identifier: string) {
       const result = await response.json();
       const { user, accessToken, refreshToken, sessionToken } = result;
 
+      console.log('📥 Login response received:', {
+        hasUser: !!user,
+        hasAccessToken: !!accessToken,
+        hasRefreshToken: !!refreshToken,
+        hasSessionToken: !!sessionToken,
+        accessTokenLength: accessToken?.length,
+        refreshTokenLength: refreshToken?.length
+      });
+
+      if (!accessToken || !refreshToken) {
+        console.error('❌ Login response missing tokens!', result);
+        throw new Error('Login response missing required tokens');
+      }
+
       await this.storeTokens({ accessToken, refreshToken });
       await AsyncStorage.setItem('user', JSON.stringify(user));
       
@@ -553,6 +579,8 @@ async resendVerificationCode(identifier: string) {
         await AsyncStorage.setItem('sessionToken', sessionToken);
       }
 
+      console.log('✅ Login completed successfully, tokens stored');
+      
       return user;
     } catch (error) {
       if (error instanceof Error) {
@@ -612,8 +640,31 @@ async resendVerificationCode(identifier: string) {
 
   // Check if user is authenticated
   async isAuthenticated(): Promise<boolean> {
+    console.log('🔍 Checking authentication status...');
+    
     const token = await this.getAccessToken();
+    const refreshToken = await this.getRefreshToken();
+    
+    console.log('Access token exists:', !!token);
+    console.log('Refresh token exists:', !!refreshToken);
+    
+    // If we have a refresh token but no access token, try to refresh
+    if (!token && refreshToken) {
+      console.log('⚠️ No access token but refresh token exists - attempting refresh...');
+      try {
+        await this.refreshAccessToken();
+        console.log('✅ Successfully refreshed access token on authentication check');
+        return true;
+      } catch (error) {
+        console.error('❌ Failed to refresh token during authentication check:', error);
+        // Clear invalid tokens
+        await this.clearTokens();
+        return false;
+      }
+    }
+    
     const isAuth = !!token;
+    console.log('Authentication status:', isAuth);
     return isAuth;
   }
 

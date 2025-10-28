@@ -42,6 +42,16 @@ platform :ios do
     profile_name = ENV["sigh_org.sera.dev.nolimitsera_appstore_profile-name"]
     
     # Build the app with explicit profile mapping
+    # Before build_app, update code signing settings
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "nolimitseradeals.xcodeproj",
+      code_sign_identity: "Apple Distribution",
+      bundle_identifier: "org.sera.dev.nolimitsera",
+      profile_name: profile_name
+    )
+
+    # Build the app with explicit profile mapping
     build_app(
       workspace: "nolimitseradeals.xcworkspace",
       scheme: "nolimitseradeals",
@@ -51,6 +61,7 @@ platform :ios do
       output_name: "nolimitseradeals.ipa",
       skip_profile_detection: true,
       codesigning_identity: "Apple Distribution",
+      xcargs: "-allowProvisioningUpdates",  # Add this to help with signing
       export_options: {
         method: "app-store",
         provisioningProfiles: {

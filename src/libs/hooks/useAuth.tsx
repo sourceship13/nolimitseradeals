@@ -221,16 +221,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const initializeApp = async () => {
     try {
       setLoading(true);
+      console.log('🚀 Initializing app...');
+      
+      // Add a small delay to ensure AsyncStorage is ready
+      await new Promise<void>(resolve => setTimeout(() => resolve(), 100));
       
       // Load saved preferences
       await loadPreferences();
       
-      // Check authentication status
+      // Check authentication status (this will also attempt token refresh if needed)
       const isAuth = await AuthService.isAuthenticated();
+      console.log('Authentication check result:', isAuth);
+      
       if (isAuth) {
         // Get stored user data
         const currentUser = await AuthService.getCurrentUser();
+        console.log('Current user loaded:', !!currentUser);
         setUser(currentUser as User | null);
+        
         // Fetch all deals (available for all users)
         try {
           await fetchDeals();
@@ -254,6 +262,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
       } else {
+        console.log('User not authenticated');
         setUser(null);
         // Even for non-authenticated users, fetch deals
         try {
@@ -262,6 +271,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.error('⚠️ InitializeApp: Failed to fetch deals for guest, but continuing...', dealsError);
         }
       }
+      console.log('✅ App initialization completed');
     } catch (error) {
       console.error('💥 InitializeApp: Error initializing app:', error);
       setUser(null);
@@ -313,17 +323,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Handle app state changes (background/foreground)
-  const handleAppStateChange = (nextAppState: AppStateStatus) => {
+  const handleAppStateChange = async (nextAppState: AppStateStatus) => {
     if (
       appState.current.match(/inactive|background/) &&
       nextAppState === 'active'
     ) {
+      console.log('📱 App returned to foreground');
       
       // Always try to restore categories from storage first
       restoreCategoriesFromStorage();
       
       // Proactively refresh tokens when app comes to foreground (prevents 401 errors)
-      AuthService.proactiveTokenRefresh();
+      // Add try-catch to prevent crashes if token refresh fails
+      try {
+        await AuthService.proactiveTokenRefresh();
+      } catch (error) {
+        console.error('Failed to proactively refresh tokens:', error);
+      }
       
       // App has come to the foreground
       // Always refresh deals when app comes to foreground (for all users)
