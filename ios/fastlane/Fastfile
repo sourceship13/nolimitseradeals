@@ -24,9 +24,8 @@ platform :ios do
     # Verify certificate is accessible
     sh("security find-identity -v -p codesigning ~/Library/Keychains/#{keychain_name}")
     
-    increment_version_number(
-      bump_type: "patch"  # This will change 1.0 to 1.0.1
-    )
+    # Set marketing version using agvtool
+    sh("xcrun agvtool new-marketing-version 1.1.0")
 
     # Increment build number
     increment_build_number(
