@@ -34,7 +34,15 @@ const isPhysicalDevice = (): boolean => {
   return true;
 };
 
-const FORCE_PRODUCTION_BUILD = false; 
+// Detect if running in CI environment (CircleCI, GitHub Actions, etc.)
+const isCI = (): boolean => {
+  // In React Native, we can't access process.env directly in production builds
+  // But we can use __DEV__ as an indicator - production builds have __DEV__ = false
+  // For CI builds, we'll inject a specific flag during the build process
+  return !__DEV__; // CI builds are always production builds (not dev mode)
+};
+
+const FORCE_PRODUCTION_BUILD = isCI(); // Automatically true in CI/production builds
 
 // Override for testing - can be set via NetworkDebug screen
 let FORCE_PHYSICAL_DEVICE: boolean | null = null;
@@ -46,7 +54,7 @@ const FORCE_LOCAL_DEVELOPMENT = !FORCE_PRODUCTION_BUILD; // Set to false to ALWA
 const FORCE_STAGING_ALWAYS = FORCE_PRODUCTION_BUILD; // Set to true to FORCE staging server for all requests
 
 // IMPORTANT: Verify all URLs point to staging
-const STAGING_URL = 'https://f3x2ipn2yf.us-east-1.awsapprunner.com';// Auto-detect environment based on device type and build
+const STAGING_URL = 'https://f3x2ipn2yf.us-east-1.awsapprunner.com';
 const getEnvironment = (): Environment => {
   const actuallyPhysical = FORCE_PHYSICAL_DEVICE !== null ? FORCE_PHYSICAL_DEVICE : isPhysicalDevice();
   // HIGHEST PRIORITY: Force staging override (bypasses all other logic)
