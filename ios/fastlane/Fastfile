@@ -58,16 +58,13 @@ platform :ios do
     require 'base64'
     File.write(key_path, Base64.decode64(ENV["APP_STORE_CONNECT_API_KEY_CONTENT"]))
 
-    # Create API key using filepath (should avoid the OpenSSL parsing issue)
-    api_key = app_store_connect_api_key(
-      key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
-      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
-      key_filepath: key_path,
-      in_house: false
-    )
+    # Set environment variables for pilot to use
+    ENV['APP_STORE_CONNECT_API_KEY_PATH'] = key_path
+    ENV['APP_STORE_CONNECT_API_KEY_ID'] = ENV['APP_STORE_CONNECT_API_KEY_KEY_ID']
+    ENV['APP_STORE_CONNECT_API_KEY_ISSUER_ID'] = ENV['APP_STORE_CONNECT_API_KEY_ISSUER_ID']
 
+    # Upload to TestFlight - pilot will read the env vars
     upload_to_testflight(
-      api_key: api_key,
       skip_waiting_for_build_processing: true,
       skip_submission: true
     )
