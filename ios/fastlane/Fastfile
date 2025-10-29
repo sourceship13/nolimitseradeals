@@ -29,6 +29,9 @@ platform :ios do
       keychain_password: keychain_password
     )
     
+    # Store the profile name from match for later use
+    profile_name = ENV["sigh_org.sera.dev.nolimitsera_appstore_profile-name"]
+    
     # Unlock keychain before building
     unlock_keychain(
       path: keychain_name,
@@ -43,18 +46,31 @@ platform :ios do
       build_number: ENV["CIRCLE_BUILD_NUM"] || 1
     )
     
-    # Build the app
-    gym(
+    # Remove problematic Hermes framework file if it exists
+    sh("rm -rf ../Pods/hermes-engine/destroot/Library/Frameworks/universal/hermes.framework/hermes || true")
+    
+    # Build the app - ONLY ONE BUILD STEP
+    build_app(
+      workspace: "nolimitseradeals.xcworkspace",
       scheme: "nolimitseradeals",
+      clean: true,
       export_method: "app-store",
       configuration: "Release",
-      clean: true,
       output_directory: "./build",
       output_name: "nolimitseradeals.ipa",
+      skip_profile_detection: true,
+      codesigning_identity: "Apple Distribution",
+      xcargs: "-allowProvisioningUpdates",
       export_options: {
+        method: "app-store",
+        uploadBitcode: false,
+        uploadSymbols: true,
+        compileBitcode: false,
         provisioningProfiles: {
-          "org.sera.dev.nolimitsera" => ENV["sigh_org.sera.dev.nolimitsera_appstore_profile-name"] || "match AppStore org.sera.dev.nolimitsera"
-        }
+          "org.sera.dev.nolimitsera" => profile_name || "match AppStore org.sera.dev.nolimitsera"
+        },
+        stripSwiftSymbols: true,
+        manageAppVersionAndBuildNumber: false
       }
     )
     
@@ -64,7 +80,7 @@ platform :ios do
       issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
       key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"],
       is_key_content_base64: true,
-      duration: 1200, # 20 minutes
+      duration: 1200,
       in_house: false
     )
     
@@ -77,34 +93,6 @@ platform :ios do
       notify_external_testers: false,
       ipa: "./build/nolimitseradeals.ipa"
     )
-    
-    # Build the app with explicit profile mapping
-    sh("rm -rf ../Pods/hermes-engine/destroot/Library/Frameworks/universal/hermes.framework/hermes || true")
-  
-    # Build with proper Swift settings
-    build_app(
-      workspace: "nolimitseradeals.xcworkspace",
-      scheme: "nolimitseradeals",
-      clean: true,
-      export_method: "app-store",
-      output_directory: "./output/gym",
-      output_name: "nolimitseradeals.ipa",
-      skip_profile_detection: true,
-      codesigning_identity: "Apple Distribution",
-      xcargs: "-allowProvisioningUpdates",
-      export_options: {
-        method: "app-store",
-        uploadBitcode: false,
-        uploadSymbols: true,
-        compileBitcode: false,
-        provisioningProfiles: {
-          "org.sera.dev.nolimitsera" => profile_name
-        },
-        stripSwiftSymbols: true,
-        manageAppVersionAndBuildNumber: false
-      }
-    )
-    
     
     puts "✅ Build uploaded to TestFlight!"
   end
