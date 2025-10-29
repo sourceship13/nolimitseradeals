@@ -1,6 +1,3 @@
-// Install required packages (no axios needed!):
-// npm install @react-native-async-storage/async-storage react-native-keychain
-
 // src/services/auth.service.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Keychain from 'react-native-keychain';
@@ -33,6 +30,9 @@ interface ApiResponse<T = any> {
 
 class AuthService {
   private refreshPromise: Promise<string> | null = null;
+  // Add in-memory token cache
+  private accessTokenCache: string | null = null;
+  private refreshTokenCache: string | null = null;
 
   // Helper method for fetch requests
   private async fetchWithConfig(
@@ -47,6 +47,8 @@ class AuthService {
       ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
     };
 
+    console.log('🌐 Making request to:', url);
+    console.log('🔑 Using access token:', accessToken ? 'YES (length: ' + accessToken.length + ')' : 'NO');
     
     const response = await fetch(url, { ...options, headers });
     
@@ -81,6 +83,11 @@ class AuthService {
     try {
       console.log('🔐 Storing tokens...');
       
+      // CRITICAL: Update cache immediately
+      this.accessTokenCache = tokens.accessToken;
+      this.refreshTokenCache = tokens.refreshToken;
+      console.log('✅ Tokens cached in memory');
+      
       // Store access token in AsyncStorage (for quick access)
       await AsyncStorage.setItem('accessToken', tokens.accessToken);
       console.log('✅ Access token stored in AsyncStorage');
@@ -113,14 +120,29 @@ class AuthService {
       console.log('✅ Token storage verified successfully');
     } catch (error) {
       console.error('❌ Error storing tokens:', error);
+      // Clear cache on error
+      this.accessTokenCache = null;
+      this.refreshTokenCache = null;
       throw error;
     }
   }
 
-  // Get access token
+  // Get access token - check cache first, then storage
   private async getAccessToken(): Promise<string | null> {
     try {
+      // Check cache first
+      if (this.accessTokenCache) {
+        console.log('✅ Access token retrieved from cache');
+        return this.accessTokenCache;
+      }
+      
+      // Fall back to storage
       const token = await AsyncStorage.getItem('accessToken');
+      if (token) {
+        // Update cache
+        this.accessTokenCache = token;
+        console.log('✅ Access token retrieved from storage and cached');
+      }
       return token;
     } catch (error) {
       console.error('Error getting access token:', error);
@@ -130,6 +152,12 @@ class AuthService {
 
   // Retrieve refresh token with retry and fallback logic
   async getRefreshToken(): Promise<string | null> {
+    // Check cache first
+    if (this.refreshTokenCache) {
+      console.log('✅ Refresh token retrieved from cache');
+      return this.refreshTokenCache;
+    }
+    
     // Small delay to ensure AsyncStorage is ready (especially after app resume)
     await new Promise<void>(resolve => setTimeout(() => resolve(), 50));
     
@@ -140,6 +168,8 @@ class AuthService {
       
       if (token) {
         console.log('✅ Refresh token retrieved from AsyncStorage');
+        // Update cache
+        this.refreshTokenCache = token;
         return token;
       }
       
@@ -159,6 +189,9 @@ class AuthService {
         
         if (credentials && credentials.password) {
           console.log('✅ Refresh token retrieved from Keychain');
+          
+          // Update cache
+          this.refreshTokenCache = credentials.password;
           
           // Restore to AsyncStorage for reliability
           try {
@@ -196,6 +229,11 @@ class AuthService {
     try {
       console.log('🧹 Clearing all tokens...');
       
+      // Clear cache immediately
+      this.accessTokenCache = null;
+      this.refreshTokenCache = null;
+      console.log('✅ Token cache cleared');
+      
       // Clear AsyncStorage
       await AsyncStorage.removeItem('accessToken');
       await AsyncStorage.removeItem('refreshToken_backup');
@@ -227,18 +265,22 @@ class AuthService {
   // Debug method to check token status
   async checkTokenStatus(): Promise<void> {
     console.log('🔍 Checking token status...');
+    console.log('Cache status:');
+    console.log('  - Access token in cache:', !!this.accessTokenCache);
+    console.log('  - Refresh token in cache:', !!this.refreshTokenCache);
     
     const accessToken = await AsyncStorage.getItem('accessToken');
     const refreshToken = await AsyncStorage.getItem('refreshToken_backup');
     
-    console.log('Access token exists:', !!accessToken);
-    console.log('Refresh token exists in AsyncStorage:', !!refreshToken);
+    console.log('Storage status:');
+    console.log('  - Access token in AsyncStorage:', !!accessToken);
+    console.log('  - Refresh token in AsyncStorage:', !!refreshToken);
     
     try {
       const keychainCreds = await Keychain.getInternetCredentials('org.sera.dev.nolimitsera');
-      console.log('Refresh token exists in Keychain:', !!(keychainCreds && keychainCreds.password));
+      console.log('  - Refresh token in Keychain:', !!(keychainCreds && keychainCreds.password));
     } catch (error) {
-      console.log('Keychain check failed:', error);
+      console.log('  - Keychain check failed:', error);
     }
   }
 
@@ -257,9 +299,12 @@ class AuthService {
         return response;
       }
 
+      console.log('⚠️ Got 401, attempting token refresh...');
       
       // If 401, try to refresh token
       const newAccessToken = await this.refreshAccessToken();
+      
+      console.log('✅ Token refreshed, retrying request...');
       
       // Retry with new token
       const retryResponse = await fetch(url, {
@@ -297,8 +342,12 @@ class AuthService {
         return this.handleResponse<T>(response);
       }
 
+      console.log('⚠️ Got 401, attempting token refresh...');
+      
       // If 401, try to refresh token
       const newAccessToken = await this.refreshAccessToken();
+      
+      console.log('✅ Token refreshed, retrying request...');
       
       // Retry with new token
       const retryResponse = await fetch(url, {
@@ -322,9 +371,11 @@ class AuthService {
 
   // Refresh access token
   private async refreshAccessToken(): Promise<string> {
+    console.log('🔄 refreshAccessToken called');
     
     // Prevent multiple simultaneous refresh calls
     if (this.refreshPromise) {
+      console.log('⏳ Refresh already in progress, waiting...');
       return this.refreshPromise;
     }
 
@@ -336,6 +387,9 @@ class AuthService {
           await this.clearTokens();
           throw new Error('No refresh token available');
         }
+        
+        console.log('📤 Sending refresh request with token length:', refreshToken.length);
+        
         const deviceId = await getDeviceId();
         const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
           method: 'POST',
@@ -345,23 +399,35 @@ class AuthService {
           },
           body: JSON.stringify({ refreshToken }),
         });
+        
         if (!response.ok) {
           const errorData = await response.text();
           console.error(`❌ AuthService.refreshAccessToken: Refresh failed with status ${response.status}: ${errorData}`);
           await this.clearTokens();
           throw new Error(`Token refresh failed: ${response.status} - ${errorData}`);
         }
+        
         const data = await response.json();
         const { accessToken, refreshToken: newRefreshToken } = data;
+        
         if (!accessToken) {
           console.error(`❌ AuthService.refreshAccessToken: No access token in refresh response`);
           await this.clearTokens();
           throw new Error('Invalid refresh response: missing access token');
         }
+        
+        console.log('✅ Received new tokens from server');
+        console.log('📥 New access token length:', accessToken.length);
+        
+        // Store tokens (this will update the cache immediately)
         await this.storeTokens({
           accessToken,
           refreshToken: newRefreshToken || refreshToken,
         });
+        
+        console.log('✅ Token refresh completed successfully');
+        console.log('🔑 Cache now contains access token:', !!this.accessTokenCache);
+        
         return accessToken;
       } catch (error) {
         console.error(`💥 AuthService.refreshAccessToken: Token refresh failed:`, error);
@@ -382,7 +448,7 @@ class AuthService {
       // Add delay to ensure AsyncStorage is ready after app resume from background
       await new Promise<void>(resolve => setTimeout(() => resolve(), 100));
       
-      // Check if we have tokens
+      // Check if we have tokens (check cache first, then storage)
       const accessToken = await this.getAccessToken();
       const refreshToken = await this.getRefreshToken();
       
@@ -392,127 +458,126 @@ class AuthService {
       }
       
       console.log('✅ Tokens found, proceeding with proactive refresh...');
+      console.log('🔑 Current access token cached:', !!this.accessTokenCache);
       
       // Attempt to refresh
-      await this.refreshAccessToken();
+      const newAccessToken = await this.refreshAccessToken();
       
       console.log('✅ Proactive token refresh completed successfully');
+      console.log('🔑 New access token received and cached:', !!newAccessToken);
     } catch (error) {
-      console.error(`❌ AuthService.proactiveTokenRefresh: Proactive refresh failed (this is expected if refresh token is also expired):`, error);
+      console.error(`❌ AuthService.proactiveTokenRefresh: Proactive refresh failed:`, error);
       // Don't throw - this is a background operation
     }
   }
 
   async verifyCode(identifier: string, code: string) {
-  try {
-    const url = `${API_BASE_URL}/auth/verify-code`;
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        identifier, // phone number or email
-        code
-      }),
-    });
-
-    const text = await response.text();
-    
-    let result;
     try {
-      result = JSON.parse(text);
-    } catch (e) {
-      throw new Error('Invalid response from server');
-    }
+      const url = `${API_BASE_URL}/auth/verify-code`;
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          identifier,
+          code
+        }),
+      });
 
-    if (!response.ok) {
-      throw new Error(result.error || 'Verification failed');
-    }
+      const text = await response.text();
+      
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch (e) {
+        throw new Error('Invalid response from server');
+      }
 
-    return result;
-  } catch (error) {
-    console.error('Verification error:', error);
-    throw error;
+      if (!response.ok) {
+        throw new Error(result.error || 'Verification failed');
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Verification error:', error);
+      throw error;
+    }
   }
-}
 
-async resendVerificationCode(identifier: string) {
-  try {
-    const url = `${API_BASE_URL}/auth/resend-code`;
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ identifier }),
-    });
+  async resendVerificationCode(identifier: string) {
+    try {
+      const url = `${API_BASE_URL}/auth/resend-code`;
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ identifier }),
+      });
 
-    const result = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(result.error || 'Failed to resend code');
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to resend code');
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Resend error:', error);
+      throw error;
     }
-
-    return result;
-  } catch (error) {
-    console.error('Resend error:', error);
-    throw error;
   }
-}
 
   async register(data: {
-  email: string;
-  password: string;
-  first_name?: string;
-  last_name?: string;
-  phone_number?: string;
-}) {
-  try {
-    const url = `${API_BASE_URL}/auth/register`;
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-    
-    
-    // Log the raw response first
-    const responseText = await response.text();
-    
-    // Check if it's HTML
-    if (responseText.startsWith('<')) {
-      console.error('Received HTML instead of JSON:', responseText.substring(0, 200));
-      throw new Error('Server error - received HTML instead of JSON. Check if backend is running.');
-    }
-    
-    // Try to parse as JSON
-    let result;
+    email: string;
+    password: string;
+    first_name?: string;
+    last_name?: string;
+    phone_number?: string;
+  }) {
     try {
-      result = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error('Failed to parse response as JSON:', parseError);
-      throw new Error('Invalid response from server');
+      const url = `${API_BASE_URL}/auth/register`;
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      const responseText = await response.text();
+      
+      // Check if it's HTML
+      if (responseText.startsWith('<')) {
+        console.error('Received HTML instead of JSON:', responseText.substring(0, 200));
+        throw new Error('Server error - received HTML instead of JSON. Check if backend is running.');
+      }
+      
+      // Try to parse as JSON
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse response as JSON:', parseError);
+        throw new Error('Invalid response from server');
+      }
+      
+      // Check if the request was successful
+      if (!response.ok) {
+        throw new Error(result.error || 'Registration failed');
+      }
+      
+      return result;
+      
+    } catch (error) {
+      console.error('❌ Registration error:', error);
+      throw error;
     }
-    
-    // Check if the request was successful
-    if (!response.ok) {
-      throw new Error(result.error || 'Registration failed');
-    }
-    
-    // Success! Return the result
-    return result;
-    
-  } catch (error) {
-    console.error('❌ Registration error:', error);
-    throw error;
   }
-}
 
   // Login user
   async login(
@@ -533,13 +598,11 @@ async resendVerificationCode(identifier: string) {
         headers['X-Device-ID'] = deviceId;
       }
 
-
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers,
         body: JSON.stringify(credentials),
       });
-
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -572,6 +635,7 @@ async resendVerificationCode(identifier: string) {
         throw new Error('Login response missing required tokens');
       }
 
+      // Store tokens (this updates cache immediately)
       await this.storeTokens({ accessToken, refreshToken });
       await AsyncStorage.setItem('user', JSON.stringify(user));
       
@@ -579,7 +643,8 @@ async resendVerificationCode(identifier: string) {
         await AsyncStorage.setItem('sessionToken', sessionToken);
       }
 
-      console.log('✅ Login completed successfully, tokens stored');
+      console.log('✅ Login completed successfully, tokens stored and cached');
+      console.log('🔑 Access token now in cache:', !!this.accessTokenCache);
       
       return user;
     } catch (error) {
@@ -613,6 +678,7 @@ async resendVerificationCode(identifier: string) {
       // Always clear local tokens
       await this.clearTokens();
       await AsyncStorage.removeItem('sessionToken');
+      await AsyncStorage.removeItem('user');
     }
   }
 
@@ -645,8 +711,8 @@ async resendVerificationCode(identifier: string) {
     const token = await this.getAccessToken();
     const refreshToken = await this.getRefreshToken();
     
-    console.log('Access token exists:', !!token);
-    console.log('Refresh token exists:', !!refreshToken);
+    console.log('Access token exists:', !!token, '(cached:', !!this.accessTokenCache, ')');
+    console.log('Refresh token exists:', !!refreshToken, '(cached:', !!this.refreshTokenCache, ')');
     
     // If we have a refresh token but no access token, try to refresh
     if (!token && refreshToken) {
@@ -756,7 +822,7 @@ async resendVerificationCode(identifier: string) {
     );
   }
 
-  // Verify two-factor code
+  // Verify two-factor code-
   async verifyTwoFactor(code: string): Promise<void> {
     await this.authenticatedRequest(
       `${API_BASE_URL}/auth/2fa/verify`,

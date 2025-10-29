@@ -18,7 +18,7 @@ interface AuthContextType {
   
   // Authentication methods
   login: (credentials: LoginCredentials) => Promise<void>;
-  register: (data: RegisterData) => Promise<string>; // Returns verification message
+  register: (data: RegisterData) => Promise<string>;
   logout: (logoutAll?: boolean) => Promise<void>;
   
   // User management methods
@@ -58,6 +58,7 @@ interface AuthContextType {
   categories: Record<string, boolean>;
   setCategories: (value: Record<string, boolean>) => void;
   availableCategories: Category[];
+  refreshCategories: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -83,6 +84,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   // App state reference for background/foreground handling
   const appState = useRef(AppState.currentState);
+  
+  // Track if we're currently handling app state change to prevent duplicate calls
+  const isHandlingAppStateChange = useRef(false);
 
   // Initialize on mount
   useEffect(() => {
@@ -90,7 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Listen for appearance changes
     const appearanceSubscription = Appearance.addChangeListener(({ colorScheme }) => {
-      if (!isDarkMode) { // Only update if user hasn't manually set it
+      if (!isDarkMode) {
         setDarkModeState(colorScheme === 'dark');
       }
     });
@@ -104,16 +108,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  // Helper to wait for storage to be ready
+  const waitForStorageReady = async (): Promise<void> => {
+    const MAX_WAIT_TIME = 2000; // 2 seconds max
+    const CHECK_INTERVAL = 100;
+    const startTime = Date.now();
+    
+    while (Date.now() - startTime < MAX_WAIT_TIME) {
+      try {
+        await AsyncStorage.getItem('_storage_ready_test');
+        console.log('✅ Storage is ready');
+        return;
+      } catch (error) {
+        console.log('⏳ Waiting for storage to be ready...');
+        await new Promise<void>(resolve => setTimeout(() => resolve(), CHECK_INTERVAL));
+      }
+    }
+    
+    console.warn('⚠️ Storage readiness timeout - proceeding anyway');
+  };
+
   // Fetch all deals from API
   const fetchDeals = async () => {
     try {
       setDealsLoading(true);
       const result = await ApiService.getDeals();
       if (result.success && result.data) {
-        // Handle both direct array and object with data property
         const dealsData = result.data || result;
         const finalDeals = Array.isArray(dealsData) ? dealsData : [];
         setDeals(finalDeals);
+        
         // Extract categories from deals
         const extractedCategories: Category[] = [];
         const categoryMap: Record<string, Category> = {};
@@ -134,7 +158,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         Object.values(categoryMap).forEach((cat: Category) => extractedCategories.push(cat));
         setAvailableCategories(extractedCategories);
-        // Build categories state object (all true by default, or restore from storage)
+        
+        // Build categories state object
         const savedCategories = await AsyncStorage.getItem('categories');
         let mergedCategories: Record<string, boolean> = {};
         if (savedCategories) {
@@ -175,25 +200,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const result = await ApiService.getHeartedDeals();
       
       if (result.success && result.data) {
-        // Handle new API response format: { dealIds: [...], count: number }
         let heartedDealIds: string[] = [];
         
         if (result.data && typeof result.data === 'object' && !Array.isArray(result.data)) {
-          // New format: { dealIds: [...], count: number }
           const dataObj = result.data as any;
           if (dataObj.dealIds && Array.isArray(dataObj.dealIds)) {
             heartedDealIds = dataObj.dealIds;
           }
         } else if (Array.isArray(result.data)) {
-          // Legacy format: array of deal objects
           heartedDealIds = result.data.map((deal: any) => deal.deal_id || deal.id).filter(Boolean);
         }
         
-        // Convert deal IDs to minimal deal objects for compatibility
         const heartedDealsArray = heartedDealIds.map(dealId => ({
           deal_id: dealId,
-          id: dealId, // Also set id for compatibility
-          isHearted: true // Flag to indicate this is a hearted deal
+          id: dealId,
+          isHearted: true
         }));
         
         setHeartedDeals(heartedDealsArray);
@@ -204,10 +225,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error('❌ Error fetching hearted deals:', error);
-      console.error('❌ Full error details:', {
-        message: (error as any)?.message,
-        stack: (error as any)?.stack
-      });
       setHeartedDeals([]);
       return [];
     } finally {
@@ -215,21 +232,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Fetch categories from API
-
   // Initialize app (auth + preferences)
   const initializeApp = async () => {
     try {
       setLoading(true);
       console.log('🚀 Initializing app...');
       
-      // Add a small delay to ensure AsyncStorage is ready
-      await new Promise<void>(resolve => setTimeout(() => resolve(), 100));
+      // CRITICAL: Wait for storage to be ready before proceeding
+      await waitForStorageReady();
       
       // Load saved preferences
       await loadPreferences();
       
-      // Check authentication status (this will also attempt token refresh if needed)
+      // Check authentication status
       const isAuth = await AuthService.isAuthenticated();
       console.log('Authentication check result:', isAuth);
       
@@ -239,18 +254,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Current user loaded:', !!currentUser);
         setUser(currentUser as User | null);
         
-        // Fetch all deals (available for all users)
+        // Fetch all deals
         try {
           await fetchDeals();
         } catch (dealsError) {
           console.error('⚠️ InitializeApp: Failed to fetch deals, but continuing...', dealsError);
         }
-        // Fetch hearted deals after user is authenticated
+        
+        // Fetch hearted deals
         try {
           await fetchHeartedDeals();
         } catch (heartedDealsError) {
           console.error('⚠️ InitializeApp: Failed to fetch hearted deals, but continuing...', heartedDealsError);
         }
+        
         // Try to refresh user data from server
         if (currentUser) {
           try {
@@ -258,13 +275,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(freshUser as User);
           } catch (error) {
             console.error('⚠️ InitializeApp: Using cached user data, server refresh failed:', error);
-            // Keep using cached data if refresh fails
           }
         }
       } else {
         console.log('User not authenticated');
         setUser(null);
-        // Even for non-authenticated users, fetch deals
+        
+        // Fetch deals for guest users
         try {
           await fetchDeals();
         } catch (dealsError) {
@@ -295,22 +312,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const parsedCategories = JSON.parse(savedCategories);
         
         if (availableCategories.length > 0) {
-          // Validate saved categories against available categories
           const validCategories: Record<string, boolean> = {};
           availableCategories.forEach(cat => {
-            // Use the saved preference if it exists, otherwise default to true
             validCategories[cat.slug] = parsedCategories[cat.slug] !== undefined 
               ? parsedCategories[cat.slug] 
               : true;
           });
           setCategoriesState(validCategories);
         } else {
-          // If availableCategories is empty, just restore the saved categories as-is
-          // This prevents clearing categories when availableCategories hasn't loaded yet
           setCategoriesState(parsedCategories);
         }
       } else if (availableCategories.length > 0) {
-        // If no saved preferences but we have categories, set all to true
         const defaultCategories: Record<string, boolean> = {};
         availableCategories.forEach(cat => {
           defaultCategories[cat.slug] = true;
@@ -324,51 +336,74 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Handle app state changes (background/foreground)
   const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+    console.log('📱 App state change detected:', appState.current, '→', nextAppState);
+    
+    // Prevent duplicate handling
+    if (isHandlingAppStateChange.current) {
+      console.log('⏭️ Already handling app state change, skipping...');
+      return;
+    }
+    
     if (
       appState.current.match(/inactive|background/) &&
       nextAppState === 'active'
     ) {
-      console.log('📱 App returned to foreground');
+      isHandlingAppStateChange.current = true;
       
-      // Always try to restore categories from storage first
-      restoreCategoriesFromStorage();
-      
-      // Proactively refresh tokens when app comes to foreground (prevents 401 errors)
-      // Add try-catch to prevent crashes if token refresh fails
       try {
-        await AuthService.proactiveTokenRefresh();
-      } catch (error) {
-        console.error('Failed to proactively refresh tokens:', error);
-      }
-      
-      // App has come to the foreground
-      // Always refresh deals when app comes to foreground (for all users)
-      fetchDeals();
-      
-      if (user) {
-        // Refresh user data when app comes back to foreground
-        refreshUser();
-        // Refresh categories when app comes back to foreground (only if user is authenticated)
-        // Refresh hearted deals when app comes back to foreground
-        fetchHeartedDeals();
-      } else {
-        // Even without user, try to fetch categories for guest mode
+        console.log('🔄 App returned to foreground - refreshing...');
+        
+        // CRITICAL: Wait for storage to be ready after app resume
+        await waitForStorageReady();
+        
+        // Add extra delay to ensure storage is fully accessible
+        await new Promise<void>(resolve => setTimeout(() => resolve(), 250));
+        
+        // Always restore categories from storage first
+        await restoreCategoriesFromStorage();
+        
+        // Proactively refresh tokens (prevents 401 errors)
+        try {
+          console.log('🔐 Attempting proactive token refresh...');
+          await AuthService.proactiveTokenRefresh();
+          console.log('✅ Proactive token refresh completed');
+        } catch (error) {
+          console.error('❌ Failed to proactively refresh tokens:', error);
+        }
+        
+        // Always refresh deals
+        fetchDeals().catch(err => console.error('❌ Failed to refresh deals:', err));
+        
+        if (user) {
+          // Refresh user data
+          refreshUser().catch(err => console.error('❌ Failed to refresh user:', err));
+          
+          // Refresh hearted deals
+          fetchHeartedDeals().catch(err => console.error('❌ Failed to refresh hearted deals:', err));
+        }
+      } finally {
+        // Reset the flag after a short delay
+        setTimeout(() => {
+          isHandlingAppStateChange.current = false;
+        }, 1000);
       }
     }
+    
     appState.current = nextAppState;
   };
 
-  // Restore categories from storage without validation against availableCategories
+  // Restore categories from storage without validation
   const restoreCategoriesFromStorage = async () => {
     try {
       const savedCategories = await AsyncStorage.getItem('categories');
       if (savedCategories !== null) {
         const parsedCategories = JSON.parse(savedCategories);
         setCategoriesState(parsedCategories);
+        console.log('✅ Categories restored from storage');
         return parsedCategories;
       }
     } catch (error) {
-      console.error('Error restoring categories from storage:', error);
+      console.error('❌ Error restoring categories from storage:', error);
     }
     return null;
   };
@@ -395,6 +430,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Refresh categories manually
   const refreshCategories = async () => {
+    // Implementation if needed
   };
 
   // Refresh deals manually
@@ -414,87 +450,68 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return heartedDeals.some(deal => deal.deal_id === dealId || deal.id === dealId);
   };
 
-  // Heart a deal (API + state update)
+  // Heart a deal
   const heartDeal = async (dealId: string, dealObject?: any): Promise<boolean> => {
-    
     if (!user?.id) {
       console.error('❌ Cannot heart deal: user not authenticated');
       return false;
     }
 
     try {
-      // Optimistic update - add to global state immediately
       const alreadyHearted = heartedDeals.some(d => d.deal_id === dealId || d.id === dealId);
       if (!alreadyHearted) {
-        // Create minimal deal object for hearted deals state
         const dealToAdd = {
           deal_id: dealId,
           id: dealId,
           isHearted: true,
-          // Include any additional deal data if provided
           ...(dealObject && typeof dealObject === 'object' ? dealObject : {})
         };
         setHeartedDeals(prev => [...prev, dealToAdd]);
       }
-      // Make API call
+      
       await ApiService.heartDeal(dealId);
-      // Refresh both hearted deals and all deals in background for consistency
+      
       Promise.all([
-        refreshHeartedDeals().catch(err => {
-          console.warn('⚠️ Background refresh failed:', err);
-        }),
-        refreshDeals().catch(err => {
-          console.warn('⚠️ Deals refresh failed:', err);
-        })
+        refreshHeartedDeals().catch(err => console.warn('⚠️ Background refresh failed:', err)),
+        refreshDeals().catch(err => console.warn('⚠️ Deals refresh failed:', err))
       ]);
 
       return true;
     } catch (error: any) {
       console.error('❌ Heart deal failed:', error);
-      // Revert optimistic update on error
       setHeartedDeals(prev => prev.filter(d => d.deal_id !== dealId && d.id !== dealId));
       return false;
     }
   };
 
-  // Unheart a deal (API + state update)
+  // Unheart a deal
   const unheartDeal = async (dealId: string): Promise<boolean> => {
-    
     if (!user?.id) {
       console.error('❌ Cannot unheart deal: user not authenticated');
       return false;
     }
 
-    // Store original deals for potential revert
     const originalDeals = [...heartedDeals];
 
     try {
-      // Optimistic update - remove from global state immediately
       setHeartedDeals(prev => prev.filter(d => d.deal_id !== dealId && d.id !== dealId));
-      // Make API call
+      
       await ApiService.unheartDeal(dealId);
-      // Refresh both hearted deals and all deals in background for consistency
+      
       Promise.all([
-        refreshHeartedDeals().catch(err => {
-          console.warn('⚠️ Background refresh failed:', err);
-        }),
-        refreshDeals().catch(err => {
-          console.warn('⚠️ Deals refresh failed:', err);
-        })
+        refreshHeartedDeals().catch(err => console.warn('⚠️ Background refresh failed:', err)),
+        refreshDeals().catch(err => console.warn('⚠️ Deals refresh failed:', err))
       ]);
 
       return true;
     } catch (error: any) {
       console.error('❌ Unheart deal failed:', error);
-      
-      // Revert optimistic update on error (restore original deals)
       setHeartedDeals(originalDeals);
-      
       return false;
     }
   };
 
-  // Toggle heart status (convenience function)
+  // Toggle heart status
   const toggleHeartDeal = async (dealId: string, dealObject?: any): Promise<boolean> => {
     const isCurrentlyHearted = isDealHearted(dealId);
     
@@ -511,10 +528,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       
-      // Get device ID if you're tracking devices
       let deviceId = await AsyncStorage.getItem('deviceId');
       if (!deviceId) {
-        // Generate a unique device ID
         deviceId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         await AsyncStorage.setItem('deviceId', deviceId);
       }
@@ -522,15 +537,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const loggedInUser = await AuthService.login(credentials, deviceId);
       setUser(loggedInUser as User);
       
-      // Fetch categories after successful login
-      // Fetch hearted deals after successful login
       try {
         await fetchHeartedDeals();
       } catch (heartedDealsError) {
         console.error('⚠️ Login: Failed to fetch hearted deals, but continuing login...', heartedDealsError);
       }
       
-      // Load user-specific preferences if any
       await loadUserPreferences(loggedInUser.id);
     } catch (error) {
       throw error;
@@ -546,7 +558,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { user: newUser, message } = await AuthService.register(data);
       setUser(newUser);
       
-      return message; // Return verification message
+      return message;
     } catch (error) {
       throw error;
     } finally {
@@ -559,8 +571,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await AuthService.logout(logoutAll);
       setUser(null);
       
-      // Optionally reset preferences on logout
-      // Reset categories to all true
       if (availableCategories.length > 0) {
         const defaultCategories: Record<string, boolean> = {};
         availableCategories.forEach(cat => {
@@ -570,7 +580,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error('Logout error:', error);
-      // Even if API call fails, clear local state
       setUser(null);
     }
   };
@@ -582,7 +591,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Error refreshing user:', error);
       
-      // Check if user is still authenticated
       const isAuth = await AuthService.isAuthenticated();
       if (!isAuth) {
         setUser(null);
@@ -614,7 +622,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const verifyEmail = async (token: string) => {
     await AuthService.verifyEmail(token);
-    // Refresh user to update verification status
     await refreshUser();
   };
 
@@ -622,8 +629,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user?.email) {
       throw new Error('No user email found');
     }
-    // This would need to be implemented in your AuthService
-    // await AuthService.resendVerificationEmail(user.email);
   };
 
   const getActiveSessions = async () => {
@@ -631,19 +636,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const revokeSession = async (sessionId: string) => {
-    // This would need to be implemented in your AuthService
-    // await AuthService.revokeSession(sessionId);
+    // Implementation needed
   };
 
-  // Load user-specific preferences
   const loadUserPreferences = async (userId: string) => {
     try {
-      // Load user-specific category preferences if they exist
       const userCategories = await AsyncStorage.getItem(`categories_${userId}`);
       if (userCategories) {
         const parsedCategories = JSON.parse(userCategories);
         
-        // Validate against available categories
         const validCategories: Record<string, boolean> = {};
         availableCategories.forEach(cat => {
           validCategories[cat.slug] = parsedCategories[cat.slug] !== undefined 
@@ -654,7 +655,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCategoriesState(validCategories);
       }
       
-      // Load user-specific theme preference if it exists
       const userTheme = await AsyncStorage.getItem(`theme_${userId}`);
       if (userTheme) {
         setDarkModeState(userTheme === 'dark');
@@ -664,37 +664,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Memoized context value
   const value = useMemo(() => ({
-    // Authentication state
     user,
     loading,
     isAuthenticated: !!user,
     isEmailVerified: user?.is_verified ?? false,
-    
-    // Authentication methods
     login,
     register,
     logout,
-    
-    // User management
     refreshUser,
     updateProfile,
-    
-    // Password management
     requestPasswordReset,
     resetPassword,
     changePassword,
-    
-    // Email verification
     verifyEmail,
     resendVerificationEmail,
-    
-    // Session management
     getActiveSessions,
     revokeSession,
-    
-    // Hearted deals management
     heartedDeals,
     heartedDealsLoading,
     refreshHeartedDeals,
@@ -702,13 +688,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     heartDeal,
     unheartDeal,
     toggleHeartDeal,
-    
-    // All deals management
     deals,
     dealsLoading,
     refreshDeals,
-    
-    // Your existing features
     isDarkMode,
     setDarkMode,
     categories,
@@ -727,3 +709,4 @@ export function useAuth() {
   }
   return context;
 }
+
