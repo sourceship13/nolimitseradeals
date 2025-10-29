@@ -471,7 +471,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       await ApiService.heartDeal(dealId);
       
-      Promise.all([
+      // Await the refresh to ensure UI has updated data immediately
+      await Promise.all([
         refreshHeartedDeals().catch(err => console.warn('⚠️ Background refresh failed:', err)),
         refreshDeals().catch(err => console.warn('⚠️ Deals refresh failed:', err))
       ]);
@@ -498,7 +499,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       await ApiService.unheartDeal(dealId);
       
-      Promise.all([
+      // Await the refresh to ensure UI has updated data immediately
+      await Promise.all([
         refreshHeartedDeals().catch(err => console.warn('⚠️ Background refresh failed:', err)),
         refreshDeals().catch(err => console.warn('⚠️ Deals refresh failed:', err))
       ]);

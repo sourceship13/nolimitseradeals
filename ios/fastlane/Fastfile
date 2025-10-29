@@ -3,47 +3,34 @@ default_platform(:ios)
 platform :ios do
   desc "Push a new beta build to TestFlight"
   lane :beta do
-    setup_ci
-    
+    # Use keychain created by CircleCI
     keychain_name = "fastlane.keychain-db"
     keychain_password = "temp_password"
     
-    create_keychain(
-      name: keychain_name,
-      password: keychain_password,
-      default_keychain: true,
-      unlock: true,
-      timeout: 3600,
-      lock_when_sleeps: false,
-      add_to_search_list: true
-    )
-    
+    # Setup certificates with Match
     match(
       type: "appstore",
       readonly: true,
       app_identifier: "org.sera.dev.nolimitsera",
       keychain_name: keychain_name,
       keychain_password: keychain_password,
-      git_url: ENV["MATCH_GIT_URL"],
-      git_basic_authorization: ENV["MATCH_GIT_BASIC_AUTHORIZATION"]
+      git_url: "git@github.com-fastlane-match:ajp-sourceship/nolimitseradeals_fastlane_match.git"
     )
     
     profile_name = ENV["sigh_org.sera.dev.nolimitsera_appstore_profile-name"]
     
-    unlock_keychain(
-      path: keychain_name,
-      password: keychain_password
-    )
-    
+    # Set partition list for codesign access
     sh("security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k #{keychain_password} ~/Library/Keychains/#{keychain_name} || true")
     
+    # Increment build number
     increment_build_number(
       build_number: ENV["CIRCLE_BUILD_NUM"] || 1
     )
     
+    # Remove problematic Hermes file
     sh("rm -rf ../Pods/hermes-engine/destroot/Library/Frameworks/universal/hermes.framework/hermes || true")
     
-    # CRITICAL: Disable manual code signing for all configurations
+    # Update code signing settings
     update_code_signing_settings(
       use_automatic_signing: false,
       path: "nolimitseradeals.xcodeproj",
@@ -51,15 +38,16 @@ platform :ios do
       code_sign_identity: "Apple Distribution",
       bundle_identifier: "org.sera.dev.nolimitsera",
       profile_name: profile_name,
-      build_configurations: ["Release"] # Only set for Release, ignore staging
+      build_configurations: ["Release"]
     )
     
+    # Build the app
     build_app(
       workspace: "nolimitseradeals.xcworkspace",
       scheme: "nolimitseradeals",
       clean: true,
       export_method: "app-store",
-      configuration: "Release", # Explicitly use Release
+      configuration: "Release",
       output_directory: "./build",
       output_name: "nolimitseradeals.ipa",
       codesigning_identity: "Apple Distribution",
@@ -77,15 +65,17 @@ platform :ios do
       }
     )
     
+    # Create API key with correct environment variable names
     api_key = app_store_connect_api_key(
-      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
-      issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
       key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"],
       is_key_content_base64: true,
       duration: 1200,
       in_house: false
     )
     
+    # Upload to TestFlight
     upload_to_testflight(
       api_key: api_key,
       skip_waiting_for_build_processing: true,

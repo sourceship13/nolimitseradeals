@@ -24,17 +24,22 @@ const SavedDealsScreen = ({ navigation }: any) => {
   console.log('💾 SavedDeals: allSavedDeals:', allSavedDeals);
 
 
-    // Strictly filter deals by redemption_status only
-    const readyToRedeemDeals = deals.filter(
+    // Filter from SAVED deals only (not all deals) and strictly filter by redemption_status
+    const readyToRedeemDeals = allSavedDeals.filter(
       deal => deal.redemption_status && deal.redemption_status.toLowerCase() === 'ready to redeem'
     );
 
-    const redeemedDeals = deals.filter(
+    const redeemedDeals = allSavedDeals.filter(
       deal => deal.redemption_status && deal.redemption_status.toLowerCase() === 'redeemed'
     );
 
-    const almostRedeemedDeals = deals.filter(
+    const almostRedeemedDeals = allSavedDeals.filter(
       deal => deal.redemption_status && deal.redemption_status.toLowerCase() === 'almost there, a few more shares!'
+    );
+    
+    // Deals that are hearted but don't have a redemption status yet (newly hearted)
+    const newlyHeartedDeals = allSavedDeals.filter(
+      deal => !deal.redemption_status || deal.redemption_status.toLowerCase() === ''
     );
 
     // Debug: log allSavedDeals and redeemedDeals
@@ -43,7 +48,8 @@ const SavedDealsScreen = ({ navigation }: any) => {
       console.log('redeemedDeals:', redeemedDeals);
       console.log('readyToRedeemDeals:', readyToRedeemDeals);
       console.log('almostRedeemedDeals:', almostRedeemedDeals);
-    }, [allSavedDeals, redeemedDeals, readyToRedeemDeals, almostRedeemedDeals]);
+      console.log('newlyHeartedDeals:', newlyHeartedDeals);
+    }, [allSavedDeals, redeemedDeals, readyToRedeemDeals, almostRedeemedDeals, newlyHeartedDeals]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -123,11 +129,11 @@ const SavedDealsScreen = ({ navigation }: any) => {
         <Text style={[styles.title, { color: colors.text }]}>Share more to Redeem</Text>
         {isLoading ? (
           <Text style={[iOSUIKit.body, { color: colors.text, textAlign: 'center' }]}>Loading saved deals...</Text>
-        ) : almostRedeemedDeals.length === 0 ? (
+        ) : (almostRedeemedDeals.length === 0 && newlyHeartedDeals.length === 0) ? (
           <Text style={[iOSUIKit.body, { color: colors.text, textAlign: 'center' }]}>No saved deals yet.</Text>
         ) : (
           <FlatList
-            data={almostRedeemedDeals}
+            data={[...almostRedeemedDeals, ...newlyHeartedDeals]}
             keyExtractor={item => (item.id || item.deal_id).toString()}
             renderItem={({ item }) => (
               <View style={[styles.card, { backgroundColor: colors.card }]}> 
