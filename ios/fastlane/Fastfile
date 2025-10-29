@@ -1,75 +1,42 @@
 default_platform(:ios)
 
 platform :ios do
-  desc "Build and upload to TestFlight"
+  desc "Push a new beta build to TestFlight"
   lane :beta do
-    # Setup the keychain for Match
+    # Setup CI environment
+    setup_ci
+    
     keychain_name = "fastlane.keychain-db"
     keychain_password = "temp_password"
     
-    # Setup certificates with Match
-    # match(
-    #   type: "appstore",
-    #   app_identifier: "org.sera.dev.nolimitsera",
-    #   readonly: true,
-    #   git_url: "git@github.com-fastlane-match:ajp-sourceship/nolimitseradeals_fastlane_match.git",
-    #   keychain_name: keychain_name,
-    #   keychain_password: keychain_password
-    # )
-    
-    # Manually set partition list for codesign access - try multiple times
-    sh("security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k #{keychain_password} ~/Library/Keychains/#{keychain_name} || true")
-    
-    # Wait a moment for keychain to settle
-    sleep(2)
-    
-    # Try setting it again
-    sh("security set-key-partition-list -S apple-tool:,apple: -s -k #{keychain_password} ~/Library/Keychains/#{keychain_name}")
-    
-    # Verify certificate is accessible
-    identities = sh("security find-identity -v -p codesigning ~/Library/Keychains/#{keychain_name}")
-    puts "Available identities:\n#{identities}"
-    
-    # Make absolutely sure the keychain is unlocked
-    sh("security unlock-keychain -p #{keychain_password} ~/Library/Keychains/#{keychain_name}")
-    
-    # Increment build number only
-    increment_build_number(
-      build_number: ENV["CIRCLE_BUILD_NUM"] || Time.now.to_i.to_s
+    # Create and setup keychain
+    create_keychain(
+      name: keychain_name,
+      password: keychain_password,
+      default_keychain: true,
+      unlock: true,
+      timeout: 3600,
+      lock_when_sleeps: false,
+      add_to_search_list: true
     )
     
-    # Get the provisioning profile name that Match downloaded
-    profile_name = ENV["sigh_org.sera.dev.nolimitsera_appstore_profile-name"]
-    
-    # Upload to TestFlight
-    key_path = "/tmp/AuthKey_#{ENV['APP_STORE_CONNECT_API_KEY_KEY_ID']}.p8"
-
-    # Decode from base64 and write to file
-    require 'base64'
-    key_content = Base64.decode64(ENV["APP_STORE_CONNECT_API_KEY_CONTENT"])
-    File.write(key_path, key_content)
-
-    # Verify the file was created
-    puts "Key file size: #{File.size(key_path)} bytes"
-    puts "First line: #{File.readlines(key_path).first}"
-
-    # Write the key file
-    key_path = "/tmp/AuthKey_#{ENV['APP_STORE_CONNECT_API_KEY_KEY_ID']}.p8"
-    require 'base64'
-    File.write(key_path, Base64.decode64(ENV["APP_STORE_CONNECT_API_KEY_CONTENT"]))
-
-    # Set environment variables for pilot to use
-    ENV['APP_STORE_CONNECT_API_KEY_PATH'] = key_path
-    ENV['APP_STORE_CONNECT_API_KEY_ID'] = ENV['APP_STORE_CONNECT_API_KEY_KEY_ID']
-    ENV['APP_STORE_CONNECT_API_KEY_ISSUER_ID'] = ENV['APP_STORE_CONNECT_API_KEY_ISSUER_ID']
-
-    setup_ci
-    
+    # Match for code signing
     match(
       type: "appstore",
       readonly: true,
-      app_identifier: "org.sera.dev.nolimitsera"
+      app_identifier: "org.sera.dev.nolimitsera",
+      keychain_name: keychain_name,
+      keychain_password: keychain_password
     )
+    
+    # Unlock keychain before building
+    unlock_keychain(
+      path: keychain_name,
+      password: keychain_password
+    )
+    
+    # Set key partition list - AFTER match imports the certificate
+    sh("security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k #{keychain_password} ~/Library/Keychains/#{keychain_name} || true")
     
     # Increment build number
     increment_build_number(
@@ -80,23 +47,37 @@ platform :ios do
     gym(
       scheme: "nolimitseradeals",
       export_method: "app-store",
-      configuration: "Release"
+      configuration: "Release",
+      clean: true,
+      output_directory: "./build",
+      output_name: "nolimitseradeals.ipa",
+      export_options: {
+        provisioningProfiles: {
+          "org.sera.dev.nolimitsera" => ENV["sigh_org.sera.dev.nolimitsera_appstore_profile-name"] || "match AppStore org.sera.dev.nolimitsera"
+        }
+      }
     )
     
-    # Create API key configuration
+    # Create API key for App Store Connect
     api_key = app_store_connect_api_key(
       key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
       issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
-      key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"], # Base64 encoded key
-      is_key_content_base64: true
+      key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"],
+      is_key_content_base64: true,
+      duration: 1200, # 20 minutes
+      in_house: false
     )
     
-    # Upload to TestFlight using the API key
+    # Upload to TestFlight
     upload_to_testflight(
       api_key: api_key,
       skip_waiting_for_build_processing: true,
-      skip_submission: true
+      skip_submission: true,
+      distribute_external: false,
+      notify_external_testers: false,
+      ipa: "./build/nolimitseradeals.ipa"
     )
+    
     # Build the app with explicit profile mapping
     sh("rm -rf ../Pods/hermes-engine/destroot/Library/Frameworks/universal/hermes.framework/hermes || true")
   
@@ -124,11 +105,6 @@ platform :ios do
       }
     )
     
-    # Upload to TestFlight
-    upload_to_testflight(
-      skip_waiting_for_build_processing: true,
-      skip_submission: true
-    )
     
     puts "✅ Build uploaded to TestFlight!"
   end
