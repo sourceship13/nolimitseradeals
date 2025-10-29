@@ -66,6 +66,9 @@ platform :ios do
     )
 
     # Build the app with explicit profile mapping
+    sh("rm -rf ../Pods/hermes-engine/destroot/Library/Frameworks/universal/hermes.framework/hermes || true")
+  
+    # Build with proper Swift settings
     build_app(
       workspace: "nolimitseradeals.xcworkspace",
       scheme: "nolimitseradeals",
@@ -75,13 +78,17 @@ platform :ios do
       output_name: "nolimitseradeals.ipa",
       skip_profile_detection: true,
       codesigning_identity: "Apple Distribution",
-      xcargs: "-allowProvisioningUpdates",  # Add this to help with signing
+      xcargs: "-allowProvisioningUpdates",
       export_options: {
         method: "app-store",
+        uploadBitcode: false,
+        uploadSymbols: true,
+        compileBitcode: false,
         provisioningProfiles: {
           "org.sera.dev.nolimitsera" => profile_name
         },
-        stripSwiftSymbols: true
+        stripSwiftSymbols: true,
+        manageAppVersionAndBuildNumber: false
       }
     )
     
