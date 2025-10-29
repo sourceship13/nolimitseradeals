@@ -8,14 +8,14 @@ platform :ios do
     keychain_password = "temp_password"
     
     # Setup certificates with Match
-    match(
-      type: "appstore",
-      app_identifier: "org.sera.dev.nolimitsera",
-      readonly: true,
-      git_url: "git@github.com-fastlane-match:ajp-sourceship/nolimitseradeals_fastlane_match.git",
-      keychain_name: keychain_name,
-      keychain_password: keychain_password
-    )
+    # match(
+    #   type: "appstore",
+    #   app_identifier: "org.sera.dev.nolimitsera",
+    #   readonly: true,
+    #   git_url: "git@github.com-fastlane-match:ajp-sourceship/nolimitseradeals_fastlane_match.git",
+    #   keychain_name: keychain_name,
+    #   keychain_password: keychain_password
+    # )
     
     # Manually set partition list for codesign access - try multiple times
     sh("security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k #{keychain_password} ~/Library/Keychains/#{keychain_name} || true")
@@ -63,8 +63,37 @@ platform :ios do
     ENV['APP_STORE_CONNECT_API_KEY_ID'] = ENV['APP_STORE_CONNECT_API_KEY_KEY_ID']
     ENV['APP_STORE_CONNECT_API_KEY_ISSUER_ID'] = ENV['APP_STORE_CONNECT_API_KEY_ISSUER_ID']
 
-    # Upload to TestFlight - pilot will read the env vars
+    setup_ci
+    
+    match(
+      type: "appstore",
+      readonly: true,
+      app_identifier: "org.sera.dev.nolimitsera"
+    )
+    
+    # Increment build number
+    increment_build_number(
+      build_number: ENV["CIRCLE_BUILD_NUM"] || 1
+    )
+    
+    # Build the app
+    gym(
+      scheme: "nolimitseradeals",
+      export_method: "app-store",
+      configuration: "Release"
+    )
+    
+    # Create API key configuration
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"], # Base64 encoded key
+      is_key_content_base64: true
+    )
+    
+    # Upload to TestFlight using the API key
     upload_to_testflight(
+      api_key: api_key,
       skip_waiting_for_build_processing: true,
       skip_submission: true
     )
