@@ -53,17 +53,24 @@ platform :ios do
     puts "Key file size: #{File.size(key_path)} bytes"
     puts "First line: #{File.readlines(key_path).first}"
 
+    # Write the key file
     key_path = "/tmp/AuthKey_#{ENV['APP_STORE_CONNECT_API_KEY_KEY_ID']}.p8"
     require 'base64'
     File.write(key_path, Base64.decode64(ENV["APP_STORE_CONNECT_API_KEY_CONTENT"]))
 
-    # Upload using the key file directly
+    # Create API key using filepath (should avoid the OpenSSL parsing issue)
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
+      key_filepath: key_path,
+      in_house: false
+    )
+
     upload_to_testflight(
-      api_key_path: key_path,
+      api_key: api_key,
       skip_waiting_for_build_processing: true,
       skip_submission: true
     )
-
     # Build the app with explicit profile mapping
     sh("rm -rf ../Pods/hermes-engine/destroot/Library/Frameworks/universal/hermes.framework/hermes || true")
   
