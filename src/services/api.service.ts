@@ -203,6 +203,36 @@ class ApiService {
       body: JSON.stringify(payload)
     });
   }
+
+  async registerBusiness(formData: FormData): Promise<ApiResponse> {
+    console.log('📤 Registering business with FormData');
+    const url = `${this.baseURL}/business/register`;
+    
+    try {
+      // Use AuthService's makeAuthenticatedRequest for proper token handling
+      const response = await AuthService.makeAuthenticatedRequest(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json',
+          // Don't set Content-Type - let fetch set it with boundary for FormData
+        },
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        console.error(`❌ Business Registration Error: ${response.status} - ${data.message || data.error}`);
+        throw new Error(data.message || data.error || `HTTP ${response.status}`);
+      }
+
+      console.log('✅ Business registered successfully:', data);
+      return data;
+    } catch (error) {
+      console.error(`💥 Business Registration Error:`, error);
+      throw error;
+    }
+  }
 }
 
 export default new ApiService();

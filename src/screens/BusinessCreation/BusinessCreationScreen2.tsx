@@ -7,9 +7,22 @@ import { iOSUIKit } from 'react-native-typography';
 import { launchImageLibrary, Asset } from 'react-native-image-picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
-const BusinessCreationScreen2 = ({ navigation }: any) => {
+const BusinessCreationScreen2 = ({ navigation, route }: any) => {
   const { isDarkMode } = useAuth();
   const colors = getColors(isDarkMode);
+  
+  // Get props from Screen1
+  const {
+    businessName,
+    description,
+    address,
+    city,
+    country,
+    state,
+    phoneNumber,
+    businessUrl,
+  } = route.params;
+  
   const [logoFile, setLogoFile] = useState<Asset | null>(null);
   const [coverFile, setCoverFile] = useState<Asset | null>(null);
 
@@ -64,8 +77,16 @@ const BusinessCreationScreen2 = ({ navigation }: any) => {
       Alert.alert('Missing Logo', 'Please upload your business logo before continuing');
       return;
     }
-    // Navigate to next step (you can pass the files as params if needed)
+    // Navigate to next step and pass all data forward
     navigation.navigate('BusinessCreationScreen3', {
+      businessName,
+      description,
+      address,
+      city,
+      country,
+      state,
+      phoneNumber,
+      businessUrl,
       logoFile,
       coverFile,
     });

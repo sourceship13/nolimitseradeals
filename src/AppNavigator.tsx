@@ -15,7 +15,6 @@ import SavedDealsScreen from './screens/SavedDeals/SavedDeals';
 import SettingsScreen from './screens/Settings/Settings';
 import VerificationScreen from './VerificationScreen/VerificationScreen';
 import DebugScreen from './screens/Debug/Debug';
-import DemoShareScreen from './screens/DemoShareScreen';
 import PermissionTestScreen from './screens/PermissionTestScreen';
 import NetworkDebugScreen from './screens/NetworkDebugScreen';
 import { useAuth, getColors } from './libs/hooks/useAuth';
@@ -23,9 +22,10 @@ import { ActivityIndicator, View } from 'react-native';
 import { iOSUIKit } from 'react-native-typography';
 import RedemptionScreen from './screens/Redemption/RedemptionScreen';
 import BusinessCreationScreen1 from './screens/BusinessCreation/BusinessCreationScreen1';
-import { Colors } from './libs/colors';
 import BusinessCreationScreen2 from './screens/BusinessCreation/BusinessCreationScreen2';
-import BusinessCreationScreen3 from './screens/BusinessCreation/BuinessCreationScreen3';
+import BusinessCreationScreen3 from './screens/BusinessCreation/BusinessCreationScreen3';
+import BusinessCreationScreen4 from './screens/BusinessCreation/BusinessCreationScreen4';
+import { Colors } from './libs/colors';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -180,6 +180,7 @@ const AppNavigator = () => {
             <Stack.Screen name="BusinessCreationScreen1" component={BusinessCreationScreen1} />
             <Stack.Screen name="BusinessCreationScreen2" component={BusinessCreationScreen2} />
             <Stack.Screen name="BusinessCreationScreen3" component={BusinessCreationScreen3} />
+            <Stack.Screen name="BusinessCreationScreen4" component={BusinessCreationScreen4} />
           </>
         )}
       </Stack.Navigator>

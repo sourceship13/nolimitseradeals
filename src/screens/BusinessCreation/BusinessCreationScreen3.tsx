@@ -7,13 +7,26 @@ import { iOSUIKit } from 'react-native-typography';
 import { launchImageLibrary, Asset } from 'react-native-image-picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
-const BusinessCreationScreen3 = ({ navigation }: any) => {
+const BusinessCreationScreen3 = ({ navigation, route }: any) => {
   const { isDarkMode } = useAuth();
   const colors = getColors(isDarkMode);
-  const [logoFile, setLogoFile] = useState<Asset | null>(null);
-  const [coverFile, setCoverFile] = useState<Asset | null>(null);
+  const [businessImage1, setBusinessImage1] = useState<Asset | null>(null);
+  const [businessImage2, setBusinessImage2] = useState<Asset | null>(null);
 
-  const pickImage = async (type: 'logo' | 'cover') => {
+  const {
+    businessName,
+    description,
+    address,
+    city,
+    country,
+    state,
+    phoneNumber,
+    businessUrl,
+    logoFile, 
+    coverFile,
+  } = route.params;
+
+  const pickImage = async (type: 'image1' | 'image2') => {
     try {
       const result = await launchImageLibrary({
         mediaType: 'photo',
@@ -36,10 +49,10 @@ const BusinessCreationScreen3 = ({ navigation }: any) => {
         
         // Accept SVG, PNG, JPG, and other image files
         if (asset.type && (asset.type.includes('svg') || asset.type.includes('image'))) {
-          if (type === 'logo') {
-            setLogoFile(asset);
+          if (type === 'image1') {
+            setBusinessImage1(asset);
           } else {
-            setCoverFile(asset);
+            setBusinessImage2(asset);
           }
         } else {
           Alert.alert('Invalid File', 'Please select an image file (SVG, PNG, JPG, etc.)');
@@ -51,23 +64,60 @@ const BusinessCreationScreen3 = ({ navigation }: any) => {
     }
   };
 
-  const removeImage = (type: 'logo' | 'cover') => {
-    if (type === 'logo') {
-      setLogoFile(null);
+  const removeImage = (type: 'image1' | 'image2') => {
+    if (type === 'image1') {
+      setBusinessImage1(null);
     } else {
-      setCoverFile(null);
+      setBusinessImage2(null);
     }
   };
 
   const handleNext = () => {
-    if (!logoFile) {
-      Alert.alert('Missing Logo', 'Please upload your business logo before continuing');
+    if (!businessImage1) {
+      Alert.alert('Missing Image 1', 'Please upload your business image 1 before continuing');
       return;
     }
-    // Navigate to next step (you can pass the files as params if needed)
-    navigation.navigate('BusinessCreationScreen3', {
-      logoFile,
-      coverFile,
+    if (!businessImage2) {
+      Alert.alert('Missing Image 2', 'Please upload your business image 2 before continuing');
+      return;
+    }
+    // Navigate to Screen4 with all data
+    navigation.navigate('BusinessCreationScreen4', {
+      // Data from Screen1
+      businessName,
+      description,
+      address,
+      city,
+      country,
+      state,
+      phoneNumber,
+      businessUrl,
+      // Data from Screen2
+      logo: logoFile ? {
+        uri: logoFile.uri,
+        type: logoFile.type,
+        fileName: logoFile.fileName,
+        fileSize: logoFile.fileSize,
+      } : null,
+      cover: coverFile ? {
+        uri: coverFile.uri,
+        type: coverFile.type,
+        fileName: coverFile.fileName,
+        fileSize: coverFile.fileSize,
+      } : null,
+      // Data from Screen3
+      businessImage1: businessImage1 ? {
+        uri: businessImage1.uri,
+        type: businessImage1.type,
+        fileName: businessImage1.fileName,
+        fileSize: businessImage1.fileSize,
+      } : null,
+      businessImage2: businessImage2 ? {
+        uri: businessImage2.uri,
+        type: businessImage2.type,
+        fileName: businessImage2.fileName,
+        fileSize: businessImage2.fileSize,
+      } : null,
     });
   };
 
@@ -103,18 +153,18 @@ const BusinessCreationScreen3 = ({ navigation }: any) => {
               </Text>
               <TouchableOpacity
                 style={[styles.uploadBox, { borderColor: colors.border }]}
-                onPress={() => pickImage('logo')}
+                onPress={() => pickImage('image1')}
               >
-                {logoFile ? (
+                {businessImage1 ? (
                   <View style={styles.imagePreview}>
                     <Image
-                      source={{ uri: logoFile.uri }}
+                      source={{ uri: businessImage1.uri }}
                       style={styles.previewImage}
                       resizeMode="contain"
                     />
                     <TouchableOpacity
                       style={[styles.removeButton, { backgroundColor: colors.error }]}
-                      onPress={() => removeImage('logo')}
+                      onPress={() => removeImage('image1')}
                     >
                       <Icon name="close" size={16} color="#fff" />
                     </TouchableOpacity>
@@ -137,18 +187,18 @@ const BusinessCreationScreen3 = ({ navigation }: any) => {
               </Text>
               <TouchableOpacity
                 style={[styles.uploadBoxCover, { borderColor: colors.border }]}
-                onPress={() => pickImage('cover')}
+                onPress={() => pickImage('image2')}
               >
-                {coverFile ? (
+                {businessImage2 ? (
                   <View style={styles.imagePreviewCover}>
                     <Image
-                      source={{ uri: coverFile.uri }}
+                      source={{ uri: businessImage2.uri }}
                       style={styles.previewImageCover}
                       resizeMode="cover"
                     />
                     <TouchableOpacity
                       style={[styles.removeButton, { backgroundColor: colors.error }]}
-                      onPress={() => removeImage('cover')}
+                      onPress={() => removeImage('image2')}
                     >
                       <Icon name="close" size={16} color="#fff" />
                     </TouchableOpacity>

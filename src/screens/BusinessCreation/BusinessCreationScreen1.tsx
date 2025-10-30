@@ -9,6 +9,14 @@ import { TextInput } from 'react-native-gesture-handler';
 const BusinessCreationScreen1 = ({ navigation }: any) => {
   const { isDarkMode } = useAuth();
   const colors = getColors(isDarkMode);
+  const [businessName, setBusinessName] = React.useState('Debug Business');
+  const [description, setDescription] = React.useState('This is a debug business description.');
+  const [address, setAddress] = React.useState('7302 Compass Rose Dr');
+  const [city, setCity] = React.useState('Richmond');
+  const [country, setCountry] = React.useState('United States');
+  const [state, setState] = React.useState('Texas');
+  const [phoneNumber, setPhoneNumber] = React.useState('713-659-2171');
+  const [businessUrl, setBusinessUrl] = React.useState('https://sera.dev');
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -39,6 +47,7 @@ const BusinessCreationScreen1 = ({ navigation }: any) => {
           }}
           placeholder="Business Name"
           placeholderTextColor={colors.placeholder}
+          onChangeText={(text) => setBusinessName(text)}
         />
         <TextInput
           style={{
@@ -52,6 +61,7 @@ const BusinessCreationScreen1 = ({ navigation }: any) => {
           }}
           placeholder="Description"
           placeholderTextColor={colors.placeholder}
+          onChangeText={(text) => setDescription(text)}
         />
         <TextInput
           style={{
@@ -65,6 +75,7 @@ const BusinessCreationScreen1 = ({ navigation }: any) => {
           }}
           placeholder="Address"
           placeholderTextColor={colors.placeholder}
+          onChangeText={(text) => setAddress(text)}
         />
         <TextInput
           style={{
@@ -78,6 +89,7 @@ const BusinessCreationScreen1 = ({ navigation }: any) => {
           }}
           placeholder="City"
           placeholderTextColor={colors.placeholder}
+          onChangeText={(text) => setCity(text)}
         />
         <TextInput
           style={{
@@ -91,6 +103,7 @@ const BusinessCreationScreen1 = ({ navigation }: any) => {
           }}
           placeholder="Country"
           placeholderTextColor={colors.placeholder}
+          onChangeText={(text) => setCountry(text)}
         />
         <TextInput
           style={{
@@ -104,6 +117,7 @@ const BusinessCreationScreen1 = ({ navigation }: any) => {
           }}
           placeholder="State"
           placeholderTextColor={colors.placeholder}
+          onChangeText={(text) => setState(text)}
         />
         <TextInput
           style={{
@@ -117,6 +131,7 @@ const BusinessCreationScreen1 = ({ navigation }: any) => {
           }}
           placeholder="Phone Number"
           placeholderTextColor={colors.placeholder}
+          onChangeText={(text) => setPhoneNumber(text)}
         />
         <TextInput
           style={{
@@ -130,6 +145,7 @@ const BusinessCreationScreen1 = ({ navigation }: any) => {
           }}
           placeholder="Business Url"
           placeholderTextColor={colors.placeholder}
+          onChangeText={(text) => setBusinessUrl(text)}
         />
       </View>
       <TouchableOpacity
@@ -140,7 +156,16 @@ const BusinessCreationScreen1 = ({ navigation }: any) => {
           margin: 24,
           alignItems: 'center',
         }}
-        onPress={() => navigation.navigate('BusinessCreationScreen2')}
+        onPress={() => navigation.navigate('BusinessCreationScreen2', {
+          businessName,
+          description,
+          address,
+          city,
+          country,
+          state,
+          phoneNumber,
+          businessUrl,
+        })}
       >
         <Text style={{ color: colors.background, fontWeight: 'bold', fontSize: 16 }}>
           Next Step
