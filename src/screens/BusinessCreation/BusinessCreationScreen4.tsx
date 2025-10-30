@@ -93,7 +93,7 @@ const BusinessCreationScreen4 = ({ navigation, route }: any) => {
               text: 'OK',
               onPress: () => {
                 // Navigate to business profile or home screen
-                navigation.navigate('Home');
+                navigation.navigate('Profile');
               },
             },
           ]
