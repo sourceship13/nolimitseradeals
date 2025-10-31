@@ -233,6 +233,21 @@ class ApiService {
       throw error;
     }
   }
+
+  async getBusinessProfile(businessId?: string): Promise<ApiResponse> {
+    console.log('📥 Fetching business profile', businessId ? `for ID: ${businessId}` : '(user\'s business)');
+    
+    try {
+      // If businessId is provided, fetch specific business, otherwise fetch user's business
+      const endpoint = businessId ? `/business/${businessId}` : '/business/profile';
+      return await this.makeRequest(endpoint, {
+        method: 'GET',
+      });
+    } catch (error) {
+      console.error(`💥 Get Business Profile Error:`, error);
+      throw error;
+    }
+  }
 }
 
 export default new ApiService();
