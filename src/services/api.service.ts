@@ -236,11 +236,9 @@ class ApiService {
 
   async getBusinessProfile(businessId?: string): Promise<ApiResponse> {
     console.log('📥 Fetching business profile', businessId ? `for ID: ${businessId}` : '(user\'s business)');
-    
+    const url = `${this.baseURL}/business/${businessId}`
     try {
-      // If businessId is provided, fetch specific business, otherwise fetch user's business
-      const endpoint = businessId ? `/business/${businessId}` : '/business/profile';
-      return await this.makeRequest(endpoint, {
+      return await this.makeRequest(url, {
         method: 'GET',
       });
     } catch (error) {
