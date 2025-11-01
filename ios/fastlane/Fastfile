@@ -138,7 +138,7 @@ platform :ios do
     # Build the PRODUCTION app
     build_app(
       workspace: "nolimitseradeals.xcworkspace",
-      scheme: "nolimitseradealsProd",
+      scheme: "nolimitseradeals-prod",
       clean: true,
       export_method: "app-store",
       configuration: "Release",
