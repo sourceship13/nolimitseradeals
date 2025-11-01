@@ -76,7 +76,7 @@ jobs:
       - run:
           name: Install CMake and Ninja
           command: |
-            yes | sdkmanager "cmake;3.22.1"
+            echo "y" | sdkmanager "cmake;3.22.1"
       - restore_cache:
           keys:
             - v2-gradle-{{ checksum "android/build.gradle" }}-{{ checksum "android/app/build.gradle" }}
