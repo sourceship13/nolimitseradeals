@@ -25,10 +25,9 @@ platform :ios do
     sh("security set-key-partition-list -S apple-tool:,apple: -s -k #{keychain_password} ~/Library/Keychains/#{keychain_name}")
     sh("security unlock-keychain -p #{keychain_password} ~/Library/Keychains/#{keychain_name}")
     
-    # Increment build number
+    # Increment build number for staging target
     increment_build_number(
       xcodeproj: "nolimitseradeals.xcodeproj",
-      target: "nolimitseradeals-staging",
       build_number: ENV["CIRCLE_BUILD_NUM"] || Time.now.to_i.to_s
     )
     
@@ -113,10 +112,9 @@ platform :ios do
     sh("security set-key-partition-list -S apple-tool:,apple: -s -k #{keychain_password} ~/Library/Keychains/#{keychain_name}")
     sh("security unlock-keychain -p #{keychain_password} ~/Library/Keychains/#{keychain_name}")
     
-    # Increment build number
+    # Increment build number for production target
     increment_build_number(
       xcodeproj: "nolimitseradeals.xcodeproj",
-      target: "nolimitseradealsProd",
       build_number: ENV["CIRCLE_BUILD_NUM"] || Time.now.to_i.to_s
     )
     
@@ -127,7 +125,7 @@ platform :ios do
     update_code_signing_settings(
       use_automatic_signing: false,
       path: "nolimitseradeals.xcodeproj",
-      targets: ["nolimitseradealsProd"],
+      targets: ["nolimitseradeals-prod"],
       team_id: "CM52HNMXXW",
       code_sign_identity: "Apple Distribution",
       bundle_identifier: "org.sera.dev.nolimitsera",
