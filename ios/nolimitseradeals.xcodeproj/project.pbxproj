@@ -285,7 +285,7 @@
 		DAEC8376139C4D78ADB5A448 /* Roboto_SemiCondensed-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Roboto_SemiCondensed-Bold.ttf"; path = "../assets/fonts/Roboto/static/Roboto_SemiCondensed-Bold.ttf"; sourceTree = "<group>"; };
 		DE1931A3150647F98E656B18 /* Roboto-ExtraLightItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Roboto-ExtraLightItalic.ttf"; path = "../assets/fonts/Roboto/static/Roboto-ExtraLightItalic.ttf"; sourceTree = "<group>"; };
 		DEAE9F632E9E27570041BB64 /* info-staging.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "info-staging.plist"; sourceTree = "<group>"; };
-		DEE363152E98730100B65285 /* nolimitseradealsProd.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = nolimitseradealsProd.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DEE363152E98730100B65285 /* nolimitseradeals-prod.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "nolimitseradeals-prod.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E0BD020738944023956E281F /* Barlow-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Barlow-Medium.ttf"; path = "../assets/fonts/Barlow/Barlow-Medium.ttf"; sourceTree = "<group>"; };
 		E0BFC27C8370494CA03E2FEA /* Barlow-SemiBoldItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Barlow-SemiBoldItalic.ttf"; path = "../assets/fonts/Barlow/Barlow-SemiBoldItalic.ttf"; sourceTree = "<group>"; };
 		E3E8A051BE734114B77ACB3E /* Barlow-ExtraLightItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Barlow-ExtraLightItalic.ttf"; path = "../assets/fonts/Barlow/Barlow-ExtraLightItalic.ttf"; sourceTree = "<group>"; };
@@ -523,7 +523,7 @@
 			isa = PBXGroup;
 			children = (
 				13B07F961A680F5B00A75B9A /* nolimitseradeals.app */,
-				DEE363152E98730100B65285 /* nolimitseradealsProd.app */,
+				DEE363152E98730100B65285 /* nolimitseradeals-prod.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -563,9 +563,9 @@
 			productReference = 13B07F961A680F5B00A75B9A /* nolimitseradeals.app */;
 			productType = "com.apple.product-type.application";
 		};
-		DEE363032E98730100B65285 /* nolimitseradealsProd */ = {
+		DEE363032E98730100B65285 /* nolimitseradeals-prod */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = DEE363122E98730100B65285 /* Build configuration list for PBXNativeTarget "nolimitseradealsProd" */;
+			buildConfigurationList = DEE363122E98730100B65285 /* Build configuration list for PBXNativeTarget "nolimitseradeals-prod" */;
 			buildPhases = (
 				74821C2A9ECAF752B7085B59 /* [CP] Check Pods Manifest.lock */,
 				DEE363052E98730100B65285 /* Sources */,
@@ -579,9 +579,9 @@
 			);
 			dependencies = (
 			);
-			name = nolimitseradealsProd;
+			name = "nolimitseradeals-prod";
 			productName = nolimitseradeals;
-			productReference = DEE363152E98730100B65285 /* nolimitseradealsProd.app */;
+			productReference = DEE363152E98730100B65285 /* nolimitseradeals-prod.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -611,7 +611,7 @@
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* nolimitseradeals-staging */,
-				DEE363032E98730100B65285 /* nolimitseradealsProd */,
+				DEE363032E98730100B65285 /* nolimitseradeals-prod */,
 			);
 		};
 /* End PBXProject section */
@@ -1265,7 +1265,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		DEE363122E98730100B65285 /* Build configuration list for PBXNativeTarget "nolimitseradealsProd" */ = {
+		DEE363122E98730100B65285 /* Build configuration list for PBXNativeTarget "nolimitseradeals-prod" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				DEE363132E98730100B65285 /* Debug */,
