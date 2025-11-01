@@ -39,11 +39,11 @@ def shared_pods
   return config
 end
 
-target 'nolimitseradeals' do
+target 'nolimitseradeals-staging' do
   config = shared_pods
 end
 
-target 'nolimitseradealsProd' do
+target 'nolimitseradeals-prod' do
   config = shared_pods
 end
 
