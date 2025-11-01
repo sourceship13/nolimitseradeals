@@ -215,7 +215,6 @@ class ApiService {
         body: formData,
         headers: {
           'Accept': 'application/json',
-          // Don't set Content-Type - let fetch set it with boundary for FormData
         },
       });
 
