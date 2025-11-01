@@ -272,9 +272,9 @@
 		B94DA3ADF20D46AC894D2C0D /* OpenSans_Condensed-MediumItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans_Condensed-MediumItalic.ttf"; path = "../assets/fonts/Open_Sans/static/OpenSans_Condensed-MediumItalic.ttf"; sourceTree = "<group>"; };
 		BAF209531AA84BBC88CD7E75 /* OpenSans_Condensed-ExtraBoldItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans_Condensed-ExtraBoldItalic.ttf"; path = "../assets/fonts/Open_Sans/static/OpenSans_Condensed-ExtraBoldItalic.ttf"; sourceTree = "<group>"; };
 		BD52E3E8B7D249F183081B3E /* OpenSans_Condensed-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans_Condensed-Regular.ttf"; path = "../assets/fonts/Open_Sans/static/OpenSans_Condensed-Regular.ttf"; sourceTree = "<group>"; };
-		BDD7F47654554CC7A4CD0845 /* Inter-Variable.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Inter-Variable.ttf"; path = "../assets/fonts/Inter/Inter-Variable.ttf"; sourceTree = "<group>"; };
+		BDD7F47654554CC7A4CD0845 /* Inter-Variable.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Inter-Variable.ttf"; path = "../assets/fonts/Inter/Inter-Variable.ttf"; sourceTree = "<group>"; };
 		C019B19179D14929A2B5F594 /* Barlow-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Barlow-ExtraBold.ttf"; path = "../assets/fonts/Barlow/Barlow-ExtraBold.ttf"; sourceTree = "<group>"; };
-		C5065E3386A14F9CAAAEAFE7 /* Inter-Italic-Variable.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "Inter-Italic-Variable.ttf"; path = "../assets/fonts/Inter/Inter-Italic-Variable.ttf"; sourceTree = "<group>"; };
+		C5065E3386A14F9CAAAEAFE7 /* Inter-Italic-Variable.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Inter-Italic-Variable.ttf"; path = "../assets/fonts/Inter/Inter-Italic-Variable.ttf"; sourceTree = "<group>"; };
 		C5B62A95AA5743DD80E9EAA6 /* OpenSans_SemiCondensed-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans_SemiCondensed-Bold.ttf"; path = "../assets/fonts/Open_Sans/static/OpenSans_SemiCondensed-Bold.ttf"; sourceTree = "<group>"; };
 		C8354745181F46769FB8A27D /* OpenSans_SemiCondensed-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans_SemiCondensed-Regular.ttf"; path = "../assets/fonts/Open_Sans/static/OpenSans_SemiCondensed-Regular.ttf"; sourceTree = "<group>"; };
 		C95F44CFF3AD8444C6F11A2A /* Pods-nolimitseradealsProd.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-nolimitseradealsProd.debug.xcconfig"; path = "Target Support Files/Pods-nolimitseradealsProd/Pods-nolimitseradealsProd.debug.xcconfig"; sourceTree = "<group>"; };
@@ -542,9 +542,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		13B07F861A680F5B00A75B9A /* nolimitseradeals */ = {
+		13B07F861A680F5B00A75B9A /* nolimitseradeals-staging */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "nolimitseradeals" */;
+			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "nolimitseradeals-staging" */;
 			buildPhases = (
 				C2AE2E8745DA7264463D6229 /* [CP] Check Pods Manifest.lock */,
 				13B07F871A680F5B00A75B9A /* Sources */,
@@ -558,7 +558,7 @@
 			);
 			dependencies = (
 			);
-			name = nolimitseradeals;
+			name = "nolimitseradeals-staging";
 			productName = nolimitseradeals;
 			productReference = 13B07F961A680F5B00A75B9A /* nolimitseradeals.app */;
 			productType = "com.apple.product-type.application";
@@ -610,7 +610,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				13B07F861A680F5B00A75B9A /* nolimitseradeals */,
+				13B07F861A680F5B00A75B9A /* nolimitseradeals-staging */,
 				DEE363032E98730100B65285 /* nolimitseradealsProd */,
 			);
 		};
@@ -802,9 +802,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-nolimitseradealsProd/Pods-nolimitseradealsProd-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-nolimitseradealsProd/Pods-nolimitseradealsProd-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -819,9 +823,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-nolimitseradealsProd/Pods-nolimitseradealsProd-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-nolimitseradealsProd/Pods-nolimitseradealsProd-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -858,9 +866,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-nolimitseradeals/Pods-nolimitseradeals-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-nolimitseradeals/Pods-nolimitseradeals-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -897,9 +909,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-nolimitseradeals/Pods-nolimitseradeals-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-nolimitseradeals/Pods-nolimitseradeals-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -1231,7 +1247,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "nolimitseradeals" */ = {
+		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "nolimitseradeals-staging" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
