@@ -100,7 +100,7 @@ jobs:
           path: android/app/build/outputs/apk/release/app-release.apk
           destination: android_apk
 
-  build_ios:
+  build_ios_staging:
     macos:
       xcode: "16.1.0"
     resource_class: macos.m1.medium.gen1
@@ -201,13 +201,6 @@ jobs:
       - run:
           name: Build and upload to TestFlight (Staging)
           command: |
-            cd ~/repo
-            npx react-native bundle \
-              --entry-file index.js \
-              --platform ios \
-              --dev false \
-              --bundle-output ios/main.jsbundle \
-              --assets-dest ios
             cd ios
             bundle exec fastlane staging
       - run:
@@ -215,11 +208,125 @@ jobs:
           command: |
             APP_VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" ios/nolimitseradeals/Info.plist)
             BUILD_NUMBER=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" ios/nolimitseradeals/Info.plist)
-            echo "App Version: $APP_VERSION"
-            echo "Build Number: $BUILD_NUMBER"
+            echo "Staging App Version: $APP_VERSION"
+            echo "Staging Build Number: $BUILD_NUMBER"
       - store_artifacts:
-          path: ios/output
-          destination: ios_build
+          path: ios/build
+          destination: ios_staging_build
+
+  build_ios_production:
+    macos:
+      xcode: "16.1.0"
+    resource_class: macos.m1.medium.gen1
+    working_directory: ~/repo
+    environment:
+      FL_OUTPUT_DIR: output
+    shell: /bin/bash --login -o pipefail
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install Ruby dependencies
+          command: |
+            cd ios
+            bundle update
+            bundle install
+      - restore_cache:
+          keys:
+            - v1-pods-{{ checksum "ios/Podfile.lock" }}
+            - v1-pods-
+      - run:
+          name: Install CocoaPods
+          command: |
+            cd ios
+            bundle exec pod install
+      - save_cache:
+          key: v1-pods-{{ checksum "ios/Podfile.lock" }}
+          paths:
+            - ios/Pods
+            - ~/.cocoapods
+      - run:
+          name: Setup SSH and Keychain for Match
+          command: |
+            # Setup SSH
+            mkdir -p ~/.ssh
+            echo "$MATCH_GIT_SSH_KEY" | base64 --decode > ~/.ssh/id_ed25519
+            chmod 600 ~/.ssh/id_ed25519
+            ssh-keyscan github.com >> ~/.ssh/known_hosts
+            
+            cat > ~/.ssh/config \<< 'EOF'
+            Host github.com-fastlane-match
+              HostName github.com
+              User git
+              IdentityFile ~/.ssh/id_ed25519
+              IdentitiesOnly yes
+              StrictHostKeyChecking no
+            EOF
+            
+            # Create and setup temporary keychain for code signing
+            KEYCHAIN_PATH=~/Library/Keychains/fastlane.keychain-db
+            KEYCHAIN_PASSWORD=temp_password
+            
+            # Delete keychain if it exists
+            security delete-keychain "$KEYCHAIN_PATH" 2>/dev/null || true
+            
+            # Create new keychain
+            security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+            
+            # Set as default keychain
+            security default-keychain -s "$KEYCHAIN_PATH"
+            
+            # Unlock keychain
+            security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+            
+            # Set keychain timeout to 3600 seconds
+            security set-keychain-settings -t 3600 -u "$KEYCHAIN_PATH"
+            
+            # Add keychain to search list
+            security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | sed s/\"//g)
+            
+            echo "✅ Keychain setup complete"
+      - run:
+          name: Generate React Native bundle
+          command: |
+            npx react-native bundle \
+              --entry-file index.js \
+              --platform ios \
+              --dev false \
+              --bundle-output ios/main.jsbundle \
+              --assets-dest ios
+      - run:
+          name: Strip bitcode from Hermes
+          command: |
+            cd ios
+            
+            # Find and strip bitcode from hermes framework
+            HERMES_FRAMEWORK="Pods/hermes-engine/destroot/Library/Frameworks/universal/hermes.framework/hermes"
+            
+            if [ -f "$HERMES_FRAMEWORK" ]; then
+              echo "Stripping bitcode from Hermes..."
+              xcrun bitcode_strip -r "$HERMES_FRAMEWORK" -o "$HERMES_FRAMEWORK"
+              echo "✅ Bitcode stripped successfully"
+            else
+              echo "⚠️ Hermes framework not found at expected location"
+              find Pods -name "hermes.framework" -type d
+            fi
+      - run:
+          name: Build and upload to TestFlight (Production)
+          command: |
+            cd ios
+            bundle exec fastlane production
+      - run:
+          name: Display App Version and Build Number
+          command: |
+            APP_VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" ios/nolimitseradeals/Info.plist)
+            BUILD_NUMBER=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" ios/nolimitseradeals/Info.plist)
+            echo "Production App Version: $APP_VERSION"
+            echo "Production Build Number: $BUILD_NUMBER"
+      - store_artifacts:
+          path: ios/build
+          destination: ios_production_build
 
 workflows:
   version: 2
@@ -228,7 +335,12 @@ workflows:
       - install_dependencies:
           context:
             - nolimitsera-context
-      - build_ios:
+      - build_android:
+          context:
+            - nolimitsera-context
+          requires:
+            - install_dependencies
+      - build_ios_staging:
           context:
             - nolimitsera-context
           requires:
@@ -241,7 +353,7 @@ workflows:
             - nolimitsera-context
           filters:
             branches:
-              only: main  # or master
+              only: main
             tags:
               only: /^v.*/
       - build_ios_production:
