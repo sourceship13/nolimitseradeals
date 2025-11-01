@@ -54,8 +54,8 @@ jobs:
           name: Install Ruby dependencies
           command: |
             cd android
+            bundle config set --local path 'vendor/bundle'
             bundle install
-            bundle update fastlane
       - run:
           name: Accept Android SDK licenses
           command: yes | sdkmanager --licenses || true
