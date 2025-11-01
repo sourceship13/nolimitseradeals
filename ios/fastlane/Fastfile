@@ -1,13 +1,98 @@
 default_platform(:ios)
 
 platform :ios do
-  desc "Push a new beta build to TestFlight"
-  lane :beta do
+  desc "Build and upload STAGING to TestFlight"
+  lane :staging do
     # Use keychain created by CircleCI
     keychain_name = "fastlane.keychain-db"
     keychain_password = "temp_password"
     
-    # Setup certificates with Match
+    # Setup certificates with Match for STAGING
+    match(
+      type: "appstore",
+      readonly: true,
+      app_identifier: "org.sera.dev.nolimitsera.staging",
+      keychain_name: keychain_name,
+      keychain_password: keychain_password,
+      git_url: "git@github.com-fastlane-match:ajp-sourceship/nolimitseradeals_fastlane_match.git"
+    )
+    
+    profile_name = ENV["sigh_org.sera.dev.nolimitsera.staging_appstore_profile-name"]
+    
+    # Set partition list for codesign access
+    sh("security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k #{keychain_password} ~/Library/Keychains/#{keychain_name} || true")
+    sleep(2)
+    sh("security set-key-partition-list -S apple-tool:,apple: -s -k #{keychain_password} ~/Library/Keychains/#{keychain_name}")
+    sh("security unlock-keychain -p #{keychain_password} ~/Library/Keychains/#{keychain_name}")
+    
+    # Increment build number
+    increment_build_number(
+      build_number: ENV["CIRCLE_BUILD_NUM"] || Time.now.to_i.to_s
+    )
+    
+    # Remove problematic Hermes file
+    sh("rm -rf ../Pods/hermes-engine/destroot/Library/Frameworks/universal/hermes.framework/hermes || true")
+    
+    # Update code signing settings for STAGING
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "nolimitseradeals.xcodeproj",
+      team_id: "CM52HNMXXW",
+      code_sign_identity: "Apple Distribution",
+      bundle_identifier: "org.sera.dev.nolimitsera.staging",
+      profile_name: profile_name,
+      build_configurations: ["Staging"]
+    )
+    
+    # Build the STAGING app
+    build_app(
+      workspace: "nolimitseradeals.xcworkspace",
+      scheme: "nolimitseradeals-staging",
+      clean: true,
+      export_method: "app-store",
+      configuration: "Staging",
+      output_directory: "./build",
+      output_name: "nolimitseradeals-staging.ipa",
+      codesigning_identity: "Apple Distribution",
+      export_options: {
+        method: "app-store",
+        uploadBitcode: false,
+        uploadSymbols: true,
+        compileBitcode: false,
+        provisioningProfiles: {
+          "org.sera.dev.nolimitsera.staging" => profile_name
+        },
+        signingStyle: "manual",
+        stripSwiftSymbols: true,
+        manageAppVersionAndBuildNumber: false
+      }
+    )
+    
+    # Create API key
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
+      key_content: Base64.decode64(ENV["APP_STORE_CONNECT_API_KEY_CONTENT"])
+    )
+    
+    # Upload to TestFlight (staging app)
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true,
+      skip_submission: true,
+      ipa: "./build/nolimitseradeals-staging.ipa"
+    )
+    
+    UI.success("✅ Staging build uploaded to TestFlight!")
+  end
+
+  desc "Build and upload PRODUCTION to TestFlight"
+  lane :production do
+    # Use keychain created by CircleCI
+    keychain_name = "fastlane.keychain-db"
+    keychain_password = "temp_password"
+    
+    # Setup certificates with Match for PRODUCTION
     match(
       type: "appstore",
       readonly: true,
@@ -21,16 +106,19 @@ platform :ios do
     
     # Set partition list for codesign access
     sh("security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k #{keychain_password} ~/Library/Keychains/#{keychain_name} || true")
+    sleep(2)
+    sh("security set-key-partition-list -S apple-tool:,apple: -s -k #{keychain_password} ~/Library/Keychains/#{keychain_name}")
+    sh("security unlock-keychain -p #{keychain_password} ~/Library/Keychains/#{keychain_name}")
     
     # Increment build number
     increment_build_number(
-      build_number: ENV["CIRCLE_BUILD_NUM"] || 1
+      build_number: ENV["CIRCLE_BUILD_NUM"] || Time.now.to_i.to_s
     )
     
     # Remove problematic Hermes file
     sh("rm -rf ../Pods/hermes-engine/destroot/Library/Frameworks/universal/hermes.framework/hermes || true")
     
-    # Update code signing settings
+    # Update code signing settings for PRODUCTION
     update_code_signing_settings(
       use_automatic_signing: false,
       path: "nolimitseradeals.xcodeproj",
@@ -41,7 +129,7 @@ platform :ios do
       build_configurations: ["Release"]
     )
     
-    # Build the app
+    # Build the PRODUCTION app
     build_app(
       workspace: "nolimitseradeals.xcworkspace",
       scheme: "nolimitseradeals",
@@ -65,26 +153,26 @@ platform :ios do
       }
     )
     
-    # Create API key with correct environment variable names
+    # Create API key
     api_key = app_store_connect_api_key(
       key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
       issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
-      key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"],
-      is_key_content_base64: true,
-      duration: 1200,
-      in_house: false
+      key_content: Base64.decode64(ENV["APP_STORE_CONNECT_API_KEY_CONTENT"])
     )
     
-    # Upload to TestFlight
+    # Upload to TestFlight (production app)
     upload_to_testflight(
       api_key: api_key,
       skip_waiting_for_build_processing: true,
       skip_submission: true,
-      distribute_external: false,
-      notify_external_testers: false,
       ipa: "./build/nolimitseradeals.ipa"
     )
     
-    UI.success("✅ Build uploaded to TestFlight!")
+    UI.success("✅ Production build uploaded to TestFlight!")
+  end
+  
+  # Keep 'beta' as an alias for staging for backwards compatibility
+  lane :beta do
+    staging
   end
 end

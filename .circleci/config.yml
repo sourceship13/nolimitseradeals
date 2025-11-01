@@ -199,9 +199,8 @@ jobs:
               find Pods -name "hermes.framework" -type d
             fi
       - run:
-          name: Build and upload to TestFlight
+          name: Build and upload to TestFlight (Staging)
           command: |
-            # Generate the bundle first
             cd ~/repo
             npx react-native bundle \
               --entry-file index.js \
@@ -210,7 +209,7 @@ jobs:
               --bundle-output ios/main.jsbundle \
               --assets-dest ios
             cd ios
-            bundle exec fastlane beta
+            bundle exec fastlane staging
       - run:
           name: Display App Version and Build Number
           command: |
@@ -224,18 +223,34 @@ jobs:
 
 workflows:
   version: 2
-  build_and_deploy:
+  build_and_deploy_staging:
     jobs:
       - install_dependencies:
           context:
             - nolimitsera-context
-      - build_android:
-          context:
-            - nolimitsera-context
-          requires:
-            - install_dependencies
       - build_ios:
           context:
             - nolimitsera-context
           requires:
             - install_dependencies
+  
+  deploy_production:
+    jobs:
+      - install_dependencies:
+          context:
+            - nolimitsera-context
+          filters:
+            branches:
+              only: main  # or master
+            tags:
+              only: /^v.*/
+      - build_ios_production:
+          context:
+            - nolimitsera-context
+          requires:
+            - install_dependencies
+          filters:
+            branches:
+              only: main
+            tags:
+              only: /^v.*/
