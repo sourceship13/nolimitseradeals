@@ -16,8 +16,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "DEE363032E98730100B65285"
-               BuildableName = "nolimitseradeals-prod.app"
-               BlueprintName = "nolimitseradeals-prod"
+               BuildableName = "nolimitseradealsProd.app"
+               BlueprintName = "nolimitseradealsProd"
                ReferencedContainer = "container:nolimitseradeals.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -45,8 +45,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "DEE363032E98730100B65285"
-            BuildableName = "nolimitseradeals-prod.app"
-            BlueprintName = "nolimitseradeals-prod"
+            BuildableName = "nolimitseradealsProd.app"
+            BlueprintName = "nolimitseradealsProd"
             ReferencedContainer = "container:nolimitseradeals.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -62,8 +62,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "DEE363032E98730100B65285"
-            BuildableName = "nolimitseradeals-prod.app"
-            BlueprintName = "nolimitseradeals-prod"
+            BuildableName = "nolimitseradealsProd.app"
+            BlueprintName = "nolimitseradealsProd"
             ReferencedContainer = "container:nolimitseradeals.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
