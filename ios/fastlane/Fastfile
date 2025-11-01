@@ -27,6 +27,8 @@ platform :ios do
     
     # Increment build number
     increment_build_number(
+      xcodeproj: "nolimitseradeals.xcodeproj",
+      target: "nolimitseradeals-staging",
       build_number: ENV["CIRCLE_BUILD_NUM"] || Time.now.to_i.to_s
     )
     
@@ -37,11 +39,12 @@ platform :ios do
     update_code_signing_settings(
       use_automatic_signing: false,
       path: "nolimitseradeals.xcodeproj",
+      targets: ["nolimitseradeals-staging"],
       team_id: "CM52HNMXXW",
       code_sign_identity: "Apple Distribution",
       bundle_identifier: "org.sera.dev.nolimitsera.staging",
       profile_name: profile_name,
-      build_configurations: ["Staging"]
+      build_configurations: ["Release"]
     )
     
     # Build the STAGING app
@@ -50,7 +53,7 @@ platform :ios do
       scheme: "nolimitseradeals-staging",
       clean: true,
       export_method: "app-store",
-      configuration: "Staging",
+      configuration: "Release",
       output_directory: "./build",
       output_name: "nolimitseradeals-staging.ipa",
       codesigning_identity: "Apple Distribution",
@@ -112,6 +115,8 @@ platform :ios do
     
     # Increment build number
     increment_build_number(
+      xcodeproj: "nolimitseradeals.xcodeproj",
+      target: "nolimitseradealsProd",
       build_number: ENV["CIRCLE_BUILD_NUM"] || Time.now.to_i.to_s
     )
     
@@ -122,6 +127,7 @@ platform :ios do
     update_code_signing_settings(
       use_automatic_signing: false,
       path: "nolimitseradeals.xcodeproj",
+      targets: ["nolimitseradealsProd"],
       team_id: "CM52HNMXXW",
       code_sign_identity: "Apple Distribution",
       bundle_identifier: "org.sera.dev.nolimitsera",
@@ -132,7 +138,7 @@ platform :ios do
     # Build the PRODUCTION app
     build_app(
       workspace: "nolimitseradeals.xcworkspace",
-      scheme: "nolimitseradeals",
+      scheme: "nolimitseradealsProd",
       clean: true,
       export_method: "app-store",
       configuration: "Release",
