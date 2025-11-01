@@ -134,9 +134,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setDealsLoading(true);
       const result = await ApiService.getDeals();
       if (result.success && result.data) {
-        const dealsData = result.data || result;
-        const finalDeals = Array.isArray(dealsData) ? dealsData : [];
-        setDeals(finalDeals);
+        // Handle both legacy array and new shape { data: { deals, profile }, count, query }
+        let finalDeals: any[] = [];
+        const dealsData: any = result.data;
+        if (Array.isArray(dealsData)) {
+          finalDeals = dealsData;
+        } else if (dealsData && Array.isArray(dealsData.deals)) {
+          finalDeals = dealsData.deals;
+        } else if (Array.isArray((result as any))) {
+          finalDeals = result as any;
+        } else {
+          finalDeals = [];
+        }
         
         // Extract categories from deals
         const extractedCategories: Category[] = [];
@@ -156,8 +165,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             };
           }
         });
-        Object.values(categoryMap).forEach((cat: Category) => extractedCategories.push(cat));
-        setAvailableCategories(extractedCategories);
+  Object.values(categoryMap).forEach((cat: Category) => extractedCategories.push(cat));
+  setAvailableCategories(extractedCategories);
         
         // Build categories state object
         const savedCategories = await AsyncStorage.getItem('categories');
@@ -174,7 +183,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         setCategoriesState(mergedCategories);
         await AsyncStorage.setItem('categories', JSON.stringify(mergedCategories));
-        return finalDeals;
+
+        // Mark deals with hearted status using server-provided flag
+        const annotatedDeals = finalDeals.map((deal: any) => {
+          const serverIsHearted =
+            deal.isHearted !== undefined ? !!deal.isHearted :
+            deal.is_hearted !== undefined ? !!deal.is_hearted :
+            false;
+          return { ...deal, isHearted: serverIsHearted };
+        });
+
+        // Derive heartedDeals state directly from annotated deals
+        const derivedHeartedIds = annotatedDeals
+          .filter((d: any) => !!d.isHearted)
+          .map((d: any) => d.deal_id || d.id)
+          .filter(Boolean);
+        setHeartedDeals(derivedHeartedIds.map((id: string) => ({ deal_id: id, id, isHearted: true })));
+
+        setDeals(annotatedDeals);
+        return annotatedDeals;
       } else {
         setDeals([]);
         setAvailableCategories([]);
@@ -196,35 +223,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchHeartedDeals = async () => {
     try {
       setHeartedDealsLoading(true);
-      
-      const result = await ApiService.getHeartedDeals();
-      
-      if (result.success && result.data) {
-        let heartedDealIds: string[] = [];
-        
-        if (result.data && typeof result.data === 'object' && !Array.isArray(result.data)) {
-          const dataObj = result.data as any;
-          if (dataObj.dealIds && Array.isArray(dataObj.dealIds)) {
-            heartedDealIds = dataObj.dealIds;
-          }
-        } else if (Array.isArray(result.data)) {
-          heartedDealIds = result.data.map((deal: any) => deal.deal_id || deal.id).filter(Boolean);
-        }
-        
-        const heartedDealsArray = heartedDealIds.map(dealId => ({
-          deal_id: dealId,
-          id: dealId,
-          isHearted: true
-        }));
-        
-        setHeartedDeals(heartedDealsArray);
-        return heartedDealsArray;
-      } else {
-        setHeartedDeals([]);
-        return [];
-      }
+      // Prefer current deals; if empty, fetch them first
+      const currentDeals = deals.length > 0 ? deals : await fetchDeals();
+      const ids = (currentDeals || [])
+        .filter((d: any) => !!(d.isHearted ?? d.is_hearted))
+        .map((d: any) => d.deal_id || d.id)
+        .filter(Boolean);
+      const heartedDealsArray = ids.map((dealId: string) => ({ deal_id: dealId, id: dealId, isHearted: true }));
+      setHeartedDeals(heartedDealsArray);
+      return heartedDealsArray;
     } catch (error) {
-      console.error('❌ Error fetching hearted deals:', error);
+      console.error('❌ Error deriving hearted deals from current deals:', error);
       setHeartedDeals([]);
       return [];
     } finally {
@@ -379,7 +388,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           refreshUser().catch(err => console.error('❌ Failed to refresh user:', err));
           
           // Refresh hearted deals
-          fetchHeartedDeals().catch(err => console.error('❌ Failed to refresh hearted deals:', err));
+          fetchHeartedDeals().catch((err: any) => console.error('❌ Failed to refresh hearted deals:', err));
         }
       } finally {
         // Reset the flag after a short delay

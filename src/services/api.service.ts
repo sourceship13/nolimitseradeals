@@ -102,9 +102,9 @@ class ApiService {
     return response;
   }
 
-  async getCategories(): Promise<ApiResponse<any[]>> {
-    return this.makeRequest('/deals/categories');
-  }
+  // async getCategories(): Promise<ApiResponse<any[]>> {
+  //   return this.makeRequest('/deals/categories');
+  // }
 
   async getDealById(id: string): Promise<ApiResponse<any>> {
     return this.makeRequest(`/deals/${id}`);
@@ -122,17 +122,17 @@ class ApiService {
     });
   }
 
-  async getHeartedDeals(): Promise<ApiResponse<any[]>> {
-    return  await this.makeRequest('/deals/hearted', {
-      method: 'GET',
-    });
-  }
+  // async getHeartedDeals(): Promise<ApiResponse<any[]>> {
+  //   return  await this.makeRequest('/deals/hearted', {
+  //     method: 'GET',
+  //   });
+  // }
 
-  async checkHeartStatus(dealId: string): Promise<ApiResponse<{dealId: string, isHearted: boolean, heartCount: number}>> {
-    return this.makeRequest(`/deals/${dealId}/heart`, {
-      method: 'GET',
-    });
-  }
+  // async checkHeartStatus(dealId: string): Promise<ApiResponse<{dealId: string, isHearted: boolean, heartCount: number}>> {
+  //   return this.makeRequest(`/deals/${dealId}/heart`, {
+  //     method: 'GET',
+  //   });
+  // }
 
   async getUserProfile(): Promise<ApiResponse<any>> {
     return this.makeRequest('/user/profile');

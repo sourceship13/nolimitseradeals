@@ -49,11 +49,11 @@ const DebugScreen = ({ navigation }: any) => {
         dealsResult = { error: String(error) };
       }
       
-      try {
-        categoriesResult = await ApiService.getCategories();
-      } catch (error) {
-        categoriesResult = { error: String(error) };
-      }
+      // try {
+      //   categoriesResult = await ApiService.getCategories();
+      // } catch (error) {
+      //   categoriesResult = { error: String(error) };
+      // }
 
       setDebugInfo({
         accessToken: accessToken ? `${accessToken.substring(0, 20)}...` : 'NULL',
@@ -77,31 +77,31 @@ const DebugScreen = ({ navigation }: any) => {
     await checkDebugInfo();
   };
 
-  const testTokenHeaders = async () => {
-    try {
-      // Get the token directly
-      const accessToken = await AsyncStorage.getItem('accessToken');
-      // Test manual fetch with token
-      const apiUrl = await import('../../libs/utils/api.utils');
-      const testUrl = `${apiUrl.default.apiURL}/deals/categories`;
-      const manualResponse = await fetch(testUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': accessToken ? `Bearer ${accessToken}` : '',
-        },
-      });
-      if (!manualResponse.ok) {
-        const errorText = await manualResponse.text();
-        console.error('❌ Debug: Manual fetch error:', errorText);
-      } else {
-        const data = await manualResponse.json();
-      }
-    } catch (error) {
-      console.error('❌ Debug: Token test failed:', error);
-    }
-    await checkDebugInfo();
-  };
+  // const testTokenHeaders = async () => {
+  //   try {
+  //     // Get the token directly
+  //     const accessToken = await AsyncStorage.getItem('accessToken');
+  //     // Test manual fetch with token
+  //     const apiUrl = await import('../../libs/utils/api.utils');
+  //     // const testUrl = `${apiUrl.default.apiURL}/deals/categories`;
+  //     const manualResponse = await fetch(testUrl, {
+  //       method: 'GET',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': accessToken ? `Bearer ${accessToken}` : '',
+  //       },
+  //     });
+  //     if (!manualResponse.ok) {
+  //       const errorText = await manualResponse.text();
+  //       console.error('❌ Debug: Manual fetch error:', errorText);
+  //     } else {
+  //       const data = await manualResponse.json();
+  //     }
+  //   } catch (error) {
+  //     console.error('❌ Debug: Token test failed:', error);
+  //   }
+  //   await checkDebugInfo();
+  // };
 
   const testApiConnection = async () => {
     try {
@@ -195,9 +195,9 @@ const DebugScreen = ({ navigation }: any) => {
         <Text style={styles.buttonText}>Test API Connection</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.button} onPress={testTokenHeaders}>
+      {/* <TouchableOpacity style={styles.button} onPress={testTokenHeaders}>
         <Text style={styles.buttonText}>Test Token Headers</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
       
       <TouchableOpacity style={styles.button} onPress={fillTestCredentials}>
         <Text style={styles.buttonText}>Go to Sign In</Text>
