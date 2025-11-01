@@ -1,0 +1,2 @@
+json_key_file(ENV["GOOGLE_PLAY_JSON"])   # or rely on SUPPLY_JSON_KEY_DATA in CI
+package_name(ENV["APP_ID"] || "REPLACE_ME")

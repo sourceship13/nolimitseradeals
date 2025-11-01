@@ -1,0 +1,31 @@
+default_platform(:android)
+
+platform :android do
+  desc "Assemble Release AAB"
+  lane :build_aab do
+    sh("cd .. && ./gradlew bundleRelease")
+  end
+
+  desc "Upload to Internal track"
+  lane :internal do
+    build_aab
+    supply(
+      aab: "../app/build/outputs/bundle/release/app-release.aab",
+      track: "internal",
+      release_status: "completed",
+      json_key_file: ENV["GOOGLE_PLAY_JSON"]
+    )
+  end
+
+  desc "Upload to Production"
+  lane :production do
+    build_aab
+    supply(
+      aab: "../app/build/outputs/bundle/release/app-release.aab",
+      track: "production",
+      release_status: "completed",
+      json_key_file: ENV["GOOGLE_PLAY_JSON"]
+    )
+  end
+end
+RUBY
