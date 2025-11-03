@@ -24,7 +24,7 @@ interface BusinessData {
 }
 
 const BusinessProfile = ({ navigation, route }: any) => {
-  const { isDarkMode } = useAuth();
+  const { isDarkMode, userBusiness } = useAuth();
   const colors = getColors(isDarkMode);
   const [business, setBusiness] = useState<BusinessData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,24 +34,51 @@ const BusinessProfile = ({ navigation, route }: any) => {
   const businessId = route?.params?.businessId;
 
   useEffect(() => {
-    fetchBusinessProfile();
-  }, []);
+    loadBusinessData();
+  }, [userBusiness, businessId]);
 
-  const fetchBusinessProfile = async () => {
+  const loadBusinessData = async () => {
     setIsLoading(true);
     setError(null);
     
     try {
-      // Fetch business profile from API
-      const response = await ApiService.getBusinessProfile(businessId);
-      
-      if (response.success && response.data) {
-        setBusiness(response.data);
+      // If viewing a specific business (businessId provided), fetch from API
+      if (businessId) {
+        const response = await ApiService.getBusinessProfile(businessId);
+        if (response.success && response.data) {
+          setBusiness(response.data);
+        } else {
+          setError(response.message || 'Failed to load business profile');
+        }
+      } 
+      // Otherwise, use the userBusiness from context (already fetched with deals)
+      else if (userBusiness && Array.isArray(userBusiness) && userBusiness.length > 0) {
+        // userBusiness is an array, get the first business (primary business)
+        const primaryBusiness = userBusiness[0];
+        
+        // Map the API response structure to BusinessData interface
+        const mappedBusiness: BusinessData = {
+          id: primaryBusiness.businessId,
+          businessName: primaryBusiness.businessName,
+          description: primaryBusiness.description || '',
+          address: primaryBusiness.address || '',
+          city: primaryBusiness.city || '',
+          state: primaryBusiness.state || '',
+          country: primaryBusiness.country || '',
+          phoneNumber: primaryBusiness.phoneNumber || '',
+          websiteUrl: primaryBusiness.websiteUrl,
+          logoUrl: primaryBusiness.images?.logo || primaryBusiness.logoUrl || '',
+          coverImageUrl: primaryBusiness.images?.coverImage,
+          businessImage1Url: primaryBusiness.images?.businessImages?.[0]?.url,
+          businessImage2Url: primaryBusiness.images?.businessImages?.[1]?.url,
+        };
+        
+        setBusiness(mappedBusiness);
       } else {
-        setError(response.message || 'Failed to load business profile');
+        setError('No business profile available');
       }
     } catch (err: any) {
-      console.error('Error fetching business profile:', err);
+      console.error('Error loading business profile:', err);
       setError(err.message || 'An error occurred while loading the business profile');
     } finally {
       setIsLoading(false);
@@ -124,7 +151,7 @@ const BusinessProfile = ({ navigation, route }: any) => {
           </Text>
           <TouchableOpacity
             style={[styles.retryButton, { backgroundColor: colors.primary }]}
-            onPress={fetchBusinessProfile}
+            onPress={loadBusinessData}
           >
             <Text style={[iOSUIKit.body, { color: colors.background, fontWeight: '600' }]}>
               Try Again
