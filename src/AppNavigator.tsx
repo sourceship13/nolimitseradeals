@@ -26,6 +26,7 @@ import BusinessCreationScreen2 from './screens/BusinessCreation/BusinessCreation
 import BusinessCreationScreen3 from './screens/BusinessCreation/BusinessCreationScreen3';
 import BusinessCreationScreen4 from './screens/BusinessCreation/BusinessCreationScreen4';
 import { Colors } from './libs/colors';
+import BusinessProfile from './screens/Profile/BusinessProfile';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -112,6 +113,11 @@ const MainTabNavigator = () => {
         name="ProfileTab" 
         component={ProfileScreen}
         options={{ tabBarLabel: 'PROFILE' }}
+      />
+      <Tab.Screen 
+        name="BusinessProfileTab" 
+        component={BusinessProfile}
+        options={{ tabBarLabel: 'BPROFILE' }}
       />
     </Tab.Navigator>
   );
