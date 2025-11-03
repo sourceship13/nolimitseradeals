@@ -222,7 +222,7 @@ const BusinessProfile = ({ navigation, route }: any) => {
           <Text style={[iOSUIKit.body, { color: colors.background, fontWeight: '600' }]}>
             Business Deals
           </Text>
-        </TouchableOpacity>.
+        </TouchableOpacity>
 
         {/* Contact Information */}
         <View style={[styles.section, { backgroundColor: colors.surface }]}>
