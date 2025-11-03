@@ -33,8 +33,11 @@ const Tab = createBottomTabNavigator();
 
 // Bottom Tab Navigator for main app screens
 const MainTabNavigator = () => {
-  const { isDarkMode } = useAuth();
+  const { isDarkMode, user } = useAuth();
   const colors = getColors(isDarkMode);
+
+  // Determine which profile screen to show based on account type
+  const ProfileComponent = user?.account_type === 'business' ? BusinessProfile : ProfileScreen;
 
   return (
     <Tab.Navigator
@@ -111,13 +114,8 @@ const MainTabNavigator = () => {
       />
       <Tab.Screen 
         name="ProfileTab" 
-        component={ProfileScreen}
+        component={ProfileComponent}
         options={{ tabBarLabel: 'PROFILE' }}
-      />
-      <Tab.Screen 
-        name="BusinessProfileTab" 
-        component={BusinessProfile}
-        options={{ tabBarLabel: 'BPROFILE' }}
       />
     </Tab.Navigator>
   );
