@@ -27,6 +27,8 @@ import BusinessCreationScreen3 from './screens/BusinessCreation/BusinessCreation
 import BusinessCreationScreen4 from './screens/BusinessCreation/BusinessCreationScreen4';
 import { Colors } from './libs/colors';
 import BusinessProfile from './screens/Profile/BusinessProfile';
+import BusinessDeals from './screens/BusinessDeals/BusinessDeals';
+import CreateDeal from './screens/CreateDeal/CreateDeal';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -181,10 +183,14 @@ const AppNavigator = () => {
             <Stack.Screen name="PermissionTest" component={PermissionTestScreen} />
             <Stack.Screen name="NetworkDebug" component={NetworkDebugScreen} />
             <Stack.Screen name="Redemption" component={RedemptionScreen} />
+            
+            {/* Business screens */}
             <Stack.Screen name="BusinessCreationScreen1" component={BusinessCreationScreen1} />
             <Stack.Screen name="BusinessCreationScreen2" component={BusinessCreationScreen2} />
             <Stack.Screen name="BusinessCreationScreen3" component={BusinessCreationScreen3} />
             <Stack.Screen name="BusinessCreationScreen4" component={BusinessCreationScreen4} />
+            <Stack.Screen name="BusinessDeals" component={BusinessDeals} />
+            <Stack.Screen name="CreateDeal" component={CreateDeal} />
           </>
         )}
       </Stack.Navigator>

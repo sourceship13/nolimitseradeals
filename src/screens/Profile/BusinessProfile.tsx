@@ -215,6 +215,16 @@ const BusinessProfile = ({ navigation, route }: any) => {
           )}
         </View>
 
+        <TouchableOpacity
+          style={[styles.editButton, { backgroundColor: colors.primary }]}
+          onPress={() => navigation.navigate('BusinessDeals', { businessId: business.id })}
+        >
+          <Icon name="edit" size={20} color={colors.background} style={{ marginRight: 8 }} />
+          <Text style={[iOSUIKit.body, { color: colors.background, fontWeight: '600' }]}>
+            Business Deals
+          </Text>
+        </TouchableOpacity>.
+
         {/* Contact Information */}
         <View style={[styles.section, { backgroundColor: colors.surface }]}>
           <Text style={[iOSUIKit.title3, { color: colors.text, marginBottom: 16, paddingHorizontal: 16 }]}>
@@ -275,16 +285,28 @@ const BusinessProfile = ({ navigation, route }: any) => {
           </View>
         )}
 
-        {/* Edit Button (optional - for business owners) */}
-        <TouchableOpacity
-          style={[styles.editButton, { backgroundColor: colors.primary }]}
-          onPress={() => navigation.navigate('EditBusiness', { businessId: business.id })}
-        >
-          <Icon name="edit" size={20} color={colors.background} style={{ marginRight: 8 }} />
-          <Text style={[iOSUIKit.body, { color: colors.background, fontWeight: '600' }]}>
-            Edit Business Profile
-          </Text>
-        </TouchableOpacity>
+        {/* Action Buttons */}
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: colors.primary }]}
+            onPress={() => navigation.navigate('BusinessDeals')}
+          >
+            <Icon name="local-offer" size={20} color={colors.background} style={{ marginRight: 8 }} />
+            <Text style={[iOSUIKit.body, { color: colors.background, fontWeight: '600' }]}>
+              View My Deals
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.primary }]}
+            onPress={() => navigation.navigate('EditBusiness', { businessId: business.id })}
+          >
+            <Icon name="edit" size={20} color={colors.primary} style={{ marginRight: 8 }} />
+            <Text style={[iOSUIKit.body, { color: colors.primary, fontWeight: '600' }]}>
+              Edit Profile
+            </Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </View>
   );
@@ -368,6 +390,20 @@ const styles = StyleSheet.create({
   businessImage: {
     width: '100%',
     height: 200,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    marginHorizontal: 24,
+    marginVertical: 24,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
   },
   editButton: {
     flexDirection: 'row',
