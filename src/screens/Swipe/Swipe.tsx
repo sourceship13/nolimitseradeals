@@ -172,13 +172,21 @@ const SwipeScreen = ({ navigation }: any) => {
       >
         <Text
           style={{
-            fontFamily: 'Inter-Variable',
-            fontWeight: '700', // Regular
+            fontFamily: 'Inter',
+            fontWeight: '700',
             fontSize: 24,
             color: colors.text,
           }}
         >
           DEALZ
+        </Text>
+         <Text
+          style={{
+            fontSize: 24,
+            color: colors.text,
+          }}
+        >
+          DEALZ - Regular Weight
         </Text>
         <TouchableOpacity
           onPress={() => navigation.navigate('Settings')}
