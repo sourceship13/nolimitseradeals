@@ -1,11 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, FlatList, ImageBackground, Dimensions, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+  FlatList,
+  ImageBackground,
+  Dimensions,
+  Platform,
+} from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useAuth, getColors } from '../../libs/hooks/useAuth';
 import { iOSUIKit } from 'react-native-typography';
-
-
 
 const PLACEHOLDER_DEAL = {
   id: 0,
@@ -15,7 +23,7 @@ const PLACEHOLDER_DEAL = {
   location: '',
   category: '',
   expires: '',
-  backgroundColor: '#888'
+  backgroundColor: '#888',
 };
 
 const SwipeScreen = ({ navigation }: any) => {
@@ -25,8 +33,12 @@ const SwipeScreen = ({ navigation }: any) => {
   const [error, setError] = useState<string | null>(null);
 
   // Filter out hearted deals
-  const heartedDealIds = new Set((heartedDeals || []).map((d: any) => d.deal_id || d.id));
-  const unheartedDeals = deals.filter((deal: any) => !heartedDealIds.has(deal.id || deal.deal_id));
+  const heartedDealIds = new Set(
+    (heartedDeals || []).map((d: any) => d.deal_id || d.id),
+  );
+  const unheartedDeals = deals.filter(
+    (deal: any) => !heartedDealIds.has(deal.id || deal.deal_id),
+  );
 
   // Animated values for swipe gestures
   const translateX = useRef(new Animated.Value(0)).current;
@@ -38,30 +50,41 @@ const SwipeScreen = ({ navigation }: any) => {
 
   // Debug: Ensure opacity starts at 0 and log it
   useEffect(() => {
-  likeOpacity.setValue(0);
-  dislikeOpacity.setValue(0);
+    likeOpacity.setValue(0);
+    dislikeOpacity.setValue(0);
   }, []);
 
   // Deals are now fetched globally via useAuth hook
 
-  const currentDeal = unheartedDeals.length > 0 ? unheartedDeals[currentDealIndex] : PLACEHOLDER_DEAL;
+  const currentDeal =
+    unheartedDeals.length > 0
+      ? unheartedDeals[currentDealIndex]
+      : PLACEHOLDER_DEAL;
 
   const resetAnimations = () => {
     Animated.parallel([
       Animated.spring(translateX, { toValue: 0, useNativeDriver: true }),
       Animated.spring(translateY, { toValue: 0, useNativeDriver: true }),
       Animated.spring(rotate, { toValue: 0, useNativeDriver: true }),
-      Animated.timing(likeOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
-      Animated.timing(dislikeOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+      Animated.timing(likeOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(dislikeOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
     ]).start();
   };
 
   const onGestureEvent = Animated.event(
     [{ nativeEvent: { translationX: translateX, translationY: translateY } }],
-    { 
+    {
       useNativeDriver: false, // Don't use native driver for opacity changes
       listener: (event: any) => {
-  // translationX is already declared in the Animated.event mapping above
+        // translationX is already declared in the Animated.event mapping above
         const { translationX } = event.nativeEvent;
         // Calculate rotation based on horizontal movement
         const rotateValue = translationX / 10;
@@ -73,7 +96,10 @@ const SwipeScreen = ({ navigation }: any) => {
           dislikeOpacity.setValue(0);
         } else if (translationX < -20) {
           // Swiping left - show X (starts at -20px for easier testing)
-          const opacity = Math.min(1, Math.max(0, Math.abs(translationX) / 100));
+          const opacity = Math.min(
+            1,
+            Math.max(0, Math.abs(translationX) / 100),
+          );
           dislikeOpacity.setValue(opacity);
           likeOpacity.setValue(0);
         } else {
@@ -81,30 +107,30 @@ const SwipeScreen = ({ navigation }: any) => {
           likeOpacity.setValue(0);
           dislikeOpacity.setValue(0);
         }
-      }
-    }
+      },
+    },
   );
 
   const onHandlerStateChange = (event: any) => {
-  // nativeEvent is already declared above
-  const { nativeEvent } = event;
-    
+    // nativeEvent is already declared above
+    const { nativeEvent } = event;
+
     if (nativeEvent.state === State.END) {
       const { translationX } = nativeEvent;
-      
+
       if (translationX > 150) {
         // Swipe right - like
-  handleSwipe('right');
+        handleSwipe('right');
         handleSwipe('right');
         resetAnimations();
       } else if (translationX < -150) {
         // Swipe left - dislike
-  handleSwipe('left');
+        handleSwipe('left');
         handleSwipe('left');
         resetAnimations();
       } else {
         // Snap back to center
-  resetAnimations();
+        resetAnimations();
         resetAnimations();
       }
     }
@@ -114,63 +140,97 @@ const SwipeScreen = ({ navigation }: any) => {
     if (direction === 'right') {
       navigation.navigate('DealDetail', { deal: currentDeal });
     } else {
-      setCurrentDealIndex((prev) => unheartedDeals.length > 0 ? (prev + 1) % unheartedDeals.length : 0);
+      setCurrentDealIndex(prev =>
+        unheartedDeals.length > 0 ? (prev + 1) % unheartedDeals.length : 0,
+      );
     }
   };
 
   const handlePreviousDeal = () => {
-    setCurrentDealIndex((prev) => {
+    setCurrentDealIndex(prev => {
       if (unheartedDeals.length === 0) return 0;
       return prev === 0 ? unheartedDeals.length - 1 : prev - 1;
     });
   };
 
   const handleNextDeal = () => {
-    setCurrentDealIndex((prev) => unheartedDeals.length > 0 ? (prev + 1) % unheartedDeals.length : 0);
+    setCurrentDealIndex(prev =>
+      unheartedDeals.length > 0 ? (prev + 1) % unheartedDeals.length : 0,
+    );
   };
 
   return (
-    <View style={[styles.screenContainer, { backgroundColor: colors.background }]}>
+    <View
+      style={[styles.screenContainer, { backgroundColor: colors.background }]}
+    >
       {/* 1. Header */}
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}> 
-        <Text style={[styles.headerTitle, { color: colors.text, fontFamily:'Roboto-Thin' }]}>DEALZ</Text>
-        <TouchableOpacity 
+      <View
+        style={[
+          styles.header,
+          { backgroundColor: colors.surface, borderBottomColor: colors.border },
+        ]}
+      >
+        <Text
+          style={{
+            fontFamily: 'Roboto-Bold',
+            fontSize: 28,
+            color: colors.text,
+          }}
+        >
+          DEALZ
+        </Text>
+        <TouchableOpacity
           onPress={() => navigation.navigate('Settings')}
           style={styles.settingsButton}
         >
           <Text style={[iOSUIKit.title3, { color: colors.primary }]}>⚙️</Text>
         </TouchableOpacity>
       </View>
-      
+
       {/* 3. Full-screen content area */}
       <PanGestureHandler
         onGestureEvent={onGestureEvent}
         onHandlerStateChange={onHandlerStateChange}
       >
-        <Animated.View 
-          style={[ 
+        <Animated.View
+          style={[
             styles.contentContainer,
             {
               transform: [
                 { translateX: translateX },
                 { translateY: translateY },
-                { rotate: rotate.interpolate({
+                {
+                  rotate: rotate.interpolate({
                     inputRange: [-200, 200],
                     outputRange: ['-30deg', '30deg'],
-                    extrapolate: 'clamp'
-                  })
-                }
-              ]
-            }
+                    extrapolate: 'clamp',
+                  }),
+                },
+              ],
+            },
           ]}
         >
           {dealsLoading ? (
             <View style={styles.centerContent}>
-              <Text style={[iOSUIKit.body, { color: colors.text, textAlign: 'center' }]}>Loading deals...</Text>
+              <Text
+                style={[
+                  iOSUIKit.body,
+                  { color: colors.text, textAlign: 'center' },
+                ]}
+              >
+                Loading deals...
+              </Text>
             </View>
           ) : error ? (
             <View style={styles.centerContent}>
-              <Text style={[iOSUIKit.body, { color: colors.error, textAlign: 'center' }]}>{error}</Text>
+              <Text
+                style={[
+                  iOSUIKit.body,
+                  { color: colors.error, textAlign: 'center' },
+                ]}
+              >
+                {error}
+              </Text>
             </View>
           ) : (
             <>
@@ -184,15 +244,35 @@ const SwipeScreen = ({ navigation }: any) => {
                   const images = currentDeal.images;
                   // Extract image URLs from deal_images array (objects with image_url property)
                   let finalImages = null;
-                  if (deal_images && Array.isArray(deal_images) && deal_images.length > 0) {
+                  if (
+                    deal_images &&
+                    Array.isArray(deal_images) &&
+                    deal_images.length > 0
+                  ) {
                     finalImages = deal_images
-                      .filter(img => img && typeof img === 'object' && img.image_url)
+                      .filter(
+                        img => img && typeof img === 'object' && img.image_url,
+                      )
                       .map(img => img.image_url)
-                      .filter(url => url && typeof url === 'string' && url.trim().length > 0);
-                  } else if (images && Array.isArray(images) && images.length > 0) {
-                    finalImages = images
-                      .filter(url => url && typeof url === 'string' && url.trim().length > 0);
-                  } else if (deal_image_url && typeof deal_image_url === 'string') {
+                      .filter(
+                        url =>
+                          url &&
+                          typeof url === 'string' &&
+                          url.trim().length > 0,
+                      );
+                  } else if (
+                    images &&
+                    Array.isArray(images) &&
+                    images.length > 0
+                  ) {
+                    finalImages = images.filter(
+                      url =>
+                        url && typeof url === 'string' && url.trim().length > 0,
+                    );
+                  } else if (
+                    deal_image_url &&
+                    typeof deal_image_url === 'string'
+                  ) {
                     finalImages = [deal_image_url];
                   } else if (image_url && typeof image_url === 'string') {
                     finalImages = [image_url];
@@ -216,11 +296,24 @@ const SwipeScreen = ({ navigation }: any) => {
                           >
                             <View style={styles.imageOverlay} />
                             {/* Swipe feedback icons on top of image */}
-                            <View style={styles.imageIconsOverlay} pointerEvents="none">
-                              <Animated.View style={[styles.imageLikeIcon, { opacity: likeOpacity }]}> 
+                            <View
+                              style={styles.imageIconsOverlay}
+                              pointerEvents="none"
+                            >
+                              <Animated.View
+                                style={[
+                                  styles.imageLikeIcon,
+                                  { opacity: likeOpacity },
+                                ]}
+                              >
                                 <Text style={styles.likeIconText}>♥</Text>
                               </Animated.View>
-                              <Animated.View style={[styles.imageDislikeIcon, { opacity: dislikeOpacity }]}> 
+                              <Animated.View
+                                style={[
+                                  styles.imageDislikeIcon,
+                                  { opacity: dislikeOpacity },
+                                ]}
+                              >
                                 <Text style={styles.dislikeIconText}>✕</Text>
                               </Animated.View>
                             </View>
@@ -230,14 +323,35 @@ const SwipeScreen = ({ navigation }: any) => {
                     );
                   } else {
                     return (
-                      <View style={[styles.fullScreenImage, { backgroundColor: currentDeal.backgroundColor || colors.primary }]}> 
+                      <View
+                        style={[
+                          styles.fullScreenImage,
+                          {
+                            backgroundColor:
+                              currentDeal.backgroundColor || colors.primary,
+                          },
+                        ]}
+                      >
                         <View style={styles.imageOverlay} />
                         {/* Swipe feedback icons on top of image */}
-                        <View style={styles.imageIconsOverlay} pointerEvents="none">
-                          <Animated.View style={[styles.imageLikeIcon, { opacity: likeOpacity }]}> 
+                        <View
+                          style={styles.imageIconsOverlay}
+                          pointerEvents="none"
+                        >
+                          <Animated.View
+                            style={[
+                              styles.imageLikeIcon,
+                              { opacity: likeOpacity },
+                            ]}
+                          >
                             <Text style={styles.likeIconText}>♥</Text>
                           </Animated.View>
-                          <Animated.View style={[styles.imageDislikeIcon, { opacity: dislikeOpacity }]}> 
+                          <Animated.View
+                            style={[
+                              styles.imageDislikeIcon,
+                              { opacity: dislikeOpacity },
+                            ]}
+                          >
                             <Text style={styles.dislikeIconText}>✕</Text>
                           </Animated.View>
                         </View>
@@ -245,27 +359,37 @@ const SwipeScreen = ({ navigation }: any) => {
                     );
                   }
                 })()}
-                
+
                 {/* Card content overlay on image */}
                 <View style={styles.cardOverlay} pointerEvents="none">
-                  <View style={{ ...styles.cardContent, justifyContent: 'center' }} pointerEvents="none">
+                  <View
+                    style={{ ...styles.cardContent, justifyContent: 'center' }}
+                    pointerEvents="none"
+                  >
                     <View style={styles.businessRow}>
-                      <Text style={styles.dealBusiness}>{currentDeal.business || currentDeal.business_name || ''}</Text>
-                      {
-                        currentDeal.is_premium_business ? (
-                          <MaterialIcons 
-                        name={'verified'}
-                        size={18}
-                        color="#0095f6"
-                        style={styles.businessIcon}
-                      />)
-                      : null
-                      }
-                      
+                      <Text style={styles.dealBusiness}>
+                        {currentDeal.business ||
+                          currentDeal.business_name ||
+                          ''}
+                      </Text>
+                      {currentDeal.is_premium_business ? (
+                        <MaterialIcons
+                          name={'verified'}
+                          size={18}
+                          color="#0095f6"
+                          style={styles.businessIcon}
+                        />
+                      ) : null}
                     </View>
-                    <Text style={styles.dealOffer}>{currentDeal.description || currentDeal.descrption || ''}</Text>
-                    <Text style={styles.dealLocation}>{currentDeal.category_name || ''}</Text>
-                    <Text style={styles.dealExpires}>{currentDeal.expires || currentDeal.expiry || ''}</Text>
+                    <Text style={styles.dealOffer}>
+                      {currentDeal.description || currentDeal.descrption || ''}
+                    </Text>
+                    <Text style={styles.dealLocation}>
+                      {currentDeal.category_name || ''}
+                    </Text>
+                    <Text style={styles.dealExpires}>
+                      {currentDeal.expires || currentDeal.expiry || ''}
+                    </Text>
                   </View>
                 </View>
               </View>
@@ -276,7 +400,6 @@ const SwipeScreen = ({ navigation }: any) => {
     </View>
   );
 };
-
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -298,7 +421,7 @@ const styles = StyleSheet.create({
     iOSUIKit.body,
     {
       fontWeight: 'bold',
-    }
+    },
   ]),
   exploreBtn: {
     paddingHorizontal: 16,
@@ -309,7 +432,7 @@ const styles = StyleSheet.create({
     iOSUIKit.callout,
     {
       fontWeight: 'bold',
-    }
+    },
   ]),
   contentContainer: {
     flex: 1,
@@ -364,10 +487,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-
   },
   businessIcon: {
-    marginTop:8
+    marginTop: 8,
   },
   dealImage: {
     fontSize: 64,
@@ -380,7 +502,7 @@ const styles = StyleSheet.create({
       marginTop: 8,
       marginRight: 8,
       fontSize: 20, // Maintain size for overlay readability
-    }
+    },
   ]),
   dealOffer: StyleSheet.flatten([
     iOSUIKit.callout,
@@ -388,7 +510,7 @@ const styles = StyleSheet.create({
       color: '#fff',
       textAlign: 'center',
       marginVertical: 4,
-    }
+    },
   ]),
   dealLocation: StyleSheet.flatten([
     iOSUIKit.subhead,
@@ -397,7 +519,7 @@ const styles = StyleSheet.create({
       marginBottom: 2,
       textAlign: 'center',
       marginVertical: 2,
-    }
+    },
   ]),
   dealExpires: StyleSheet.flatten([
     iOSUIKit.caption2,
@@ -405,7 +527,7 @@ const styles = StyleSheet.create({
       color: '#fff',
       marginBottom: 8,
       textAlign: 'center',
-    }
+    },
   ]),
   actionContainer: {
     height: screenHeight * 0.1, // 1/10 of screen height
@@ -458,7 +580,7 @@ const styles = StyleSheet.create({
     iOSUIKit.largeTitleEmphasized,
     {
       fontSize: 24, // Override the default large title size to fit header
-    }
+    },
   ]),
   settingsButton: {
     padding: 8,

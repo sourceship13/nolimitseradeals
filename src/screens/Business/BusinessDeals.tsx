@@ -1,0 +1,421 @@
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+  RefreshControl,
+} from 'react-native';
+import { useAuth } from '../../libs/hooks/useAuth';
+import { getColors } from '../../libs/colors';
+import Toolbar from '../../components/Toolbar';
+import { iOSUIKit } from 'react-native-typography';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+interface Deal {
+  deal_id: string;
+  deal_title: string;
+  description: string;
+  deal_type: string;
+  deal_price: string;
+  percentage_discount: number;
+  min_shares_required: number;
+  end_time: string;
+  created_at: string;
+  priority_score: number;
+  deal_images?: Array<{
+    id: string;
+    image_url: string;
+    image_type: string;
+  }>;
+  is_hearted?: boolean;
+  redemption_status?: string | null;
+}
+
+const BusinessDeals = ({ navigation }: any) => {
+  const { isDarkMode, userBusiness, deals } = useAuth();
+  const colors = getColors(isDarkMode);
+  const [businessDeals, setBusinessDeals] = useState<Deal[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadBusinessDeals();
+  }, [userBusiness, deals]);
+
+  const loadBusinessDeals = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      if (userBusiness && Array.isArray(userBusiness) && userBusiness.length > 0) {
+        const primaryBusiness = userBusiness[0];
+        const businessId = primaryBusiness.businessId;
+
+        // Filter deals that belong to this business
+        const filteredDeals = deals.filter(
+          (deal: any) => deal.business_id === businessId
+        );
+
+        setBusinessDeals(filteredDeals);
+      } else {
+        setError('No business profile found');
+      }
+    } catch (err: any) {
+      console.error('Error loading business deals:', err);
+      setError(err.message || 'Failed to load business deals');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadBusinessDeals();
+    setRefreshing(false);
+  };
+
+  const handleDealPress = (deal: Deal) => {
+    navigation.navigate('DealDetail', { deal });
+  };
+
+  const getDealTypeLabel = (dealType: string) => {
+    switch (dealType) {
+      case 'free_item':
+        return 'FREE ITEM';
+      case 'bogo':
+        return 'BOGO';
+      case 'percentage':
+        return 'DISCOUNT';
+      default:
+        return dealType.toUpperCase();
+    }
+  };
+
+  const getDealTypeColor = (dealType: string) => {
+    switch (dealType) {
+      case 'free_item':
+        return '#10B981'; // Green
+      case 'bogo':
+        return '#F59E0B'; // Orange
+      case 'percentage':
+        return '#3B82F6'; // Blue
+      default:
+        return colors.primary;
+    }
+  };
+
+  const renderDealCard = ({ item }: { item: Deal }) => {
+    const dealImage = item.deal_images?.[0]?.image_url;
+
+    return (
+      <TouchableOpacity
+        style={[styles.dealCard, { backgroundColor: colors.surface }]}
+        onPress={() => handleDealPress(item)}
+      >
+        {/* Deal Image */}
+        {dealImage ? (
+          <Image source={{ uri: dealImage }} style={styles.dealImage} resizeMode="cover" />
+        ) : (
+          <View style={[styles.dealImagePlaceholder, { backgroundColor: colors.border }]}>
+            <Icon name="local-offer" size={48} color={colors.textSecondary} />
+          </View>
+        )}
+
+        <View style={styles.dealInfo}>
+          {/* Deal Type Badge */}
+          <View
+            style={[
+              styles.dealTypeBadge,
+              { backgroundColor: getDealTypeColor(item.deal_type) },
+            ]}
+          >
+            <Text style={styles.dealTypeText}>{getDealTypeLabel(item.deal_type)}</Text>
+          </View>
+
+          {/* Deal Title */}
+          <Text style={[iOSUIKit.title3, { color: colors.text }]} numberOfLines={2}>
+            {item.deal_title}
+          </Text>
+
+          {/* Deal Description */}
+          <Text
+            style={[iOSUIKit.body, { color: colors.textSecondary, marginTop: 4 }]}
+            numberOfLines={2}
+          >
+            {item.description}
+          </Text>
+
+          {/* Deal Stats */}
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Icon name="share" size={16} color={colors.textSecondary} />
+              <Text style={[iOSUIKit.footnote, { color: colors.textSecondary, marginLeft: 4 }]}>
+                {item.min_shares_required} shares
+              </Text>
+            </View>
+
+            {item.percentage_discount > 0 && (
+              <View style={styles.statItem}>
+                <Icon name="local-offer" size={16} color={colors.textSecondary} />
+                <Text style={[iOSUIKit.footnote, { color: colors.textSecondary, marginLeft: 4 }]}>
+                  {item.percentage_discount}% off
+                </Text>
+              </View>
+            )}
+
+            <View style={styles.statItem}>
+              <Icon name="access-time" size={16} color={colors.textSecondary} />
+              <Text style={[iOSUIKit.footnote, { color: colors.textSecondary, marginLeft: 4 }]}>
+                {item.end_time}
+              </Text>
+            </View>
+          </View>
+
+          {/* Priority Badge */}
+          {item.priority_score > 0 && (
+            <View style={styles.priorityBadge}>
+              <Icon name="star" size={14} color="#FFD700" />
+              <Text style={[iOSUIKit.footnote, { color: '#FFD700', marginLeft: 4 }]}>
+                Featured
+              </Text>
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderEmptyState = () => (
+    <View style={styles.emptyContainer}>
+      <Icon name="local-offer" size={64} color={colors.textSecondary} />
+      <Text style={[iOSUIKit.title3, { color: colors.text, marginTop: 16, textAlign: 'center' }]}>
+        No Deals Yet
+      </Text>
+      <Text
+        style={[
+          iOSUIKit.body,
+          { color: colors.textSecondary, marginTop: 8, textAlign: 'center', paddingHorizontal: 32 },
+        ]}
+      >
+        Create your first deal to start attracting customers
+      </Text>
+      <TouchableOpacity
+        style={[styles.createButton, { backgroundColor: colors.primary }]}
+        onPress={() => navigation.navigate('CreateDeal')}
+      >
+        <Icon name="add" size={20} color={colors.background} style={{ marginRight: 8 }} />
+        <Text style={[iOSUIKit.body, { color: colors.background, fontWeight: '600' }]}>
+          Create Deal
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  if (isLoading && !refreshing) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <Toolbar title="My Deals" onBack={() => navigation.goBack()} showSettings={false} />
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[iOSUIKit.body, { color: colors.textSecondary, marginTop: 16 }]}>
+            Loading deals...
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <Toolbar title="My Deals" onBack={() => navigation.goBack()} showSettings={false} />
+        <View style={styles.centerContainer}>
+          <Icon name="error-outline" size={64} color={colors.error} />
+          <Text style={[iOSUIKit.title3, { color: colors.text, marginTop: 16, textAlign: 'center' }]}>
+            {error}
+          </Text>
+          <TouchableOpacity
+            style={[styles.retryButton, { backgroundColor: colors.primary }]}
+            onPress={loadBusinessDeals}
+          >
+            <Text style={[iOSUIKit.body, { color: colors.background, fontWeight: '600' }]}>
+              Try Again
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <Toolbar title="My Deals" onBack={() => navigation.goBack()} showSettings={false} />
+
+      {/* Header Stats */}
+      <View style={[styles.headerStats, { backgroundColor: colors.surface }]}>
+        <View style={styles.statBox}>
+          <Text style={[iOSUIKit.title3Emphasized, { color: colors.text }]}>{businessDeals.length}</Text>
+          <Text style={[iOSUIKit.footnote, { color: colors.textSecondary }]}>Total Deals</Text>
+        </View>
+        <View style={styles.statBox}>
+          <Text style={[iOSUIKit.title3Emphasized, { color: colors.text }]}>
+            {businessDeals.filter((d) => d.priority_score > 0).length}
+          </Text>
+          <Text style={[iOSUIKit.footnote, { color: colors.textSecondary }]}>Featured</Text>
+        </View>
+        <View style={styles.statBox}>
+          <Text style={[iOSUIKit.title3Emphasized, { color: colors.text }]}>
+            {businessDeals.filter((d) => d.is_hearted).length}
+          </Text>
+          <Text style={[iOSUIKit.footnote, { color: colors.textSecondary }]}>Hearted</Text>
+        </View>
+      </View>
+
+      <FlatList
+        data={businessDeals}
+        renderItem={renderDealCard}
+        keyExtractor={(item) => item.deal_id}
+        contentContainerStyle={[
+          styles.listContent,
+          businessDeals.length === 0 && styles.emptyListContent,
+        ]}
+        ListEmptyComponent={renderEmptyState}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+        }
+        showsVerticalScrollIndicator={false}
+      />
+
+      {/* Floating Action Button - only show when there are deals */}
+      {businessDeals.length > 0 && (
+        <TouchableOpacity
+          style={[styles.fab, { backgroundColor: colors.primary }]}
+          onPress={() => navigation.navigate('CreateDeal')}
+        >
+          <Icon name="add" size={28} color="#FFFFFF" />
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  headerStats: {
+    flexDirection: 'row',
+    padding: 16,
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 16,
+    borderRadius: 12,
+    justifyContent: 'space-around',
+  },
+  statBox: {
+    alignItems: 'center',
+  },
+  listContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 100, // Extra padding for bottom tab bar
+  },
+  emptyListContent: {
+    flex: 1,
+  },
+  dealCard: {
+    borderRadius: 12,
+    marginBottom: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  dealImage: {
+    width: '100%',
+    height: 200,
+  },
+  dealImagePlaceholder: {
+    width: '100%',
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dealInfo: {
+    padding: 16,
+  },
+  dealTypeBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    marginBottom: 12,
+  },
+  dealTypeText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    marginTop: 12,
+    gap: 16,
+    flexWrap: 'wrap',
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  priorityBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  createButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButton: {
+    marginTop: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  fab: {
+    position: 'absolute',
+    right: 24,
+    bottom: 100, // Above bottom tab bar
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+});
+
+export default BusinessDeals;

@@ -24,7 +24,7 @@ interface BusinessData {
 }
 
 const BusinessProfile = ({ navigation, route }: any) => {
-  const { isDarkMode } = useAuth();
+  const { isDarkMode, userBusiness } = useAuth();
   const colors = getColors(isDarkMode);
   const [business, setBusiness] = useState<BusinessData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,24 +34,51 @@ const BusinessProfile = ({ navigation, route }: any) => {
   const businessId = route?.params?.businessId;
 
   useEffect(() => {
-    fetchBusinessProfile();
-  }, []);
+    loadBusinessData();
+  }, [userBusiness, businessId]);
 
-  const fetchBusinessProfile = async () => {
+  const loadBusinessData = async () => {
     setIsLoading(true);
     setError(null);
     
     try {
-      // Fetch business profile from API
-      const response = await ApiService.getBusinessProfile(businessId);
-      
-      if (response.success && response.data) {
-        setBusiness(response.data);
+      // If viewing a specific business (businessId provided), fetch from API
+      if (businessId) {
+        const response = await ApiService.getBusinessProfile(businessId);
+        if (response.success && response.data) {
+          setBusiness(response.data);
+        } else {
+          setError(response.message || 'Failed to load business profile');
+        }
+      } 
+      // Otherwise, use the userBusiness from context (already fetched with deals)
+      else if (userBusiness && Array.isArray(userBusiness) && userBusiness.length > 0) {
+        // userBusiness is an array, get the first business (primary business)
+        const primaryBusiness = userBusiness[0];
+        
+        // Map the API response structure to BusinessData interface
+        const mappedBusiness: BusinessData = {
+          id: primaryBusiness.businessId,
+          businessName: primaryBusiness.businessName,
+          description: primaryBusiness.description || '',
+          address: primaryBusiness.address || '',
+          city: primaryBusiness.city || '',
+          state: primaryBusiness.state || '',
+          country: primaryBusiness.country || '',
+          phoneNumber: primaryBusiness.phoneNumber || '',
+          websiteUrl: primaryBusiness.websiteUrl,
+          logoUrl: primaryBusiness.images?.logo || primaryBusiness.logoUrl || '',
+          coverImageUrl: primaryBusiness.images?.coverImage,
+          businessImage1Url: primaryBusiness.images?.businessImages?.[0]?.url,
+          businessImage2Url: primaryBusiness.images?.businessImages?.[1]?.url,
+        };
+        
+        setBusiness(mappedBusiness);
       } else {
-        setError(response.message || 'Failed to load business profile');
+        setError('No business profile available');
       }
     } catch (err: any) {
-      console.error('Error fetching business profile:', err);
+      console.error('Error loading business profile:', err);
       setError(err.message || 'An error occurred while loading the business profile');
     } finally {
       setIsLoading(false);
@@ -124,7 +151,7 @@ const BusinessProfile = ({ navigation, route }: any) => {
           </Text>
           <TouchableOpacity
             style={[styles.retryButton, { backgroundColor: colors.primary }]}
-            onPress={fetchBusinessProfile}
+            onPress={loadBusinessData}
           >
             <Text style={[iOSUIKit.body, { color: colors.background, fontWeight: '600' }]}>
               Try Again
@@ -139,10 +166,13 @@ const BusinessProfile = ({ navigation, route }: any) => {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Toolbar
         title="Business Profile"
-        onBack={() => navigation.goBack()}
         showSettings={false}
       />
-      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={{ flex: 1 }} 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Cover Image */}
         {business.coverImageUrl ? (
           <Image
@@ -183,6 +213,16 @@ const BusinessProfile = ({ navigation, route }: any) => {
             </Text>
           )}
         </View>
+
+        <TouchableOpacity
+          style={[styles.editButton, { backgroundColor: colors.primary }]}
+          onPress={() => navigation.navigate('BusinessDeals', { businessId: business.id })}
+        >
+          <Icon name="edit" size={20} color={colors.background} style={{ marginRight: 8 }} />
+          <Text style={[iOSUIKit.body, { color: colors.background, fontWeight: '600' }]}>
+            Business Deals
+          </Text>
+        </TouchableOpacity>.
 
         {/* Contact Information */}
         <View style={[styles.section, { backgroundColor: colors.surface }]}>
@@ -244,22 +284,37 @@ const BusinessProfile = ({ navigation, route }: any) => {
           </View>
         )}
 
-        {/* Edit Button (optional - for business owners) */}
-        <TouchableOpacity
-          style={[styles.editButton, { backgroundColor: colors.primary }]}
-          onPress={() => navigation.navigate('EditBusiness', { businessId: business.id })}
-        >
-          <Icon name="edit" size={20} color={colors.background} style={{ marginRight: 8 }} />
-          <Text style={[iOSUIKit.body, { color: colors.background, fontWeight: '600' }]}>
-            Edit Business Profile
-          </Text>
-        </TouchableOpacity>
+        {/* Action Buttons */}
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: colors.primary }]}
+            onPress={() => navigation.navigate('BusinessDeals')}
+          >
+            <Icon name="local-offer" size={20} color={colors.background} style={{ marginRight: 8 }} />
+            <Text style={[iOSUIKit.body, { color: colors.background, fontWeight: '600' }]}>
+              View My Deals
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.primary }]}
+            onPress={() => navigation.navigate('EditBusiness', { businessId: business.id })}
+          >
+            <Icon name="edit" size={20} color={colors.primary} style={{ marginRight: 8 }} />
+            <Text style={[iOSUIKit.body, { color: colors.primary, fontWeight: '600' }]}>
+              Edit Profile
+            </Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  scrollContent: {
+    paddingBottom: 100., // Extra padding to ensure content is not hidden by tab bar
+  },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -334,6 +389,20 @@ const styles = StyleSheet.create({
   businessImage: {
     width: '100%',
     height: 200,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    marginHorizontal: 24,
+    marginVertical: 24,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
   },
   editButton: {
     flexDirection: 'row',

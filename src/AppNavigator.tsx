@@ -21,19 +21,25 @@ import { useAuth, getColors } from './libs/hooks/useAuth';
 import { ActivityIndicator, View } from 'react-native';
 import { iOSUIKit } from 'react-native-typography';
 import RedemptionScreen from './screens/Redemption/RedemptionScreen';
-import BusinessCreationScreen1 from './screens/BusinessCreation/BusinessCreationScreen1';
-import BusinessCreationScreen2 from './screens/BusinessCreation/BusinessCreationScreen2';
-import BusinessCreationScreen3 from './screens/BusinessCreation/BusinessCreationScreen3';
-import BusinessCreationScreen4 from './screens/BusinessCreation/BusinessCreationScreen4';
+import BusinessCreationScreen1 from './screens/Business/BusinessCreation/BusinessCreationScreen1';
+import BusinessCreationScreen2 from './screens/Business/BusinessCreation/BusinessCreationScreen2';
+import BusinessCreationScreen3 from './screens/Business/BusinessCreation/BusinessCreationScreen3';
+import BusinessCreationScreen4 from './screens/Business/BusinessCreation/BusinessCreationScreen4';
 import { Colors } from './libs/colors';
+import BusinessProfile from './screens/Profile/BusinessProfile';
+import BusinessDeals from './screens/Business/BusinessDeals';
+import CreateDeal from './screens/Business/CreateDeal';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
 // Bottom Tab Navigator for main app screens
 const MainTabNavigator = () => {
-  const { isDarkMode } = useAuth();
+  const { isDarkMode, user, refreshDeals } = useAuth();
   const colors = getColors(isDarkMode);
+
+  // Determine which profile screen to show based on account type
+  const ProfileComponent = user?.account_type === 'business' ? BusinessProfile : ProfileScreen;
 
   return (
     <Tab.Navigator
@@ -97,21 +103,45 @@ const MainTabNavigator = () => {
         name="SwipeTab" 
         component={SwipeScreen}
         options={{ tabBarLabel: 'DISCOVER' }}
+        listeners={{
+          tabPress: () => {
+            console.log('🔄 Refreshing deals from Swipe tab');
+            refreshDeals().catch(err => console.warn('Tab refresh failed:', err));
+          },
+        }}
       />
       <Tab.Screen 
         name="ExploreTab" 
         component={ExploreScreen}
         options={{ tabBarLabel: 'EXPLORE' }}
+        listeners={{
+          tabPress: () => {
+            console.log('🔄 Refreshing deals from Explore tab');
+            refreshDeals().catch(err => console.warn('Tab refresh failed:', err));
+          },
+        }}
       />
       <Tab.Screen 
         name="SavedTab" 
         component={SavedDealsScreen}
         options={{ tabBarLabel: 'SAVED' }}
+        listeners={{
+          tabPress: () => {
+            console.log('🔄 Refreshing deals from Saved tab');
+            refreshDeals().catch(err => console.warn('Tab refresh failed:', err));
+          },
+        }}
       />
       <Tab.Screen 
         name="ProfileTab" 
-        component={ProfileScreen}
+        component={ProfileComponent}
         options={{ tabBarLabel: 'PROFILE' }}
+        listeners={{
+          tabPress: () => {
+            console.log('🔄 Refreshing deals from Profile tab');
+            refreshDeals().catch(err => console.warn('Tab refresh failed:', err));
+          },
+        }}
       />
     </Tab.Navigator>
   );
@@ -177,10 +207,14 @@ const AppNavigator = () => {
             <Stack.Screen name="PermissionTest" component={PermissionTestScreen} />
             <Stack.Screen name="NetworkDebug" component={NetworkDebugScreen} />
             <Stack.Screen name="Redemption" component={RedemptionScreen} />
+            
+            {/* Business screens */}
             <Stack.Screen name="BusinessCreationScreen1" component={BusinessCreationScreen1} />
             <Stack.Screen name="BusinessCreationScreen2" component={BusinessCreationScreen2} />
             <Stack.Screen name="BusinessCreationScreen3" component={BusinessCreationScreen3} />
             <Stack.Screen name="BusinessCreationScreen4" component={BusinessCreationScreen4} />
+            <Stack.Screen name="BusinessDeals" component={BusinessDeals} />
+            <Stack.Screen name="CreateDeal" component={CreateDeal} />
           </>
         )}
       </Stack.Navigator>

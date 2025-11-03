@@ -52,6 +52,9 @@ interface AuthContextType {
   dealsLoading: boolean;
   refreshDeals: () => Promise<void>;
   
+  // Business profile (from deals API)
+  userBusiness: any | null;
+  
   // Your existing features
   isDarkMode: boolean;
   setDarkMode: (value: boolean) => void;
@@ -75,6 +78,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // All deals state
   const [deals, setDeals] = useState<any[]>([]);
   const [dealsLoading, setDealsLoading] = useState(false);
+  
+  // User business state (from deals API)
+  const [userBusiness, setUserBusiness] = useState<any | null>(null);
   
   // Your existing state
   const colorScheme = Appearance.getColorScheme();
@@ -134,9 +140,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setDealsLoading(true);
       const result = await ApiService.getDeals();
       if (result.success && result.data) {
-        // Handle both legacy array and new shape { data: { deals, profile }, count, query }
+        // Handle both legacy array and new shape { data: { deals, profile, business }, count, query }
         let finalDeals: any[] = [];
         const dealsData: any = result.data;
+        
+        // Extract userBusiness if present (it's an array of business relationships)
+        if (dealsData && Array.isArray(dealsData.userBusiness)) {
+          setUserBusiness(dealsData.userBusiness);
+        } else if (dealsData && dealsData.business) {
+          // Fallback if it comes as a single business object
+          setUserBusiness([dealsData.business]);
+        }
+        
         if (Array.isArray(dealsData)) {
           finalDeals = dealsData;
         } else if (dealsData && Array.isArray(dealsData.deals)) {
@@ -702,13 +717,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     deals,
     dealsLoading,
     refreshDeals,
+    userBusiness,
     isDarkMode,
     setDarkMode,
     categories,
     setCategories,
     availableCategories,
     refreshCategories,
-  }), [user, loading, isDarkMode, categories, availableCategories, heartedDeals, heartedDealsLoading, deals, dealsLoading]);
+  }), [user, loading, isDarkMode, categories, availableCategories, heartedDeals, heartedDealsLoading, deals, dealsLoading, userBusiness]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
