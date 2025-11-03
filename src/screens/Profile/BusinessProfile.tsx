@@ -166,7 +166,6 @@ const BusinessProfile = ({ navigation, route }: any) => {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Toolbar
         title="Business Profile"
-        onBack={() => navigation.goBack()}
         showSettings={false}
       />
       <ScrollView 
