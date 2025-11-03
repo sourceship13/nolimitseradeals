@@ -169,7 +169,11 @@ const BusinessProfile = ({ navigation, route }: any) => {
         onBack={() => navigation.goBack()}
         showSettings={false}
       />
-      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={{ flex: 1 }} 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Cover Image */}
         {business.coverImageUrl ? (
           <Image
@@ -287,6 +291,9 @@ const BusinessProfile = ({ navigation, route }: any) => {
 };
 
 const styles = StyleSheet.create({
+  scrollContent: {
+    paddingBottom: 100., // Extra padding to ensure content is not hidden by tab bar
+  },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
