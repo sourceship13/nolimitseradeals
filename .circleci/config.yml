@@ -113,6 +113,16 @@ jobs:
       - attach_workspace:
           at: .
       - run:
+          name: Install Ruby 3.3.5
+          command: |
+            # Check if Ruby 3.3.5 is installed
+            if ! rbenv versions | grep -q "3.3.5"; then
+              echo "Installing Ruby 3.3.5..."
+              rbenv install 3.3.5
+            fi
+            rbenv global 3.3.5
+            ruby --version
+      - run:
           name: Install Ruby dependencies
           command: |
             cd ios
@@ -226,6 +236,16 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
+      - run:
+          name: Install Ruby 3.3.5
+          command: |
+            # Check if Ruby 3.3.5 is installed
+            if ! rbenv versions | grep -q "3.3.5"; then
+              echo "Installing Ruby 3.3.5..."
+              rbenv install 3.3.5
+            fi
+            rbenv global 3.3.5
+            ruby --version
       - run:
           name: Install Ruby dependencies
           command: |
