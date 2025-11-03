@@ -35,7 +35,7 @@ const Tab = createBottomTabNavigator();
 
 // Bottom Tab Navigator for main app screens
 const MainTabNavigator = () => {
-  const { isDarkMode, user } = useAuth();
+  const { isDarkMode, user, refreshDeals } = useAuth();
   const colors = getColors(isDarkMode);
 
   // Determine which profile screen to show based on account type
@@ -103,21 +103,45 @@ const MainTabNavigator = () => {
         name="SwipeTab" 
         component={SwipeScreen}
         options={{ tabBarLabel: 'DISCOVER' }}
+        listeners={{
+          tabPress: () => {
+            console.log('🔄 Refreshing deals from Swipe tab');
+            refreshDeals().catch(err => console.warn('Tab refresh failed:', err));
+          },
+        }}
       />
       <Tab.Screen 
         name="ExploreTab" 
         component={ExploreScreen}
         options={{ tabBarLabel: 'EXPLORE' }}
+        listeners={{
+          tabPress: () => {
+            console.log('🔄 Refreshing deals from Explore tab');
+            refreshDeals().catch(err => console.warn('Tab refresh failed:', err));
+          },
+        }}
       />
       <Tab.Screen 
         name="SavedTab" 
         component={SavedDealsScreen}
         options={{ tabBarLabel: 'SAVED' }}
+        listeners={{
+          tabPress: () => {
+            console.log('🔄 Refreshing deals from Saved tab');
+            refreshDeals().catch(err => console.warn('Tab refresh failed:', err));
+          },
+        }}
       />
       <Tab.Screen 
         name="ProfileTab" 
         component={ProfileComponent}
         options={{ tabBarLabel: 'PROFILE' }}
+        listeners={{
+          tabPress: () => {
+            console.log('🔄 Refreshing deals from Profile tab');
+            refreshDeals().catch(err => console.warn('Tab refresh failed:', err));
+          },
+        }}
       />
     </Tab.Navigator>
   );
