@@ -29,6 +29,7 @@ import { Colors } from './libs/colors';
 import BusinessProfile from './screens/Profile/BusinessProfile';
 import BusinessDeals from './screens/Business/BusinessDeals';
 import CreateDeal from './screens/Business/CreateDeal';
+import FontDebug from './screens/FontDebug/FontDebug';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -204,6 +205,7 @@ const AppNavigator = () => {
             
             {/* Debug screens */}
             <Stack.Screen name="Debug" component={DebugScreen} />
+            <Stack.Screen name="FontDebug" component={FontDebug} />
             <Stack.Screen name="PermissionTest" component={PermissionTestScreen} />
             <Stack.Screen name="NetworkDebug" component={NetworkDebugScreen} />
             <Stack.Screen name="Redemption" component={RedemptionScreen} />

@@ -172,7 +172,8 @@ const SwipeScreen = ({ navigation }: any) => {
       >
         <Text
           style={{
-            fontFamily: 'Roboto-Bold',
+            fontFamily: 'Inter-Variable',
+            fontWeight: '800',
             fontSize: 28,
             color: colors.text,
           }}

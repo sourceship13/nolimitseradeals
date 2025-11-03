@@ -100,9 +100,9 @@ const ExploreScreen = ({ navigation }: any) => {
           styles.card,
           isDarkMode ? styles.glassCardDark : styles.glassCard,
           {
-            backgroundColor: isDarkMode
-              ? 'rgba(255, 255, 255, 0.06)'
-              : 'rgba(255, 255, 255, 0.15)',
+            // backgroundColor: isDarkMode
+            //   ? 'rgba(255, 255, 255, 0.06)'
+            //   : 'rgba(255, 255, 255, 0.15)',
             borderWidth: 0,
           },
         ]}

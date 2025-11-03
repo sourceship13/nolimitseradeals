@@ -142,25 +142,31 @@ const SettingsScreen = ({ navigation }: any) => {
             <Text style={[iOSUIKit.callout, { color: colors.background, fontWeight: 'bold' }]}>🔧 Debug Console</Text>
           </TouchableOpacity>
           <TouchableOpacity 
-          style={[styles.button, { backgroundColor: colors.error, marginBottom: 8 }]} 
-          onPress={() => navigation.navigate('NetworkDebug')}
-        >
-          <Text style={[iOSUIKit.callout, { color: '#fff', fontWeight: 'bold' }]}>🔧 Network Debug</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.button, { backgroundColor: colors.primary, marginBottom: 8 }]} 
-          onPress={() => navigation.navigate('PermissionTest')}
-        >
-          <Text style={[iOSUIKit.callout, { color: '#fff', fontWeight: 'bold' }]}>Test Permissions</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.button, { backgroundColor: colors.primary, marginBottom: 16 }]} 
-          onPress={() => navigation.navigate('DemoShare')}
-        >
-          <Text style={[iOSUIKit.callout, { color: '#fff', fontWeight: 'bold' }]}>Test Deal Sharing</Text>
-        </TouchableOpacity>
+            style={[styles.button, { backgroundColor: colors.error, marginBottom: 16 }]} 
+            onPress={() => navigation.navigate('NetworkDebug')}
+          >
+            <Text style={[iOSUIKit.callout, { color: '#fff', fontWeight: 'bold' }]}>🔧 Network Debug</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.button, { backgroundColor: colors.primary, marginBottom: 8 }]} 
+            onPress={() => navigation.navigate('FontDebug')}
+          >
+            <Text style={[iOSUIKit.callout, { color: '#fff', fontWeight: 'bold' }]}>🔤 Font Debug</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.button, { backgroundColor: colors.primary, marginBottom: 8 }]} 
+            onPress={() => navigation.navigate('PermissionTest')}
+          >
+            <Text style={[iOSUIKit.callout, { color: '#fff', fontWeight: 'bold' }]}>Test Permissions</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.button, { backgroundColor: colors.primary, marginBottom: 16 }]} 
+            onPress={() => navigation.navigate('DemoShare')}
+          >
+            <Text style={[iOSUIKit.callout, { color: '#fff', fontWeight: 'bold' }]}>Test Deal Sharing</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>
