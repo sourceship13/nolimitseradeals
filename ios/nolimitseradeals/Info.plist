@@ -79,6 +79,9 @@
 		<string>Inter.ttf</string>
 		<string>Inter-Variable.ttf</string>
 		<string>Inter-Italic-Variable.ttf</string>
+		<string>Roboto-Regular.ttf</string>
+		<string>Roboto-Medium.ttf</string>
+		<string>Roboto-Bold.ttf</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
