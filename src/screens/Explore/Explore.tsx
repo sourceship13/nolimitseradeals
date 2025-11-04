@@ -45,6 +45,11 @@ const ExploreScreen = ({ navigation }: any) => {
     Object.keys(categories).length === 0
       ? deals // If no category preferences set, show all deals
       : deals.filter(deal => {
+          // If deal has no category, show it by default (uncategorized deals)
+          if (!deal.category_name) {
+            return true;
+          }
+          
           // Find which category this deal belongs to
           const dealCategory = (deal.category_name || '').toLowerCase();
           const matchingCategory = availableCategories.find(
@@ -70,6 +75,12 @@ const ExploreScreen = ({ navigation }: any) => {
         const selectedCat = availableCategories.find(
           cat => cat.slug === selectedCategory,
         );
+        
+        // If deal has no category, don't show it when filtering by specific category
+        if (!deal.category_name) {
+          return false;
+        }
+        
         return selectedCat && dealCategory === selectedCat.name.toLowerCase();
       })
     : unheartedDeals;

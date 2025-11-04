@@ -10,6 +10,7 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  Modal,
 } from 'react-native';
 import { useAuth } from '../../libs/hooks/useAuth';
 import { getColors } from '../../libs/colors';
@@ -31,6 +32,22 @@ const DEAL_TYPES = [
   { value: 'fixed_discount', label: 'Fixed Discount', icon: 'attach-money' },
 ];
 
+const BUSINESS_CATEGORIES = [
+  'Food',
+  'Fashion',
+  'Beauty',
+  'Electronics',
+  'Fitness',
+  'Food & Dining',
+  'Coffee & Beverages',
+  'Automotive',
+  'Beauty & Wellness',
+  'Retail & Shopping',
+  'Bakery & Desserts',
+  'Health & Fitness',
+  'Home Services',
+];
+
 const CreateDeal: React.FC<CreateDealProps> = ({ navigation, route }) => {
   const { isDarkMode, userBusiness } = useAuth();
   const colors = getColors(isDarkMode);
@@ -39,6 +56,8 @@ const CreateDeal: React.FC<CreateDealProps> = ({ navigation, route }) => {
   const [dealTitle, setDealTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dealType, setDealType] = useState('free_item');
+  const [category, setCategory] = useState('');
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [dealPrice, setDealPrice] = useState('');
   const [percentageDiscount, setPercentageDiscount] = useState('');
   const [minSharesRequired, setMinSharesRequired] = useState('3');
@@ -125,6 +144,7 @@ const CreateDeal: React.FC<CreateDealProps> = ({ navigation, route }) => {
       
       // Optional fields
       formData.append('dealType', dealType);
+      formData.append('category', category);
       formData.append('dealPrice', dealPrice.trim());
       formData.append('percentageDiscount', percentageDiscount.trim() || '0');
       formData.append('minSharesRequired', minSharesRequired.trim());
@@ -233,6 +253,29 @@ const CreateDeal: React.FC<CreateDealProps> = ({ navigation, route }) => {
             numberOfLines={4}
             textAlignVertical="top"
           />
+        </View>
+
+        {/* Category Dropdown */}
+        <View style={styles.section}>
+          <Text style={[iOSUIKit.subhead, { color: colors.text, marginBottom: 8 }]}>Category *</Text>
+          <TouchableOpacity
+            style={[
+              styles.input,
+              { 
+                backgroundColor: colors.card, 
+                borderColor: colors.border,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }
+            ]}
+            onPress={() => setShowCategoryModal(true)}
+          >
+            <Text style={[{ color: category ? colors.text : colors.textSecondary }]}>
+              {category || 'Select Category'}
+            </Text>
+            <Icon name="arrow-drop-down" size={24} color={colors.text} />
+          </TouchableOpacity>
         </View>
 
         {/* Deal Type */}
@@ -371,6 +414,58 @@ const CreateDeal: React.FC<CreateDealProps> = ({ navigation, route }) => {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Category Selection Modal */}
+      <Modal
+        visible={showCategoryModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowCategoryModal(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowCategoryModal(false)}
+        >
+          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+              <Text style={[iOSUIKit.title3Emphasized, { color: colors.text }]}>
+                Select Category
+              </Text>
+              <TouchableOpacity onPress={() => setShowCategoryModal(false)}>
+                <Icon name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.modalScroll}>
+              {BUSINESS_CATEGORIES.map((cat) => (
+                <TouchableOpacity
+                  key={cat}
+                  style={[
+                    styles.categoryOption,
+                    { borderBottomColor: colors.border },
+                    category === cat && { backgroundColor: colors.primary + '20' }
+                  ]}
+                  onPress={() => {
+                    setCategory(cat);
+                    setShowCategoryModal(false);
+                  }}
+                >
+                  <Text style={[
+                    iOSUIKit.body,
+                    { color: category === cat ? colors.primary : colors.text }
+                  ]}>
+                    {cat}
+                  </Text>
+                  {category === cat && (
+                    <Icon name="check" size={20} color={colors.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
@@ -475,6 +570,33 @@ const styles = StyleSheet.create({
   },
   submitButtonDisabled: {
     opacity: 0.6,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '70%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+  },
+  modalScroll: {
+    maxHeight: 400,
+  },
+  categoryOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
   },
 });
 
