@@ -40,6 +40,20 @@ const ExploreScreen = ({ navigation }: any) => {
     (heartedDeals || []).map((d: any) => d.deal_id || d.id),
   );
 
+  // Calculate deal counts for each category
+  const getCategoryDealCount = (categoryName: string) => {
+    return deals.filter(deal => {
+      // Skip hearted deals
+      if (heartedDealIds.has(deal.id || deal.deal_id)) {
+        return false;
+      }
+      
+      // Match category name (case insensitive)
+      const dealCategory = (deal.category_name || '').toLowerCase();
+      return dealCategory === categoryName.toLowerCase();
+    }).length;
+  };
+
   // Filter deals by category settings (enabled/disabled switches from Settings)
   const categoryFilteredDeals =
     Object.keys(categories).length === 0
@@ -404,22 +418,25 @@ const ExploreScreen = ({ navigation }: any) => {
                   >
                     {cat.name}
                   </Text>
-                  {(cat as any).active_deal_count ? (
-                    <Text
-                      style={[
-                        iOSUIKit.caption2,
-                        {
-                          color: isSelected
-                            ? colors.background
-                            : colors.textPlaceholder,
-                          fontSize: 10,
-                          marginLeft: 4,
-                        },
-                      ]}
-                    >
-                      ({(cat as any).active_deal_count})
-                    </Text>
-                  ) : null}
+                  {(() => {
+                    const count = getCategoryDealCount(cat.name);
+                    return count > 0 ? (
+                      <Text
+                        style={[
+                          iOSUIKit.caption2,
+                          {
+                            color: isSelected
+                              ? colors.background
+                              : colors.textPlaceholder,
+                            fontSize: 10,
+                            marginLeft: 4,
+                          },
+                        ]}
+                      >
+                        ({count})
+                      </Text>
+                    ) : null;
+                  })()}
                 </TouchableOpacity>
               );
             }}
