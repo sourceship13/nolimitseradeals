@@ -163,37 +163,6 @@ export const DealDetailScreen: React.FC<DealDetailProps> = props => {
     }
   }, [shareProgress?.canRedeem, dealId, isSaved, toggleHeartDeal, deal]);
 
-  const handleSave = async () => {
-    if (!deal?.deal_id || !user?.id) {
-      Alert.alert('Error', 'You must be logged in to heart deals');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      // Use the global toggleHeartDeal function - handles everything!
-      const success = await toggleHeartDeal(deal.deal_id, deal);
-
-      if (success) {
-      } else {
-        console.warn('⚠️ Heart toggle failed');
-        Alert.alert(
-          'Error',
-          'Failed to update heart status. Please try again.',
-        );
-      }
-    } catch (error: any) {
-      console.error('❌ Heart operation failed:', error);
-      Alert.alert(
-        'Error',
-        error.message || 'Failed to update heart status. Please try again.',
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleRedeem = () => {
     navigation.navigate('Redemption', { deal });
   };
@@ -391,6 +360,8 @@ export const DealDetailScreen: React.FC<DealDetailProps> = props => {
     const currentShares = shareProgress?.currentShares || 0;
     const canRedeem = shareProgress?.canRedeem || false;
 
+    console.log('Rendering DealDetailScreen for deal:', deal);
+
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <Toolbar
@@ -548,6 +519,25 @@ export const DealDetailScreen: React.FC<DealDetailProps> = props => {
                   'No description available'}
               </Text>
             </View>
+
+            {/* About Business Button */}
+            <TouchableOpacity
+              style={[styles.aboutBusinessButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              onPress={() => navigation.navigate('AboutBusiness', { deal })}
+            >
+              <View style={styles.aboutBusinessContent}>
+                <MaterialIcons name="business" size={24} color={colors.primary} />
+                <View style={styles.aboutBusinessTextContainer}>
+                  <Text style={[styles.aboutBusinessTitle, { color: colors.text }]}>
+                    About {deal.business_name || deal.business || 'Business'}
+                  </Text>
+                  <Text style={[styles.aboutBusinessSubtitle, { color: colors.textSecondary }]}>
+                    View business details and contact information
+                  </Text>
+                </View>
+              </View>
+              <MaterialIcons name="chevron-right" size={24} color={colors.textSecondary} />
+            </TouchableOpacity>
 
             {/* Deal Info */}
             <View style={styles.infoContainer}>
@@ -1143,6 +1133,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   shareModalButtonText: iOSUIKit.calloutObject,
+  aboutBusinessButton: {
+    flexDirection: 'row',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 20,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  aboutBusinessContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  aboutBusinessTextContainer: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  aboutBusinessTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  aboutBusinessSubtitle: {
+    fontSize: 13,
+  },
 });
 
 // Export with Error Boundary wrapper
