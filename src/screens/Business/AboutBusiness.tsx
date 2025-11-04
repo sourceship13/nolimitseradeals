@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Linking, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Linking, TouchableOpacity, Platform } from 'react-native';
 import { useAuth } from '../../libs/hooks/useAuth';
 import { getColors } from '../../libs/colors';
 import Toolbar from '../../components/Toolbar';
 import { iOSUIKit } from 'react-native-typography';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
 interface AboutBusinessProps {
   navigation: any;
@@ -31,6 +32,61 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ navigation, route }) => {
       Linking.openURL(deal.business_website);
     }
   };
+
+  const handleGetDirections = () => {
+    const coordinates = getBusinessCoordinates();
+    if (coordinates) {
+      const { latitude, longitude } = coordinates;
+      const label = deal.business_name || deal.business || 'Business Location';
+      
+      const url = Platform.select({
+        ios: `maps:0,0?q=${label}@${latitude},${longitude}`,
+        android: `geo:0,0?q=${latitude},${longitude}(${label})`,
+      });
+      
+      if (url) {
+        Linking.openURL(url);
+      }
+    }
+  };
+
+  // Helper function to get business coordinates
+  const getBusinessCoordinates = () => {
+    // Try multiple possible property names for latitude
+    const lat = parseFloat(
+      deal?.latitude || 
+      deal?.business_latitude || 
+      deal?.lat || 
+      deal?.business_lat || 
+      ''
+    );
+    
+    // Try multiple possible property names for longitude
+    const lng = parseFloat(
+      deal?.longitude || 
+      deal?.business_longitude || 
+      deal?.lng || 
+      deal?.lon ||
+      deal?.business_lng || 
+      deal?.business_lon || 
+      ''
+    );
+
+    // Validate coordinates
+    if (isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) {
+      return null;
+    }
+
+    return { latitude: lat, longitude: lng };
+  };
+
+  const coordinates = getBusinessCoordinates();
+  const hasValidCoordinates = coordinates !== null;
+
+  // Debug logging
+  console.log('Deal object:', deal);
+  console.log('Coordinates:', coordinates);
+  console.log('Has valid coordinates:', hasValidCoordinates);
 
   if (!deal) {
     return (
@@ -84,6 +140,50 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ navigation, route }) => {
             </Text>
           )}
         </View>
+
+        {/* Map Section */}
+        {hasValidCoordinates && coordinates && (
+          <View
+            style={[
+              styles.mapSection,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+            ]}
+          >
+            <View style={styles.mapContainer}>
+              <MapView
+                provider={PROVIDER_GOOGLE}
+                style={styles.map}
+                initialRegion={{
+                  latitude: coordinates.latitude,
+                  longitude: coordinates.longitude,
+                  latitudeDelta: 0.01,
+                  longitudeDelta: 0.01,
+                }}
+                scrollEnabled={false}
+                zoomEnabled={false}
+                pitchEnabled={false}
+                rotateEnabled={false}
+              >
+                <Marker
+                  coordinate={{
+                    latitude: coordinates.latitude,
+                    longitude: coordinates.longitude,
+                  }}
+                  title={deal.business_name || deal.business || 'Business Location'}
+                  description={deal.business_address}
+                />
+              </MapView>
+            </View>
+            
+            <TouchableOpacity
+              style={[styles.directionsButton, { backgroundColor: colors.primary }]}
+              onPress={handleGetDirections}
+            >
+              <MaterialIcons name="directions" size={20} color="#FFFFFF" />
+              <Text style={styles.directionsButtonText}>Get Directions</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Business Information Section */}
         <View
@@ -283,6 +383,33 @@ const styles = StyleSheet.create({
   },
   businessHeader: {
     marginBottom: 24,
+  },
+  mapSection: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 24,
+    overflow: 'hidden',
+  },
+  mapContainer: {
+    height: 250,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  map: {
+    flex: 1,
+  },
+  directionsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    gap: 8,
+  },
+  directionsButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
   businessTitleRow: {
     flexDirection: 'row',
