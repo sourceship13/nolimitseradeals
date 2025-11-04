@@ -5,9 +5,14 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider, useAuth } from './libs/hooks/useAuth';
 import AppReturnUtils from './libs/utils/appReturnUtils';
+import Config from 'react-native-config';
 
 
 function App() {
+  useEffect(() => {
+    console.log('🔑 Google Maps API Key:', Config.GOOGLE_MAPS_API_KEY);
+  }, []);
+
   return (
     <AuthProvider>
       <SafeAreaProvider>
