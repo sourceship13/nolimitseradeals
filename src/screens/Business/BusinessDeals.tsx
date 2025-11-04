@@ -8,12 +8,15 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  Modal,
+  Alert,
 } from 'react-native';
 import { useAuth } from '../../libs/hooks/useAuth';
 import { getColors } from '../../libs/colors';
 import Toolbar from '../../components/Toolbar';
 import { iOSUIKit } from 'react-native-typography';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import ApiService from '../../services/api.service';
 
 interface Deal {
   deal_id: string;
@@ -49,6 +52,9 @@ const BusinessDeals = ({ navigation }: any) => {
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [dealToDelete, setDealToDelete] = useState<Deal | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadBusinessDeals();
@@ -88,6 +94,42 @@ const BusinessDeals = ({ navigation }: any) => {
 
   const handleDealPress = (deal: Deal) => {
     navigation.navigate('DealDetail', { deal });
+  };
+
+  const handleDeletePress = (deal: Deal) => {
+    setDealToDelete(deal);
+    setDeleteModalVisible(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!dealToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await ApiService.deleteDeal(dealToDelete.deal_id);
+      
+      if (response.success) {
+        // Remove the deal from local state
+        setBusinessDeals(prev => prev.filter(d => d.deal_id !== dealToDelete.deal_id));
+        setDeleteModalVisible(false);
+        setDealToDelete(null);
+        
+        // Show success message
+        Alert.alert('Success', 'Deal deleted successfully');
+      } else {
+        throw new Error(response.message || 'Failed to delete deal');
+      }
+    } catch (error: any) {
+      console.error('Error deleting deal:', error);
+      Alert.alert('Error', error.message || 'Failed to delete deal. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteModalVisible(false);
+    setDealToDelete(null);
   };
 
   const getDealTypeLabel = (dealType: string) => {
@@ -136,6 +178,15 @@ const BusinessDeals = ({ navigation }: any) => {
         style={[styles.dealCard, { backgroundColor: colors.surface }]}
         onPress={() => handleDealPress(item)}
       >
+        {/* Delete Button - Top Right */}
+        <TouchableOpacity
+          style={[styles.deleteButton, { backgroundColor: 'rgba(239, 68, 68, 0.9)' }]}
+          onPress={() => handleDeletePress(item)}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Icon name="delete" size={20} color="#FFFFFF" />
+        </TouchableOpacity>
+
         {/* Deal Image */}
         {dealImage ? (
           <Image source={{ uri: dealImage }} style={styles.dealImage} resizeMode="cover" />
@@ -319,6 +370,51 @@ const BusinessDeals = ({ navigation }: any) => {
           <Icon name="add" size={28} color="#FFFFFF" />
         </TouchableOpacity>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        visible={deleteModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={cancelDelete}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+            <View style={styles.modalHeader}>
+              <Icon name="warning" size={48} color="#EF4444" />
+              <Text style={[iOSUIKit.title3Emphasized, { color: colors.text, marginTop: 16 }]}>
+                Delete Deal?
+              </Text>
+            </View>
+
+            <Text style={[iOSUIKit.body, { color: colors.textSecondary, textAlign: 'center', marginTop: 8 }]}>
+              Are you sure you want to delete "{dealToDelete?.deal_title}"? This action cannot be undone.
+            </Text>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton, { backgroundColor: colors.border }]}
+                onPress={cancelDelete}
+                disabled={isDeleting}
+              >
+                <Text style={[iOSUIKit.bodyEmphasized, { color: colors.text }]}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalButton, styles.deleteConfirmButton, { backgroundColor: '#EF4444' }]}
+                onPress={confirmDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={[iOSUIKit.bodyEmphasized, { color: '#FFFFFF' }]}>Delete</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -434,6 +530,63 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
+  },
+  deleteButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: 16,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  modalHeader: {
+    alignItems: 'center',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    marginTop: 24,
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 48,
+  },
+  cancelButton: {
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  deleteConfirmButton: {
+    // backgroundColor set inline
   },
 });
 

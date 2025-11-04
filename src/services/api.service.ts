@@ -245,6 +245,18 @@ class ApiService {
       throw error;
     }
   }
+
+  async deleteDeal(dealId: string): Promise<ApiResponse> {
+    console.log('🗑️ Deleting deal:', dealId);
+    try {
+      return await this.makeRequest(`/deals/${dealId}`, {
+        method: 'DELETE',
+      });
+    } catch (error) {
+      console.error(`💥 Delete Deal Error:`, error);
+      throw error;
+    }
+  }
 }
 
 export default new ApiService();
