@@ -59,24 +59,51 @@ post_install do |installer|
     installer,
     "../node_modules/react-native",
     :mac_catalyst_enabled => false,
-    # :ccache_enabled => true
   )
   
-  # Fix Xcode 16 duplicate output files for React-Core privacy bundle
+  # Aggressive fix for Xcode 16 duplicate React-Core_privacy bundle
   installer.pods_project.targets.each do |target|
+    # Remove all privacy bundle targets except one
+    if target.name.include?('React-Core') && target.name.include?('privacy')
+      unless target.name == 'React-Core.common-React-Core_privacy'
+        puts "Removing duplicate privacy bundle target: #{target.name}"
+        installer.pods_project.targets.delete(target)
+      end
+    end
+    
     target.build_configurations.each do |config|
-      if target.name == 'React-Core.common-React-Core_privacy'
+      # Disable code signing for all resource bundles
+      if target.respond_to?(:product_type) && target.product_type == "com.apple.product-type.bundle"
+        config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+        config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
+        config.build_settings['CODE_SIGN_IDENTITY'] = ''
+      end
+      
+      # Disable user script sandboxing for privacy bundle targets
+      if target.name.include?('privacy')
         config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
       end
     end
   end
   
-  # Deduplicate resource bundles
-  installer.target_installation_results.pod_target_installation_results.each do |pod_name, target_installation_result|
-    target_installation_result.resource_bundle_targets.each do |resource_bundle_target|
-      resource_bundle_target.build_configurations.each do |config|
-        config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+  # Remove duplicate copy phases for privacy bundles
+  installer.pods_project.targets.each do |target|
+    target.build_phases.each do |build_phase|
+      if build_phase.is_a?(Xcodeproj::Project::Object::PBXCopyFilesBuildPhase)
+        build_phase.files.to_a.each do |file|
+          if file.file_ref && file.file_ref.path && file.file_ref.path.include?("React-Core_privacy")
+            # Keep only the first occurrence
+            duplicates = build_phase.files.select { |f| 
+              f.file_ref && f.file_ref.path && f.file_ref.path.include?("React-Core_privacy")
+            }
+            if duplicates.count > 1
+              duplicates[1..-1].each { |dup| build_phase.files.delete(dup) }
+            end
+          end
+        end
       end
     end
   end
+  
+  installer.pods_project.save
 end
