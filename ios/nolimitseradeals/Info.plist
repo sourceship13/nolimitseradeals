@@ -51,7 +51,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>We need access to your camera to take photos for your business profile.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string>We need your location to show nearby deals and help you navigate to businesses.</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIAppFonts</key>
