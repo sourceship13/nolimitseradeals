@@ -25,9 +25,9 @@ interface CreateDealProps {
 }
 
 const DEAL_TYPES = [
+  { value: 'free_item', label: 'Free Item', icon: 'card-giftcard' },
   { value: 'percentage', label: 'Percentage Off', icon: 'percent' },
   { value: 'bogo', label: 'Buy One Get One', icon: 'local-offer' },
-  { value: 'free_item', label: 'Free Item', icon: 'card-giftcard' },
   { value: 'fixed_discount', label: 'Fixed Discount', icon: 'attach-money' },
 ];
 
@@ -38,7 +38,7 @@ const CreateDeal: React.FC<CreateDealProps> = ({ navigation, route }) => {
   // Form state
   const [dealTitle, setDealTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [dealType, setDealType] = useState('percentage');
+  const [dealType, setDealType] = useState('free_item');
   const [dealPrice, setDealPrice] = useState('');
   const [percentageDiscount, setPercentageDiscount] = useState('');
   const [minSharesRequired, setMinSharesRequired] = useState('3');
@@ -423,11 +423,12 @@ const styles = StyleSheet.create({
   dealTypeGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    marginHorizontal: -6,
   },
   dealTypeOption: {
-    flex: 1,
-    minWidth: '45%',
+    width: '48%',
+    marginHorizontal: '1%',
+    marginBottom: 12,
     borderWidth: 2,
     borderRadius: 12,
     padding: 16,

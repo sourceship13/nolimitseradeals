@@ -21,6 +21,12 @@ interface BusinessData {
   coverImageUrl?: string;
   businessImage1Url?: string;
   businessImage2Url?: string;
+  businessImages?: Array<{
+    id: string;
+    url: string;
+    s3Key: string;
+    originalName: string;
+  }>;
 }
 
 const BusinessProfile = ({ navigation, route }: any) => {
@@ -69,9 +75,10 @@ const BusinessProfile = ({ navigation, route }: any) => {
           websiteUrl: primaryBusiness.websiteUrl,
           logoUrl: primaryBusiness.images?.logo || primaryBusiness.logoUrl || '',
           coverImageUrl: primaryBusiness.images?.coverImage,
-          businessImage1Url: primaryBusiness.images?.businessImages?.[0]?.url,
-          businessImage2Url: primaryBusiness.images?.businessImages?.[1]?.url,
+          businessImages: primaryBusiness.images?.businessImages || primaryBusiness.businessImages || [],
         };
+        
+        console.log('📸 Business Images:', mappedBusiness.businessImages);
         
         setBusiness(mappedBusiness);
       } else {
@@ -173,30 +180,17 @@ const BusinessProfile = ({ navigation, route }: any) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Cover Image */}
-        {business.coverImageUrl ? (
-          <Image
-            source={{ uri: business.coverImageUrl }}
-            style={styles.coverImage}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={[styles.coverImagePlaceholder, { backgroundColor: colors.border }]}>
-            <Icon name="business" size={48} color={colors.textSecondary} />
-          </View>
-        )}
-
-        {/* Logo and Business Name */}
-        <View style={styles.headerContainer}>
-          <View style={[styles.logoContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
+        {/* Logo Circle Badge - Centered */}
+        <View style={styles.logoSection}>
+          <View style={[styles.logoCircle, { backgroundColor: colors.background, borderColor: colors.border }]}>
             {business.logoUrl ? (
               <Image
                 source={{ uri: business.logoUrl }}
-                style={styles.logo}
-                resizeMode="contain"
+                style={styles.logoImage}
+                resizeMode="cover"
               />
             ) : (
-              <Icon name="business" size={48} color={colors.textSecondary} />
+              <Icon name="business" size={64} color={colors.textSecondary} />
             )}
           </View>
           
@@ -208,7 +202,7 @@ const BusinessProfile = ({ navigation, route }: any) => {
           </View>
 
           {business.description && (
-            <Text style={[iOSUIKit.body, { color: colors.textSecondary, marginTop: 8, marginHorizontal: 24 }]}>
+            <Text style={[iOSUIKit.body, { color: colors.textSecondary, marginTop: 8, textAlign: 'center', marginHorizontal: 24 }]}>
               {business.description}
             </Text>
           )}
@@ -253,33 +247,23 @@ const BusinessProfile = ({ navigation, route }: any) => {
           />
         </View>
 
-        {/* Business Images */}
-        {(business.businessImage1Url || business.businessImage2Url) && (
+        {/* Business Photos - All images from businessImages array */}
+        {business.businessImages && business.businessImages.length > 0 && (
           <View style={[styles.section, { backgroundColor: colors.surface }]}>
             <Text style={[iOSUIKit.title3, { color: colors.text, marginBottom: 16, paddingHorizontal: 16 }]}>
               Business Photos
             </Text>
             
             <View style={styles.imagesGrid}>
-              {business.businessImage1Url && (
-                <View style={styles.businessImageContainer}>
+              {business.businessImages.map((image) => (
+                <View key={image.id} style={styles.businessImageContainer}>
                   <Image
-                    source={{ uri: business.businessImage1Url }}
+                    source={{ uri: image.url }}
                     style={styles.businessImage}
                     resizeMode="cover"
                   />
                 </View>
-              )}
-              
-              {business.businessImage2Url && (
-                <View style={styles.businessImageContainer}>
-                  <Image
-                    source={{ uri: business.businessImage2Url }}
-                    style={styles.businessImage}
-                    resizeMode="cover"
-                  />
-                </View>
-              )}
+              ))}
             </View>
           </View>
         )}
@@ -335,6 +319,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: -40,
     paddingBottom: 24,
+  },
+  logoSection: {
+    alignItems: 'center',
+    paddingVertical: 32,
+    paddingHorizontal: 24,
+  },
+  logoCircle: {
+    width: 128,
+    height: 128,
+    borderRadius: 64,
+    borderWidth: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
   },
   logoContainer: {
     width: 100,

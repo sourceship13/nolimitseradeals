@@ -28,9 +28,16 @@ interface Deal {
   priority_score: number;
   deal_images?: Array<{
     id: string;
-    image_url: string;
+    image_url?: string;
+    url?: string;
     image_type: string;
   }>;
+  dealImages?: Array<{
+    id: string;
+    url: string;
+  }>;
+  dealImage?: string;
+  deal_image?: string;
   is_hearted?: boolean;
   redemption_status?: string | null;
 }
@@ -110,7 +117,19 @@ const BusinessDeals = ({ navigation }: any) => {
   };
 
   const renderDealCard = ({ item }: { item: Deal }) => {
-    const dealImage = item.deal_images?.[0]?.image_url;
+    // Log the entire deal object to see the structure
+    console.log('📦 Full Deal Object:', JSON.stringify(item, null, 2));
+    
+    // Try multiple possible image sources from the API response
+    const dealImage = 
+      item.deal_images?.[0]?.image_url || 
+      item.deal_images?.[0]?.url ||
+      (item as any).dealImages?.[0]?.url ||
+      (item as any).dealImage ||
+      (item as any).deal_image;
+
+    console.log('🖼️ Deal Image URL:', dealImage, 'Deal:', item.deal_title);
+    console.log('🖼️ deal_images array:', item.deal_images);
 
     return (
       <TouchableOpacity

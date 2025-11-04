@@ -27,8 +27,8 @@ export const Colors = {
     placeholder: '#000'
   },
   dark: {
-    background: '#36393B',
-    surface: 'rgba(69, 72, 74, 0.95)',
+    background: '#0A0A0A',
+    surface: 'rgba(30, 31, 32, 0.95)',
     primary: '#DE541E',
     secondary: '#4ECDC4',
     accent: '#BB86FC',
