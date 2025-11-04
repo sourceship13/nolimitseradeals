@@ -34,6 +34,7 @@ declare module 'react-native-maps' {
     showsBuildings?: boolean;
     showsIndoors?: boolean;
     mapType?: 'standard' | 'satellite' | 'hybrid' | 'terrain';
+    customMapStyle?: any[];
   }
 
   export interface MarkerProps extends ViewProps {
