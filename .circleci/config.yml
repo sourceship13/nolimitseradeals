@@ -85,12 +85,14 @@ jobs:
           name: Build Android APK (release)
           command: |
             cd android
-            # Clean gradle cache to remove any hardcoded paths
-            rm -rf .gradle
-            # Clean build
-            ./gradlew clean --no-daemon
-            # Build with proper node path
-            ./gradlew assembleRelease --no-daemon --stacktrace
+            # Clean everything
+            rm -rf .gradle app/.cxx app/build
+            
+            # Generate all codegen artifacts first
+            ./gradlew generateCodegenArtifactsFromSchema --no-daemon
+            
+            # Clean and build
+            ./gradlew clean assembleRelease --no-daemon --stacktrace
       - save_cache:
           key: v2-gradle-{{ checksum "android/build.gradle" }}-{{ checksum "android/app/build.gradle" }}
           paths:
@@ -115,7 +117,6 @@ jobs:
       - run:
           name: Install Ruby 3.3.5
           command: |
-            # Check if Ruby 3.3.5 is installed
             if ! rbenv versions | grep -q "3.3.5"; then
               echo "Installing Ruby 3.3.5..."
               rbenv install 3.3.5
@@ -145,7 +146,6 @@ jobs:
       - run:
           name: Setup SSH and Keychain for Match
           command: |
-            # Setup SSH
             mkdir -p ~/.ssh
             echo "$MATCH_GIT_SSH_KEY" | base64 --decode > ~/.ssh/id_ed25519
             chmod 600 ~/.ssh/id_ed25519
@@ -160,26 +160,14 @@ jobs:
               StrictHostKeyChecking no
             EOF
             
-            # Create and setup temporary keychain for code signing
             KEYCHAIN_PATH=~/Library/Keychains/fastlane.keychain-db
             KEYCHAIN_PASSWORD=temp_password
             
-            # Delete keychain if it exists
             security delete-keychain "$KEYCHAIN_PATH" 2>/dev/null || true
-            
-            # Create new keychain
             security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-            
-            # Set as default keychain
             security default-keychain -s "$KEYCHAIN_PATH"
-            
-            # Unlock keychain
             security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-            
-            # Set keychain timeout to 3600 seconds
             security set-keychain-settings -t 3600 -u "$KEYCHAIN_PATH"
-            
-            # Add keychain to search list
             security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | sed s/\"//g)
             
             echo "✅ Keychain setup complete"
@@ -196,10 +184,7 @@ jobs:
           name: Strip bitcode from Hermes
           command: |
             cd ios
-            
-            # Find and strip bitcode from hermes framework
             HERMES_FRAMEWORK="Pods/hermes-engine/destroot/Library/Frameworks/universal/hermes.framework/hermes"
-            
             if [ -f "$HERMES_FRAMEWORK" ]; then
               echo "Stripping bitcode from Hermes..."
               xcrun bitcode_strip -r "$HERMES_FRAMEWORK" -o "$HERMES_FRAMEWORK"
@@ -239,7 +224,6 @@ jobs:
       - run:
           name: Install Ruby 3.3.5
           command: |
-            # Check if Ruby 3.3.5 is installed
             if ! rbenv versions | grep -q "3.3.5"; then
               echo "Installing Ruby 3.3.5..."
               rbenv install 3.3.5
@@ -269,7 +253,6 @@ jobs:
       - run:
           name: Setup SSH and Keychain for Match
           command: |
-            # Setup SSH
             mkdir -p ~/.ssh
             echo "$MATCH_GIT_SSH_KEY" | base64 --decode > ~/.ssh/id_ed25519
             chmod 600 ~/.ssh/id_ed25519
@@ -284,26 +267,14 @@ jobs:
               StrictHostKeyChecking no
             EOF
             
-            # Create and setup temporary keychain for code signing
             KEYCHAIN_PATH=~/Library/Keychains/fastlane.keychain-db
             KEYCHAIN_PASSWORD=temp_password
             
-            # Delete keychain if it exists
             security delete-keychain "$KEYCHAIN_PATH" 2>/dev/null || true
-            
-            # Create new keychain
             security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-            
-            # Set as default keychain
             security default-keychain -s "$KEYCHAIN_PATH"
-            
-            # Unlock keychain
             security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-            
-            # Set keychain timeout to 3600 seconds
             security set-keychain-settings -t 3600 -u "$KEYCHAIN_PATH"
-            
-            # Add keychain to search list
             security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | sed s/\"//g)
             
             echo "✅ Keychain setup complete"
@@ -320,10 +291,7 @@ jobs:
           name: Strip bitcode from Hermes
           command: |
             cd ios
-            
-            # Find and strip bitcode from hermes framework
             HERMES_FRAMEWORK="Pods/hermes-engine/destroot/Library/Frameworks/universal/hermes.framework/hermes"
-            
             if [ -f "$HERMES_FRAMEWORK" ]; then
               echo "Stripping bitcode from Hermes..."
               xcrun bitcode_strip -r "$HERMES_FRAMEWORK" -o "$HERMES_FRAMEWORK"
