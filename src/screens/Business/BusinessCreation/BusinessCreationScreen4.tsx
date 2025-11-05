@@ -8,7 +8,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import ApiService from '../../../services/api.service';
 
 const BusinessCreationScreen4 = ({ navigation, route }: any) => {
-  const { isDarkMode } = useAuth();
+  const { isDarkMode, refreshDeals } = useAuth();
   const colors = getColors(isDarkMode);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -93,9 +93,10 @@ const BusinessCreationScreen4 = ({ navigation, route }: any) => {
           [
             {
               text: 'OK',
-              onPress: () => {
+              onPress: async () => {
                 // Navigate to business profile or home screen
-                navigation.navigate('Profile');
+                await refreshDeals();
+                navigation.navigate('BusinessProfile');
               },
             },
           ]
