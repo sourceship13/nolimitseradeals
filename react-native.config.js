@@ -4,4 +4,11 @@ module.exports = {
     android: {},
   },
   assets: ['./assets/fonts/'],
+  dependencies: {
+    'react-native-config': {
+      platforms: {
+        android: null, // Disable autolinking for Android to avoid New Architecture issues
+      },
+    },
+  },
 };
