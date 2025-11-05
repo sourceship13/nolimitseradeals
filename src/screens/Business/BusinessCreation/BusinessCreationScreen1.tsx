@@ -14,6 +14,7 @@ const BusinessCreationScreen1 = ({ navigation }: any) => {
   const [address, setAddress] = React.useState('7302 Compass Rose Dr');
   const [city, setCity] = React.useState('Richmond');
   const [country, setCountry] = React.useState('United States');
+  const [postalCode, setPostalCode] = React.useState('77407');
   const [state, setState] = React.useState('Texas');
   const [phoneNumber, setPhoneNumber] = React.useState('713-659-2171');
   const [businessUrl, setBusinessUrl] = React.useState('https://sera.dev');
@@ -129,6 +130,20 @@ const BusinessCreationScreen1 = ({ navigation }: any) => {
             color: colors.text,
             backgroundColor: colors.surface,
           }}
+          placeholder="Postal Code"
+          placeholderTextColor={colors.placeholder}
+          onChangeText={(text) => setPostalCode(text)}
+        />
+        <TextInput
+          style={{
+            height: 40,
+            borderColor: colors.border,
+            borderWidth: 1,
+            borderRadius: 8,
+            paddingHorizontal: 10,
+            color: colors.text,
+            backgroundColor: colors.surface,
+          }}
           placeholder="Phone Number"
           placeholderTextColor={colors.placeholder}
           onChangeText={(text) => setPhoneNumber(text)}
@@ -163,6 +178,7 @@ const BusinessCreationScreen1 = ({ navigation }: any) => {
           city,
           country,
           state,
+          postalCode,
           phoneNumber,
           businessUrl,
         })}

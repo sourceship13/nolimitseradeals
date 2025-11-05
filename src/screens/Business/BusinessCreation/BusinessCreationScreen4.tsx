@@ -20,6 +20,7 @@ const BusinessCreationScreen4 = ({ navigation, route }: any) => {
     city,
     country,
     state,
+    postalCode,
     phoneNumber,
     businessUrl,
     logo,
@@ -41,6 +42,7 @@ const BusinessCreationScreen4 = ({ navigation, route }: any) => {
       formData.append('address', address);
       formData.append('city', city);
       formData.append('state', state);
+      formData.append('postalCode', postalCode);
       formData.append('country', country);
       formData.append('phoneNumber', phoneNumber);
       formData.append('websiteUrl', businessUrl);

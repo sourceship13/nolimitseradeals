@@ -6,6 +6,7 @@ import Toolbar from '../../../components/Toolbar';
 import { iOSUIKit } from 'react-native-typography';
 import { launchImageLibrary, Asset } from 'react-native-image-picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import ProfileScreen from '../../Profile/Profile';
 
 const BusinessCreationScreen2 = ({ navigation, route }: any) => {
   const { isDarkMode } = useAuth();
@@ -19,6 +20,7 @@ const BusinessCreationScreen2 = ({ navigation, route }: any) => {
     city,
     country,
     state,
+    postalCode,
     phoneNumber,
     businessUrl,
   } = route.params;
@@ -85,6 +87,7 @@ const BusinessCreationScreen2 = ({ navigation, route }: any) => {
       city,
       country,
       state,
+      postalCode,
       phoneNumber,
       businessUrl,
       logoFile,
