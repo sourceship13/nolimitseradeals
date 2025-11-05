@@ -49,7 +49,7 @@ const BUSINESS_CATEGORIES = [
 ];
 
 const CreateDeal: React.FC<CreateDealProps> = ({ navigation, route }) => {
-  const { isDarkMode, userBusiness } = useAuth();
+  const { isDarkMode, userBusiness, refreshDeals } = useAuth();
   const colors = getColors(isDarkMode);
 
   // Form state
@@ -193,6 +193,9 @@ const CreateDeal: React.FC<CreateDealProps> = ({ navigation, route }) => {
       const data = await response.json();
 
       if (response.ok && data.success) {
+        // Refresh deals to get the newly created deal
+        await refreshDeals();
+        
         Alert.alert(
           'Success',
           'Deal created successfully!',
