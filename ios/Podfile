@@ -62,7 +62,6 @@ post_install do |installer|
   )
   
   # Fix Xcode 16 duplicate React-Core_privacy bundle issue
-  # Instead of deleting targets, we'll configure them to not conflict
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
       # Disable code signing for all resource bundles
@@ -75,29 +74,48 @@ post_install do |installer|
       # Fix for privacy bundle targets
       if target.name.include?('React-Core') && target.name.include?('privacy')
         config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
-        # Use unique output path for each privacy bundle target
-        if target.name != 'React-Core.common-React-Core_privacy'
-          config.build_settings['CONFIGURATION_BUILD_DIR'] = "$(BUILD_DIR)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/#{target.name}"
-        end
       end
     end
   end
   
-  # Update the copy resources script to handle multiple privacy bundles
+  # Fix the copy resources script to remove duplicate privacy bundles
   installer.aggregate_targets.each do |aggregate_target|
     aggregate_target.xcconfigs.each do |config_name, config_file|
       xcconfig_path = aggregate_target.xcconfig_path(config_name)
       if File.exist?(xcconfig_path)
         xcconfig = File.read(xcconfig_path)
-        # Remove duplicate privacy bundle references
-        privacy_bundles = xcconfig.scan(/React-Core[^\s]*privacy\.bundle/).uniq
+        
+        # Find all privacy bundle references
+        privacy_bundle_pattern = /\$\{PODS_CONFIGURATION_BUILD_DIR\}\/React-Core[^\/\s]*\/React-Core_privacy\.bundle/
+        privacy_bundles = xcconfig.scan(privacy_bundle_pattern).uniq
+        
         if privacy_bundles.length > 1
-          # Keep only the first one
-          privacy_bundles[1..-1].each do |bundle|
-            xcconfig.gsub!(/\s*\$\{PODS_CONFIGURATION_BUILD_DIR\}\/#{Regexp.escape(bundle)}/, '')
+          puts "Found #{privacy_bundles.length} privacy bundles, keeping only the first one"
+          # Keep only the first occurrence
+          first_bundle = privacy_bundles.first
+          privacy_bundles[1..-1].each do |duplicate_bundle|
+            xcconfig.gsub!(/ #{Regexp.escape(duplicate_bundle)}/, '')
           end
           File.write(xcconfig_path, xcconfig)
         end
+      end
+    end
+    
+    # Also fix the copy resources script
+    copy_resources_script = File.join(aggregate_target.support_files_dir, 'Pods-' + aggregate_target.name + '-resources.sh')
+    if File.exist?(copy_resources_script)
+      script_content = File.read(copy_resources_script)
+      
+      # Find all install_resource calls for privacy bundles
+      privacy_installs = script_content.scan(/install_resource.*React-Core.*privacy\.bundle.*$/)
+      
+      if privacy_installs.length > 1
+        puts "Found #{privacy_installs.length} privacy bundle install calls, keeping only the first one"
+        # Remove duplicate install_resource calls
+        privacy_installs[1..-1].each do |duplicate_line|
+          script_content.gsub!(/#{Regexp.escape(duplicate_line)}\n/, '')
+        end
+        File.write(copy_resources_script, script_content)
       end
     end
   end
