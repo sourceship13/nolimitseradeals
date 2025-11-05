@@ -131,7 +131,8 @@ const BusinessProfile = ({ navigation, route }: any) => {
         <Toolbar
           title="Business Profile"
           onBack={() => navigation.goBack()}
-          showSettings={false}
+          showSettings={true}
+          onSettings={() => navigation.navigate('Settings')}
         />
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -149,7 +150,8 @@ const BusinessProfile = ({ navigation, route }: any) => {
         <Toolbar
           title="Business Profile"
           onBack={() => navigation.goBack()}
-          showSettings={false}
+          showSettings={true}
+          onSettings={() => navigation.navigate('Settings')}
         />
         <View style={styles.centerContainer}>
           <Icon name="error-outline" size={64} color={colors.error} />
@@ -173,7 +175,8 @@ const BusinessProfile = ({ navigation, route }: any) => {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Toolbar
         title="Business Profile"
-        showSettings={false}
+        showSettings={true}
+        onSettings={() => navigation.navigate('Settings')}
       />
       <ScrollView 
         style={{ flex: 1 }} 
