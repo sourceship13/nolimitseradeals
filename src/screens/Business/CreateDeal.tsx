@@ -203,7 +203,7 @@ const CreateDeal: React.FC<CreateDealProps> = ({ navigation, route }) => {
             {
               text: 'OK',
               onPress: () => {
-                navigation.goBack();
+                navigation.navigate('BusinessDeals');
               },
             },
           ]
@@ -215,7 +215,9 @@ const CreateDeal: React.FC<CreateDealProps> = ({ navigation, route }) => {
       console.error('Create deal error:', error);
       Alert.alert('Error', error.message || 'Failed to create deal');
     } finally {
+      await refreshDeals();
       setLoading(false);
+      
     }
   };
 
