@@ -12,6 +12,7 @@ import {
   Platform,
   Modal,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAuth } from '../../libs/hooks/useAuth';
 import { getColors } from '../../libs/colors';
 import { iOSUIKit } from 'react-native-typography';
@@ -62,6 +63,8 @@ const CreateDeal: React.FC<CreateDealProps> = ({ navigation, route }) => {
   const [percentageDiscount, setPercentageDiscount] = useState('');
   const [minSharesRequired, setMinSharesRequired] = useState('3');
   const [endDate, setEndDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedImages, setSelectedImages] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -91,6 +94,25 @@ const CreateDeal: React.FC<CreateDealProps> = ({ navigation, route }) => {
 
   const removeImage = (index: number) => {
     setSelectedImages(selectedImages.filter((_, i) => i !== index));
+  };
+
+  const handleDateChange = (event: any, date?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    
+    if (date) {
+      setSelectedDate(date);
+      // Format date as YYYY-MM-DD
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      setEndDate(`${year}-${month}-${day}`);
+    }
+  };
+
+  const showDatepickerModal = () => {
+    setShowDatePicker(true);
   };
 
   const validateForm = () => {
@@ -360,15 +382,38 @@ const CreateDeal: React.FC<CreateDealProps> = ({ navigation, route }) => {
 
           <View style={[styles.halfInput, { marginLeft: 8 }]}>
             <Text style={[iOSUIKit.subhead, { color: colors.text, marginBottom: 8 }]}>End Date *</Text>
-            <TextInput
-              style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={colors.textSecondary}
-              value={endDate}
-              onChangeText={setEndDate}
-            />
+            <TouchableOpacity
+              style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, justifyContent: 'center' }]}
+              onPress={showDatepickerModal}
+            >
+              <Text style={[{ color: endDate ? colors.text : colors.textSecondary }]}>
+                {endDate || 'Select Date'}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
+
+        {/* Date Picker */}
+        {showDatePicker && (
+          <DateTimePicker
+            value={selectedDate}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={handleDateChange}
+            minimumDate={new Date()}
+            textColor={isDarkMode ? '#FFFFFF' : '#000000'}
+          />
+        )}
+
+        {/* iOS Date Picker Confirm Button */}
+        {showDatePicker && Platform.OS === 'ios' && (
+          <TouchableOpacity
+            style={[styles.datePickerButton, { backgroundColor: colors.primary }]}
+            onPress={() => setShowDatePicker(false)}
+          >
+            <Text style={[iOSUIKit.bodyEmphasized, { color: '#FFFFFF' }]}>Confirm Date</Text>
+          </TouchableOpacity>
+        )}
 
         {/* Images */}
         <View style={styles.section}>
@@ -564,6 +609,13 @@ const styles = StyleSheet.create({
     padding: 32,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  datePickerButton: {
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 12,
+    marginBottom: 24,
   },
   submitButton: {
     flexDirection: 'row',
