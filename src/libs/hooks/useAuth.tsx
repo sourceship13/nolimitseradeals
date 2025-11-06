@@ -482,6 +482,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
+      // Optimistic update - add to hearted deals immediately
       const alreadyHearted = heartedDeals.some(d => d.deal_id === dealId || d.id === dealId);
       if (!alreadyHearted) {
         const dealToAdd = {
@@ -493,17 +494,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setHeartedDeals(prev => [...prev, dealToAdd]);
       }
       
+      // Make API call - optimistic update already applied
       await ApiService.heartDeal(dealId);
-      
-      // Await the refresh to ensure UI has updated data immediately
-      await Promise.all([
-        refreshHeartedDeals().catch(err => console.warn('⚠️ Background refresh failed:', err)),
-        refreshDeals().catch(err => console.warn('⚠️ Deals refresh failed:', err))
-      ]);
 
       return true;
     } catch (error: any) {
       console.error('❌ Heart deal failed:', error);
+      // Revert optimistic update on error
       setHeartedDeals(prev => prev.filter(d => d.deal_id !== dealId && d.id !== dealId));
       return false;
     }
@@ -516,22 +513,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
 
+    // Store original state for potential revert
     const originalDeals = [...heartedDeals];
 
     try {
+      // Optimistic update - remove from hearted deals immediately
       setHeartedDeals(prev => prev.filter(d => d.deal_id !== dealId && d.id !== dealId));
       
+      // Make API call - optimistic update already applied
       await ApiService.unheartDeal(dealId);
-      
-      // Await the refresh to ensure UI has updated data immediately
-      await Promise.all([
-        refreshHeartedDeals().catch(err => console.warn('⚠️ Background refresh failed:', err)),
-        refreshDeals().catch(err => console.warn('⚠️ Deals refresh failed:', err))
-      ]);
 
       return true;
     } catch (error: any) {
       console.error('❌ Unheart deal failed:', error);
+      // Revert optimistic update on error
       setHeartedDeals(originalDeals);
       return false;
     }
