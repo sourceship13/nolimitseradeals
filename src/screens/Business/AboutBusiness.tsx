@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Linking, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Linking, TouchableOpacity, Platform, FlatList, Image } from 'react-native';
 import { useAuth } from '../../libs/hooks/useAuth';
 import { getColors } from '../../libs/colors';
 import Toolbar from '../../components/Toolbar';
@@ -165,10 +165,39 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ navigation, route }) => {
   const coordinates = getBusinessCoordinates();
   const hasValidCoordinates = coordinates !== null;
 
+  // Helper function to get business images
+  const getBusinessImages = (): Array<{ id: string; url: string }> => {
+    const images: Array<{ id: string; url: string }> = [];
+    
+    // Try multiple possible property names for business images
+    const businessImages = 
+      deal?.images?.businessImages || 
+      deal?.businessImages || 
+      deal?.business_images || 
+      [];
+    
+    // Add business images to array
+    if (Array.isArray(businessImages) && businessImages.length > 0) {
+      businessImages.forEach((img: any) => {
+        if (img.url || img.image_url) {
+          images.push({
+            id: img.id || Math.random().toString(),
+            url: img.url || img.image_url,
+          });
+        }
+      });
+    }
+    
+    return images;
+  };
+
+  const businessImages = getBusinessImages();
+
   // Debug logging
   console.log('Deal object:', deal);
   console.log('Coordinates:', coordinates);
   console.log('Has valid coordinates:', hasValidCoordinates);
+  console.log('Business Images:', businessImages);
 
   if (!deal) {
     return (
@@ -223,50 +252,80 @@ const AboutBusiness: React.FC<AboutBusinessProps> = ({ navigation, route }) => {
           )}
         </View>
 
-        {/* Map Section */}
-        {hasValidCoordinates && coordinates && (
+        {/* Map and Images Section */}
+        {(hasValidCoordinates && coordinates) || businessImages.length > 0 ? (
           <View
             style={[
               styles.mapSection,
               { backgroundColor: colors.surface, borderColor: colors.border },
             ]}
           >
-            <View style={styles.mapContainer}>
-              <MapView
-                provider={PROVIDER_GOOGLE}
-                style={styles.map}
-                initialRegion={{
-                  latitude: coordinates.latitude,
-                  longitude: coordinates.longitude,
-                  latitudeDelta: 0.01,
-                  longitudeDelta: 0.01,
-                }}
-                scrollEnabled={false}
-                zoomEnabled={false}
-                pitchEnabled={false}
-                rotateEnabled={false}
-                customMapStyle={isDarkMode ? darkMapStyle : []}
-              >
-                <Marker
-                  coordinate={{
-                    latitude: coordinates.latitude,
-                    longitude: coordinates.longitude,
-                  }}
-                  title={deal.business_name || deal.business || 'Business Location'}
-                  description={deal.business_address}
+            {/* Business Images Horizontal FlatList */}
+            {businessImages.length > 0 && (
+              <View style={styles.businessImagesSection}>
+                <Text style={[iOSUIKit.subhead, { color: colors.text, marginBottom: 12, paddingHorizontal: 16 }]}>
+                  Business Photos
+                </Text>
+                <FlatList
+                  data={businessImages}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  keyExtractor={(item) => item.id}
+                  contentContainerStyle={styles.imagesList}
+                  renderItem={({ item }) => (
+                    <View style={styles.businessImageContainer}>
+                      <Image
+                        source={{ uri: item.url }}
+                        style={styles.businessImage}
+                        resizeMode="cover"
+                      />
+                    </View>
+                  )}
                 />
-              </MapView>
-            </View>
-            
-            <TouchableOpacity
-              style={[styles.directionsButton, { backgroundColor: colors.primary }]}
-              onPress={handleGetDirections}
-            >
-              <MaterialIcons name="directions" size={20} color="#FFFFFF" />
-              <Text style={styles.directionsButtonText}>Get Directions</Text>
-            </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Map */}
+            {hasValidCoordinates && coordinates && (
+              <>
+                <View style={styles.mapContainer}>
+                  <MapView
+                    provider={PROVIDER_GOOGLE}
+                    style={styles.map}
+                    initialRegion={{
+                      latitude: coordinates.latitude,
+                      longitude: coordinates.longitude,
+                      latitudeDelta: 0.01,
+                      longitudeDelta: 0.01,
+                    }}
+                    scrollEnabled={false}
+                    zoomEnabled={false}
+                    pitchEnabled={false}
+                    rotateEnabled={false}
+                    customMapStyle={isDarkMode ? darkMapStyle : []}
+                  >
+                    <Marker
+                      coordinate={{
+                        latitude: coordinates.latitude,
+                        longitude: coordinates.longitude,
+                      }}
+                      title={deal.business_name || deal.business || 'Business Location'}
+                      description={deal.business_address}
+                    />
+                  </MapView>
+                </View>
+                
+                <TouchableOpacity
+                  style={[styles.directionsButton, { backgroundColor: colors.primary }]}
+                  onPress={handleGetDirections}
+                >
+                  <MaterialIcons name="directions" size={20} color="#FFFFFF" />
+                  <Text style={styles.directionsButtonText}>Get Directions</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
-        )}
+        ) : null}
 
         {/* Business Information Section */}
         <View
@@ -473,6 +532,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 24,
     overflow: 'hidden',
+  },
+  businessImagesSection: {
+    paddingVertical: 16,
+  },
+  imagesList: {
+    paddingHorizontal: 16,
+  },
+  businessImageContainer: {
+    marginRight: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  businessImage: {
+    width: 200,
+    height: 150,
+    borderRadius: 12,
   },
   mapContainer: {
     height: 250,
