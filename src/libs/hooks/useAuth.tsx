@@ -52,6 +52,9 @@ interface AuthContextType {
   dealsLoading: boolean;
   refreshDeals: () => Promise<void>;
   
+  // Redeemed deals (unlocked and eligible for redemption)
+  redeemedDeals: any[];
+  
   // Business profile (from deals API)
   userBusiness: any | null;
   
@@ -78,6 +81,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // All deals state
   const [deals, setDeals] = useState<any[]>([]);
   const [dealsLoading, setDealsLoading] = useState(false);
+  
+  // Redeemed deals state (unlocked and eligible for redemption)
+  const [redeemedDeals, setRedeemedDeals] = useState<any[]>([]);
   
   // User business state (from deals API)
   const [userBusiness, setUserBusiness] = useState<any | null>(null);
@@ -139,28 +145,97 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setDealsLoading(true);
       const result = await ApiService.getDeals();
+      console.log('📦 fetchDeals result:', JSON.stringify(result, null, 2));
+      
       if (result.success && result.data) {
         // Handle both legacy array and new shape { data: { deals, profile, business }, count, query }
         let finalDeals: any[] = [];
         const dealsData: any = result.data;
         
+        console.log('📦 dealsData type:', Array.isArray(dealsData) ? 'array' : typeof dealsData);
+        console.log('📦 dealsData keys:', dealsData ? Object.keys(dealsData) : 'null');
+        
         // Extract userBusiness if present (it's an array of business relationships)
         if (dealsData && Array.isArray(dealsData.userBusiness)) {
           setUserBusiness(dealsData.userBusiness);
+          console.log('📦 Set userBusiness:', dealsData.userBusiness.length);
         } else if (dealsData && dealsData.business) {
           // Fallback if it comes as a single business object
           setUserBusiness([dealsData.business]);
+          console.log('📦 Set userBusiness (single):', dealsData.business);
+        }
+        
+        // Extract redeemedDeals if present
+        if (dealsData && Array.isArray(dealsData.redeemedDeals)) {
+          setRedeemedDeals(dealsData.redeemedDeals);
+          console.log('📦 Set redeemedDeals:', dealsData.redeemedDeals.length);
+        } else {
+          setRedeemedDeals([]);
+          console.log('📦 No redeemedDeals found');
         }
         
         if (Array.isArray(dealsData)) {
           finalDeals = dealsData;
+          console.log('📦 finalDeals from array:', finalDeals.length);
         } else if (dealsData && Array.isArray(dealsData.deals)) {
-          finalDeals = dealsData.deals;
+          // Check if deals array has full deal data or just search results
+          const hasFullDealData = dealsData.deals.length > 0 && 
+            (dealsData.deals[0].deal_id || dealsData.deals[0].dealId || dealsData.deals[0].business_name);
+          
+          if (hasFullDealData) {
+            finalDeals = dealsData.deals;
+            console.log('📦 finalDeals from dealsData.deals (full data):', finalDeals.length);
+          } else if (dealsData.userBusinessDeals && Array.isArray(dealsData.userBusinessDeals)) {
+            // Use userBusinessDeals if deals array only has search results
+            finalDeals = dealsData.userBusinessDeals;
+            console.log('📦 finalDeals from userBusinessDeals:', finalDeals.length);
+          } else {
+            finalDeals = dealsData.deals;
+            console.log('📦 finalDeals from dealsData.deals (fallback):', finalDeals.length);
+          }
         } else if (Array.isArray((result as any))) {
           finalDeals = result as any;
+          console.log('📦 finalDeals from result array:', finalDeals.length);
         } else {
           finalDeals = [];
+          console.log('📦 finalDeals empty - no data structure matched');
         }
+        
+        // Normalize property names from userBusinessDeals format to expected format
+        finalDeals = finalDeals.map((deal: any) => {
+          // If deal already has expected properties, return as-is
+          if (deal.deal_id || deal.title || deal.business_name) {
+            return deal;
+          }
+          
+          // Otherwise, map from userBusinessDeals format
+          return {
+            ...deal,
+            deal_id: deal.dealId || deal.deal_id,
+            id: deal.dealId || deal.id,
+            title: deal.dealTitle || deal.title,
+            description: deal.description,
+            descrption: deal.description, // Keep typo for backward compatibility
+            business_name: deal.businessName || deal.business_name,
+            business: deal.businessName || deal.business,
+            business_id: deal.businessId || deal.business_id,
+            business_slug: deal.businessSlug || deal.business_slug,
+            image_url: deal.dealImageUrl || deal.image_url,
+            deal_image_url: deal.dealImageUrl || deal.deal_image_url,
+            price: deal.dealPrice || deal.price,
+            deal_type: deal.dealType || deal.deal_type,
+            percentage_discount: deal.percentageDiscount || deal.percentage_discount,
+            expires: deal.endTime || deal.expires,
+            expiry: deal.endTime || deal.expiry,
+            max_redemptions: deal.maxRedemptions || deal.max_redemptions,
+            min_shares_required: deal.minSharesRequired || deal.min_shares_required,
+            status: deal.dealStatus || deal.status,
+            created_at: deal.dealCreatedAt || deal.created_at,
+            is_premium: deal.isPremium || deal.is_premium,
+          };
+        });
+        
+        console.log('📦 Normalized deals:', finalDeals.length);
         
         // Extract categories from deals
         const extractedCategories: Category[] = [];
@@ -215,9 +290,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .filter(Boolean);
         setHeartedDeals(derivedHeartedIds.map((id: string) => ({ deal_id: id, id, isHearted: true })));
 
+        console.log('📦 Final setDeals:', annotatedDeals.length, 'deals');
         setDeals(annotatedDeals);
         return annotatedDeals;
       } else {
+        console.log('📦 No success or no data in result');
         setDeals([]);
         setAvailableCategories([]);
         setCategoriesState({});
@@ -712,6 +789,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     deals,
     dealsLoading,
     refreshDeals,
+    redeemedDeals,
     userBusiness,
     isDarkMode,
     setDarkMode,
@@ -719,7 +797,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCategories,
     availableCategories,
     refreshCategories,
-  }), [user, loading, isDarkMode, categories, availableCategories, heartedDeals, heartedDealsLoading, deals, dealsLoading, userBusiness]);
+  }), [user, loading, isDarkMode, categories, availableCategories, heartedDeals, heartedDealsLoading, deals, dealsLoading, redeemedDeals, userBusiness]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

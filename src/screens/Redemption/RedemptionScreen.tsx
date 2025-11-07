@@ -38,41 +38,38 @@ type Item = {
   format: keyof typeof BarcodeFormat;
 };
 
-const DATA: Item[] = [
-  // CODE128 accepts arbitrary strings/digits
-  {
-    id: '1',
-    label: 'Order #1001',
-    payload: '1001-ACME-XYZ',
-    format: BarcodeFormat.CODE128,
-  },
-  // EAN13 must be 13 digits (use helper below if you only have 12)
-  {
-    id: '2',
-    label: 'EAN-13',
-    payload: '5901234123457',
-    format: BarcodeFormat.EAN13,
-  },
- 
-];
-
 const RedemptionScreen = () => {
   const route = useRoute();
   const params = (route.params || {}) as RedemptionRouteParams;
   const navigation = useNavigation();
-  const { isDarkMode, user, refreshDeals } = useAuth();
+  const { isDarkMode, user, refreshDeals, redeemedDeals } = useAuth();
   const colors = getColors(isDarkMode);
   const code = params.code;
   const deal = params.deal;
   const userId = user?.id;
   
+  // Find the redeemed deal from the redeemedDeals array
+  const dealId = deal?.deal_id || deal?.id;
+  const redeemedDeal = redeemedDeals.find(
+    (rd) => rd.deal_id === dealId || rd.id === dealId
+  );
 
   const listRef = useRef<FlatList<Item>>(null);
   const [containerW, setContainerW] = useState(0);
 
 
-  // Fallback code if not provided
-  const redemptionCode = code || deal?.redemption_code || 'ABC123';
+  // Use redemption code from redeemed deal, fallback to params or deal object
+  const redemptionCode = redeemedDeal?.redemption_code || code || deal?.redemption_code || 'ABC123';
+
+  // Generate barcode data dynamically based on redemption code
+  const barcodeData: Item[] = useMemo(() => [
+    {
+      id: '1',
+      label: 'Redemption Code',
+      payload: redemptionCode,
+      format: BarcodeFormat.CODE128,
+    },
+  ], [redemptionCode]);
 
 
   const CARD_W = 260; // visible card width
@@ -114,7 +111,7 @@ const RedemptionScreen = () => {
           <FlatList
             ref={listRef}
             horizontal
-            data={DATA}
+            data={barcodeData}
             keyExtractor={i => i.id}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: sidePad }}
