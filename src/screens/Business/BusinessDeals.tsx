@@ -46,7 +46,7 @@ interface Deal {
 }
 
 const BusinessDeals = ({ navigation }: any) => {
-  const { isDarkMode, userBusiness, deals } = useAuth();
+  const { isDarkMode, userBusiness, deals, refreshDeals } = useAuth();
   const colors = getColors(isDarkMode);
   const [businessDeals, setBusinessDeals] = useState<Deal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -124,6 +124,7 @@ const BusinessDeals = ({ navigation }: any) => {
       Alert.alert('Error', error.message || 'Failed to delete deal. Please try again.');
     } finally {
       setIsDeleting(false);
+      await refreshDeals();
     }
   };
 
