@@ -1,0 +1,97 @@
+name: Deploy to TestFlight
+
+on:
+  push:
+    branches:
+      - main
+
+# Only allow one deployment at a time
+concurrency:
+  group: deploy-testflight
+  cancel-in-progress: true
+
+jobs:
+  deploy-ios:
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: ios
+
+      # The Fastlane Match repo uses a custom SSH host alias:
+      # git@github.com-fastlane-match → github.com
+      # Add the MATCH_SSH_PRIVATE_KEY secret (a deploy key with read access
+      # to the ajp-sourceship/nolimitseradeals_fastlane_match repo).
+      - name: Set up SSH for Fastlane Match
+        env:
+          MATCH_SSH_PRIVATE_KEY: ${{ secrets.MATCH_SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$MATCH_SSH_PRIVATE_KEY" > ~/.ssh/fastlane_match_key
+          chmod 600 ~/.ssh/fastlane_match_key
+          cat >> ~/.ssh/config << 'EOF'
+          Host github.com-fastlane-match
+            HostName github.com
+            User git
+            IdentityFile ~/.ssh/fastlane_match_key
+            IdentitiesOnly yes
+          EOF
+          ssh-keyscan -t rsa,ecdsa github.com >> ~/.ssh/known_hosts
+
+      # The Fastfile expects a keychain named fastlane.keychain-db with
+      # password "temp_password" to already exist when Match runs.
+      - name: Create keychain
+        run: |
+          security create-keychain -p "temp_password" ~/Library/Keychains/fastlane.keychain-db
+          security default-keychain -s ~/Library/Keychains/fastlane.keychain-db
+          security unlock-keychain -p "temp_password" ~/Library/Keychains/fastlane.keychain-db
+          # Keep keychain unlocked for 6 hours (the full job window)
+          security set-keychain-settings -lut 21600 ~/Library/Keychains/fastlane.keychain-db
+
+      # Store the full contents of your .env.staging file as a GitHub secret
+      # named ENV_STAGING (multiline secrets are supported).
+      - name: Write .env.staging
+        env:
+          ENV_STAGING: ${{ secrets.ENV_STAGING }}
+        run: echo "$ENV_STAGING" > .env.staging
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: ios/Pods
+          key: pods-${{ hashFiles('ios/Podfile.lock') }}
+          restore-keys: pods-
+
+      - name: Install CocoaPods dependencies
+        run: bundle exec pod install
+        working-directory: ios
+
+      # To deploy production instead, change `staging` → `production`
+      # and ensure ENV_PRODUCTION and the matching bundle ID secrets are set.
+      - name: Build and upload to TestFlight (staging)
+        env:
+          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
+          # Base64-encoded contents of the .p8 API key file
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          # Fastfile reads CIRCLE_BUILD_NUM for the build number — map it here
+          CIRCLE_BUILD_NUM: ${{ github.run_number }}
+        run: bundle exec fastlane staging
+        working-directory: ios

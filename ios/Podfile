@@ -80,21 +80,40 @@ post_install do |installer|
     duplicate_target.remove_from_project
   end
   
+  # Patch fmt/base.h to disable consteval on all Apple Clang versions.
+  # The existing guard only disables it for Apple Clang < 14, but Xcode 26
+  # (Clang 17+) still enables consteval and the older fmt API cannot satisfy
+  # the stricter constant-expression requirements of the newer compiler.
+  fmt_base_h = "#{installer.sandbox.root}/fmt/include/fmt/base.h"
+  if File.exist?(fmt_base_h)
+    content = File.read(fmt_base_h)
+    patched = content.gsub(
+      "defined(__apple_build_version__) && __apple_build_version__ < 14000029L",
+      "defined(__apple_build_version__)"
+    )
+    if content != patched
+      File.chmod(0644, fmt_base_h)
+      File.write(fmt_base_h, patched)
+      puts "[Patch] fmt/base.h: disabled consteval for all Apple Clang (Xcode 26 fix)"
+    end
+  end
+
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
       config.build_settings['DEAD_CODE_STRIPPING'] = 'YES'
-      
+
       # Exclude x86_64 for simulator builds to fix Xcode 26 beta issues
       config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'x86_64'
-      
+
+      # Disable script sandboxing globally for Pods — CocoaPods XCFramework copy
+      # scripts (e.g. GoogleMaps) access paths outside the sandbox and will fail
+      # with Xcode 15+ sandboxing enabled.
+      config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
+
       if target.respond_to?(:product_type) && target.product_type == "com.apple.product-type.bundle"
         config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
         config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
         config.build_settings['CODE_SIGN_IDENTITY'] = ''
-      end
-      
-      if target.name.include?('React-Core') && target.name.include?('privacy')
-        config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
       end
     end
   end

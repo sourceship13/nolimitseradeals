@@ -3,27 +3,32 @@ default_platform(:ios)
 platform :ios do
   desc "Build and upload STAGING to TestFlight"
   lane :staging do
-    # Use keychain created by CircleCI
     keychain_name = "fastlane.keychain-db"
     keychain_password = "temp_password"
-    
+    is_ci = ENV["CI"] ? true : false
+
     # Setup certificates with Match for STAGING
-    match(
+    match_params = {
       type: "appstore",
-      readonly: true,
+      readonly: is_ci,
       app_identifier: "org.sera.dev.nolimitsera.staging",
-      keychain_name: keychain_name,
-      keychain_password: keychain_password,
       git_url: "git@github.com-fastlane-match:ajp-sourceship/nolimitseradeals_fastlane_match.git"
-    )
+    }
+    if is_ci
+      match_params[:keychain_name] = keychain_name
+      match_params[:keychain_password] = keychain_password
+    end
+    match(match_params)
     
     profile_name = ENV["sigh_org.sera.dev.nolimitsera.staging_appstore_profile-name"]
     
-    # Set partition list for codesign access
-    sh("security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k #{keychain_password} ~/Library/Keychains/#{keychain_name} || true")
-    sleep(2)
-    sh("security set-key-partition-list -S apple-tool:,apple: -s -k #{keychain_password} ~/Library/Keychains/#{keychain_name}")
-    sh("security unlock-keychain -p #{keychain_password} ~/Library/Keychains/#{keychain_name}")
+    # Set partition list for codesign access (CI only — local login keychain handles this)
+    if is_ci
+      sh("security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k #{keychain_password} ~/Library/Keychains/#{keychain_name} || true")
+      sleep(2)
+      sh("security set-key-partition-list -S apple-tool:,apple: -s -k #{keychain_password} ~/Library/Keychains/#{keychain_name}")
+      sh("security unlock-keychain -p #{keychain_password} ~/Library/Keychains/#{keychain_name}")
+    end
     
     # Increment build number for staging target
     increment_build_number(
@@ -94,27 +99,32 @@ platform :ios do
 
   desc "Build and upload PRODUCTION to TestFlight"
   lane :production do
-    # Use keychain created by CircleCI
     keychain_name = "fastlane.keychain-db"
     keychain_password = "temp_password"
-    
+    is_ci = ENV["CI"] ? true : false
+
     # Setup certificates with Match for PRODUCTION
-    match(
+    match_params = {
       type: "appstore",
-      readonly: true,
+      readonly: is_ci,
       app_identifier: "org.sera.dev.nolimitsera",
-      keychain_name: keychain_name,
-      keychain_password: keychain_password,
       git_url: "git@github.com-fastlane-match:ajp-sourceship/nolimitseradeals_fastlane_match.git"
-    )
+    }
+    if is_ci
+      match_params[:keychain_name] = keychain_name
+      match_params[:keychain_password] = keychain_password
+    end
+    match(match_params)
     
     profile_name = ENV["sigh_org.sera.dev.nolimitsera_appstore_profile-name"]
     
-    # Set partition list for codesign access
-    sh("security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k #{keychain_password} ~/Library/Keychains/#{keychain_name} || true")
-    sleep(2)
-    sh("security set-key-partition-list -S apple-tool:,apple: -s -k #{keychain_password} ~/Library/Keychains/#{keychain_name}")
-    sh("security unlock-keychain -p #{keychain_password} ~/Library/Keychains/#{keychain_name}")
+    # Set partition list for codesign access (CI only — local login keychain handles this)
+    if is_ci
+      sh("security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k #{keychain_password} ~/Library/Keychains/#{keychain_name} || true")
+      sleep(2)
+      sh("security set-key-partition-list -S apple-tool:,apple: -s -k #{keychain_password} ~/Library/Keychains/#{keychain_name}")
+      sh("security unlock-keychain -p #{keychain_password} ~/Library/Keychains/#{keychain_name}")
+    end
     
     # Increment build number for production target
     increment_build_number(

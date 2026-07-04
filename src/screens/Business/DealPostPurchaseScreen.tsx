@@ -58,8 +58,8 @@ const STAGING_SKUS = {
 };
 
 const PRODUCTION_SKUS = {
-  ios: 'com.nolimitsera.prod.deal.post',
-  android: 'com.nolimitsera.prod.deal.post',
+  ios: 'com.nolimitsera.deal.post',
+  android: 'com.nolimitsera.deal.post',
 };
 
 const ACTIVE_SKUS = IS_PRODUCTION ? PRODUCTION_SKUS : STAGING_SKUS;
