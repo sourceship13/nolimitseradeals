@@ -355,7 +355,7 @@ const BusinessDeals = ({ navigation }: any) => {
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         <Toolbar
           title="My Deals"
-          onBack={() => navigation.goBack()}
+          onBack={() => navigation.navigate('Swipe')}
           showSettings={false}
         />
         <View style={styles.centerContainer}>
@@ -378,7 +378,7 @@ const BusinessDeals = ({ navigation }: any) => {
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         <Toolbar
           title="My Deals"
-          onBack={() => navigation.goBack()}
+          onBack={() => navigation.navigate('Swipe')}
           showSettings={false}
         />
         <View style={styles.centerContainer}>
@@ -413,7 +413,7 @@ const BusinessDeals = ({ navigation }: any) => {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Toolbar
         title="My Deals"
-        onBack={() => navigation.goBack()}
+        onBack={() => navigation.navigate('Swipe')}
         showSettings={false}
       />
 
