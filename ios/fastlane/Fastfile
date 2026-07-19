@@ -108,7 +108,8 @@ platform :ios do
       type: "appstore",
       readonly: is_ci,
       app_identifier: "org.sera.dev.nolimitsera",
-      git_url: "git@github.com-fastlane-match:ajp-sourceship/nolimitseradeals_fastlane_match.git"
+      git_url: "git@github.com-fastlane-match:ajp-sourceship/nolimitseradeals_fastlane_match.git",
+      force_for_new_certificates: true
     }
     if is_ci
       match_params[:keychain_name] = keychain_name

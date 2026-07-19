@@ -20,7 +20,8 @@ import { Platform, NativeModules } from 'react-native';
  */
 
 // ========== CONFIGURATION FLAGS ==========
-const FORCE_LOCAL = true; // Set to true to use local server
+const FORCE_LOCAL = false; // Set to true to use local server
+const FORCE_PRODUCTION = true; // Set to true to use production server in dev builds
 
 // Safely load Config value with fallback - handles Android null Config
 // Cache values to avoid repeated Config access
@@ -96,7 +97,12 @@ function getEnvironment(): Environment {
     return 'local';
   }
 
-  // Priority 2: Development builds always use staging
+  // Priority 2: Force production (for testing against prod in dev builds)
+  if (FORCE_PRODUCTION && __DEV__) {
+    return 'production';
+  }
+
+  // Priority 3: Development builds always use staging
   if (__DEV__) {
     return 'staging';
   }

@@ -253,9 +253,9 @@ const SwipeScreen = ({ navigation }: any) => {
       const { translationX } = nativeEvent;
 
       // Edge threshold - card must be moved close to screen edge
-      // screenWidth/2 - 50 means the card center is near the screen edge
+      // Reduced by 15% to make like/dislike easier to trigger
       const { width } = Dimensions.get('window');
-      const edgeThreshold = width / 2 - 50;
+      const edgeThreshold = (width / 2 - 50) * 0.85;
 
       if (translationX > edgeThreshold) {
         // Swiped to right edge and released - LIKE

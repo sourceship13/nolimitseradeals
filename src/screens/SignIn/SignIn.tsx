@@ -14,7 +14,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
 } from 'react-native';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import FontAwesome from 'react-native-vector-icons/FontAwesome'; 
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import MaterialCommunityIcons from '@react-native-vector-icons/material-icons';
 import { useAuth } from '../../libs/hooks/useAuth';
