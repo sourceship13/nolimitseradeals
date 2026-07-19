@@ -39,21 +39,26 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
 
-      # Checkout the local react-native-share-sms package to the sibling path
-      # that package.json expects: "file:../react-native-share-sms"
+      # Checkout the local react-native-share-sms package inside the workspace
+      # (GitHub Actions blocks checkouts outside the workspace boundary).
+      # Then symlink it to the sibling path that package.json expects:
+      # "file:../react-native-share-sms"
       - name: Checkout react-native-share-sms
         uses: actions/checkout@v4
         with:
           repository: ajp-sourceship/react-native-share-sms
           token: ${{ secrets.GH_PACKAGES_TOKEN }}
-          path: ../react-native-share-sms
+          path: vendor/react-native-share-sms
+
+      - name: Link react-native-share-sms to expected sibling path
+        run: ln -s "$GITHUB_WORKSPACE/vendor/react-native-share-sms" "$(dirname "$GITHUB_WORKSPACE")/react-native-share-sms"
 
       # Build the local package first so bob is available when the main
       # project's npm install runs the prepare script
       - name: Build react-native-share-sms
-        run: cd ../react-native-share-sms && npm install
+        run: cd vendor/react-native-share-sms && npm install
 
       - name: Install dependencies
         run: npm install --ignore-scripts --legacy-peer-deps
