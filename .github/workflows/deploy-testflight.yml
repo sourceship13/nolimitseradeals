@@ -1,7 +1,14 @@
-name: Deploy to TestFlight
+# GitHub Actions workflow
+# Builds React Native production for iOS (TestFlight)
+# Triggers on push to main (production releases)
+
+name: FriBee CI & Deploy
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
     branches:
       - main
 
@@ -11,26 +18,50 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy-ios:
+  build_ios:
+    name: Build iOS & Deploy
     runs-on: macos-15
+    permissions:
+      contents: read
+      packages: read
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Select Xcode 26
+        run: sudo xcode-select -s $(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)/Contents/Developer
+
+      - name: Show Xcode version
+        run: xcodebuild -version
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: '20'
 
-      - name: Install npm dependencies
-        run: npm ci
+      # Checkout the local react-native-share-sms package to the sibling path
+      # that package.json expects: "file:../react-native-share-sms"
+      - name: Checkout react-native-share-sms
+        uses: actions/checkout@v4
+        with:
+          repository: ajp-sourceship/react-native-share-sms
+          token: ${{ secrets.GH_PACKAGES_TOKEN }}
+          path: ../react-native-share-sms
+
+      # Build the local package first so bob is available when the main
+      # project's npm install runs the prepare script
+      - name: Build react-native-share-sms
+        run: cd ../react-native-share-sms && npm install
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts --legacy-peer-deps
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.2"
+          ruby-version: '3.2'
           bundler-cache: true
           working-directory: ios
 
@@ -54,44 +85,85 @@ jobs:
           EOF
           ssh-keyscan -t rsa,ecdsa github.com >> ~/.ssh/known_hosts
 
-      # The Fastfile expects a keychain named fastlane.keychain-db with
-      # password "temp_password" to already exist when Match runs.
+      # The Fastfile expects a keychain named fastlane.keychain-db
       - name: Create keychain
         run: |
           security create-keychain -p "temp_password" ~/Library/Keychains/fastlane.keychain-db
           security default-keychain -s ~/Library/Keychains/fastlane.keychain-db
           security unlock-keychain -p "temp_password" ~/Library/Keychains/fastlane.keychain-db
-          # Keep keychain unlocked for 6 hours (the full job window)
+          # Keep keychain unlocked for 6 hours
           security set-keychain-settings -lut 21600 ~/Library/Keychains/fastlane.keychain-db
 
-      # Store the full contents of your .env.staging file as a GitHub secret
-      # named ENV_STAGING (multiline secrets are supported).
-      - name: Write .env.staging
+      # Store the full contents of your .env.production file as a GitHub
+      # secret named ENV_PRODUCTION (multiline secrets are supported).
+      - name: Write .env.production
         env:
-          ENV_STAGING: ${{ secrets.ENV_STAGING }}
-        run: echo "$ENV_STAGING" > .env.staging
+          ENV_PRODUCTION: ${{ secrets.ENV_PRODUCTION }}
+        run: echo "$ENV_PRODUCTION" > .env.production
 
-      - name: Cache CocoaPods
+      - name: Cache CocoaPods specs and Pods
         uses: actions/cache@v4
         with:
-          path: ios/Pods
-          key: pods-${{ hashFiles('ios/Podfile.lock') }}
-          restore-keys: pods-
+          path: |
+            ~/.cocoapods
+            ios/Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
 
-      - name: Install CocoaPods dependencies
+      - name: Install CocoaPods
         run: bundle exec pod install
         working-directory: ios
 
-      # To deploy production instead, change `staging` → `production`
-      # and ensure ENV_PRODUCTION and the matching bundle ID secrets are set.
-      - name: Build and upload to TestFlight (staging)
+      - name: Pre-bundle React Native JS (warms Metro cache, no Watchman)
+        run: |
+          npx react-native bundle \
+            --entry-file index.js \
+            --platform ios \
+            --dev false \
+            --bundle-output /tmp/main.jsbundle \
+            --assets-dest /tmp/rn-assets
+
+      - name: Build and Deploy iOS with Fastlane
         env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
           APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
           # Base64-encoded contents of the .p8 API key file
           APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
-          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-          # Fastfile reads CIRCLE_BUILD_NUM for the build number — map it here
+          # Fastfile reads CIRCLE_BUILD_NUM for the build number
           CIRCLE_BUILD_NUM: ${{ github.run_number }}
-        run: bundle exec fastlane staging
-        working-directory: ios
+        run: |
+          # Write .xcode.env.local so Xcode's "Bundle React Native code and images"
+          # script can find node (actions/setup-node puts it in a non-standard path).
+          NODE_PATH=$(which node)
+          echo "export NODE_BINARY=$NODE_PATH" > ios/.xcode.env.local
+          echo "NODE_BINARY set to: $NODE_PATH"
+          cd ios
+          bundle exec fastlane production
+
+      - name: Upload build logs on failure
+        if: failure()
+        run: |
+          echo "=== GYM LOG LOCATION ==="
+          find ~/Library/Logs/gym -name "*.log" 2>/dev/null | head -10
+          GYM_LOG=$(find ~/Library/Logs/gym -name "nolimitseradeals-prod-nolimitseradeals-prod.log" 2>/dev/null | head -1)
+          if [ -z "$GYM_LOG" ]; then
+            GYM_LOG=$(find ~/Library/Logs/gym -name "*.log" 2>/dev/null | head -1)
+          fi
+          echo "Using log: $GYM_LOG"
+          echo ""
+          echo "=== COMPILE ERRORS (error:) ==="
+          if [ -n "$GYM_LOG" ]; then
+            grep -n " error:" "$GYM_LOG" 2>/dev/null | grep -v "^[0-9]*:.*warning:" | tail -100
+          fi
+          echo ""
+          echo "=== ARCHIVE FAILURE CONTEXT ==="
+          if [ -n "$GYM_LOG" ]; then
+            grep -B5 -A10 "ARCHIVE FAILED\|BUILD FAILED\|CompileSwift\|CompileC\|Ld " "$GYM_LOG" 2>/dev/null | grep -A10 "error:" | tail -120
+          fi
+          echo ""
+          echo "=== LAST 150 LINES OF LOG ==="
+          if [ -n "$GYM_LOG" ]; then
+            tail -150 "$GYM_LOG"
+          fi
